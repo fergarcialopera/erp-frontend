@@ -1,0 +1,246 @@
+import React, { useState, useMemo } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/EmptyState";
+import { SkeletonTable } from "@/components/SkeletonTable";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+
+export interface Column<T> {
+  key: string;
+  header: string;
+  render?: (item: T) => React.ReactNode;
+  sortable?: boolean;
+  className?: string;
+}
+
+interface DataTableProps<T> {
+  data: T[];
+  columns: Column<T>[];
+  isLoading?: boolean;
+  searchPlaceholder?: string;
+  searchKey?: string;
+  onRowClick?: (item: T) => void;
+  emptyTitle?: string;
+  emptyDescription?: string;
+  emptyAction?: React.ReactNode;
+  headerAction?: React.ReactNode;
+  filters?: React.ReactNode;
+  pageSize?: number;
+}
+
+type SortDir = "asc" | "desc" | null;
+
+export function DataTable<T extends Record<string, any>>({
+  data,
+  columns,
+  isLoading,
+  searchPlaceholder = "Buscar...",
+  searchKey,
+  onRowClick,
+  emptyTitle,
+  emptyDescription,
+  emptyAction,
+  headerAction,
+  filters,
+  pageSize: defaultPageSize = 10,
+}: DataTableProps<T>) {
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>(null);
+
+  const filtered = useMemo(() => {
+    let result = data;
+
+    if (search && searchKey) {
+      const q = search.toLowerCase();
+      result = result.filter((item) => {
+        const val = item[searchKey];
+        return val && String(val).toLowerCase().includes(q);
+      });
+    }
+
+    if (sortKey && sortDir) {
+      result = [...result].sort((a, b) => {
+        const aVal = a[sortKey] ?? "";
+        const bVal = b[sortKey] ?? "";
+        const cmp = String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
+        return sortDir === "asc" ? cmp : -cmp;
+      });
+    }
+
+    return result;
+  }, [data, search, searchKey, sortKey, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paged = filtered.slice(page * pageSize, (page + 1) * pageSize);
+
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      if (sortDir === "asc") setSortDir("desc");
+      else if (sortDir === "desc") {
+        setSortKey(null);
+        setSortDir(null);
+      }
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+    setPage(0);
+  };
+
+  if (isLoading) {
+    return <SkeletonTable columns={columns.length} />;
+  }
+
+  return (
+    <div className="table-container">
+      {/* Toolbar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 border-b">
+        {searchKey && (
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(0);
+              }}
+              placeholder={searchPlaceholder}
+              className="pl-9 h-9 bg-background"
+            />
+          </div>
+        )}
+        {filters}
+        <div className="ml-auto flex items-center gap-2">
+          {headerAction}
+        </div>
+      </div>
+
+      {/* Table */}
+      {paged.length === 0 ? (
+        <EmptyState
+          title={emptyTitle}
+          description={emptyDescription}
+          action={emptyAction}
+        />
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              {columns.map((col) => (
+                <TableHead
+                  key={col.key}
+                  className={`text-[11px] uppercase tracking-wider font-semibold text-muted-foreground ${col.className || ""}`}
+                >
+                  {col.sortable ? (
+                    <button
+                      onClick={() => handleSort(col.key)}
+                      className="flex items-center gap-1 hover:text-foreground transition-colors"
+                    >
+                      {col.header}
+                      {sortKey === col.key ? (
+                        sortDir === "asc" ? (
+                          <ArrowUp className="h-3 w-3" />
+                        ) : (
+                          <ArrowDown className="h-3 w-3" />
+                        )
+                      ) : (
+                        <ArrowUpDown className="h-3 w-3 opacity-40" />
+                      )}
+                    </button>
+                  ) : (
+                    col.header
+                  )}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paged.map((item, idx) => (
+              <TableRow
+                key={item.id || idx}
+                className={onRowClick ? "cursor-pointer" : ""}
+                onClick={() => onRowClick?.(item)}
+              >
+                {columns.map((col) => (
+                  <TableCell key={col.key} className={`text-sm ${col.className || ""}`}>
+                    {col.render ? col.render(item) : item[col.key]}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+
+      {/* Pagination */}
+      {filtered.length > 0 && (
+        <div className="flex items-center justify-between px-4 py-3 border-t">
+          <div className="text-xs text-muted-foreground">
+            {filtered.length} registro{filtered.length !== 1 ? "s" : ""}
+          </div>
+          <div className="flex items-center gap-2">
+            <Select
+              value={String(pageSize)}
+              onValueChange={(v) => {
+                setPageSize(Number(v));
+                setPage(0);
+              }}
+            >
+              <SelectTrigger className="h-8 w-[70px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[10, 25, 50].map((n) => (
+                  <SelectItem key={n} value={String(n)}>
+                    {n}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                disabled={page === 0}
+                onClick={() => setPage(page - 1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-xs text-muted-foreground min-w-[60px] text-center">
+                {page + 1} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                disabled={page >= totalPages - 1}
+                onClick={() => setPage(page + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
