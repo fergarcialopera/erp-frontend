@@ -1,5 +1,5 @@
 /**
- * Base URL de la API (sin /api/v1). Fuente: VITE_API_BASE_URL.
+ * Base URL de la API (sin basepath). Fuente: VITE_API_BASE_URL.
  * - Vacío ("") en dev sin .env: las peticiones van al mismo origen y el proxy de Vite las reenvía al backend.
  * - En prod o con .env: URL completa del backend (ej. http://localhost:8000).
  */
@@ -20,6 +20,13 @@ export const LOGIN_FORMAT =
  */
 export const LOGIN_USER_FIELD =
   (import.meta.env.VITE_LOGIN_USER_FIELD as string | undefined)?.toLowerCase() || "email";
+
+/**
+ * BasePath de la API (ej. /api/v1). Fuente: VITE_API_BASEPATH.
+ * Si tu backend usa otro prefijo (ej. /api), configúralo aquí.
+ */
+export const API_BASEPATH =
+  (import.meta.env.VITE_API_BASEPATH as string | undefined)?.trim() || "/api/v1";
 
 /** Alias para compatibilidad */
 export const ENV = { API_BASE_URL };

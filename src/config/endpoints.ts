@@ -1,7 +1,7 @@
-import { API_BASE_URL } from "./env";
+import { API_BASE_URL, API_BASEPATH } from "./env";
 
-/** BasePath fijo de la API. Única fuente de verdad; no hardcodear en componentes. */
-export const API_BASEPATH = "/api/v1";
+/** Re-exportar para uso externo si se necesita. */
+export { API_BASEPATH };
 
 /** URL base para axios. Precomputada para evitar concatenaciones repetidas. */
 const BASE_URL = `${API_BASE_URL}${API_BASEPATH}`;
@@ -20,13 +20,16 @@ const resource = (base: string) =>
     DETAIL: (id: string) => `${base}/${id}`,
   }) as const;
 
-/** Paths relativos al baseURL del apiClient. */
+/** Paths relativos al baseURL del apiClient. Alineados con el backend Laravel (prefix v1). */
 export const ENDPOINTS = {
   AUTH: {
     LOGIN: "/auth/login",
     LOGOUT: "/auth/logout",
   },
-  CLINICS: { ME: "/clinics/me" },
+  CLINIC: {
+    GET: "/clinic",
+    UPDATE_SETTINGS: "/clinic/settings",
+  },
   USERS: resource("/users"),
   LOCKERS: resource("/lockers"),
   COMPARTMENTS: {
@@ -34,12 +37,14 @@ export const ENDPOINTS = {
     DETAIL: (id: string) => `/compartments/${id}`,
   },
   PRODUCTS: resource("/products"),
-  INVENTORY: { LIST: "/inventory" },
+  INVENTORY: {
+    LIST: "/inventory",
+    ADJUST: "/inventory/adjust",
+  },
   OPEN_ORDERS: {
     LIST: "/open-orders",
     CREATE: "/open-orders",
-    CANCEL: (id: string) => `/open-orders/${id}/cancel`,
-    RETIRE: (id: string) => `/open-orders/${id}/retire`,
+    CONFIRM_READ: (id: string) => `/open-orders/${id}/confirm-read`,
   },
   AUDIT_LOGS: { LIST: "/audit-logs" },
 } as const;

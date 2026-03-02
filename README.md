@@ -13,7 +13,8 @@ Crea un archivo `.env` en la raíz (o `.env.local`):
 
 | Variable                 | Descripción                          | Por defecto   |
 |--------------------------|--------------------------------------|---------------|
-| `VITE_API_BASE_URL`      | URL base del backend (sin `/api/v1`) | Proxy / `localhost:8000` |
+| `VITE_API_BASE_URL`      | URL base del backend (sin basepath)  | Proxy / `localhost:8000` |
+| `VITE_API_BASEPATH`      | BasePath de la API (ej. `/api/v1`)   | `/api/v1`     |
 | `VITE_LOGIN_FORMAT`      | `json` o `form` (form-urlencoded)    | `json`        |
 | `VITE_LOGIN_USER_FIELD`  | `email` o `username`                 | `email`       |
 
@@ -29,7 +30,7 @@ VITE_API_BASE_URL=http://localhost:8000
 - **En desarrollo sin `.env`**: las peticiones van al mismo origen (`/api/v1/...`) y Vite las reenvía al backend vía proxy. El backend debe estar en `http://localhost:8000`.
 - **Con `.env` o en producción**: las peticiones van directamente a `VITE_API_BASE_URL/api/v1/...`.
 
-**Importante**: El backend debe exponer `POST /api/v1/auth/login`. Si el error es "The route api/v1/auth/login could not be found", comprueba que el backend tenga esa ruta registrada.
+**Importante**: El backend debe exponer las rutas que usa el frontend. Si ves errores como "The route api/v1/products could not be found", el backend no tiene esa ruta registrada. Ver tabla de rutas esperadas más abajo.
 
 ### Login: formato del body
 
@@ -68,7 +69,7 @@ npm run test
 
 ## API — BasePath y headers
 
-- **BasePath**: `/api/v1` (constante en `src/config/endpoints.ts`).
+- **BasePath**: `/api/v1` por defecto (configurable con `VITE_API_BASEPATH`).
 - **Autenticación**: header `Authorization: Bearer <token>` (token tras `POST /api/v1/auth/login`).
 - **Clinic scope**: header `X-Clinic-Id: <clinic_id>` en todas las peticiones autenticadas.
 
@@ -81,6 +82,23 @@ El cliente Axios (`src/lib/apiClient.ts`) añade estos headers y maneja:
 - **401**: cierre de sesión y redirección a `/login`.
 - **403**: toast "Sin permisos".
 - Otros errores: toast con mensaje normalizado.
+
+### Rutas del backend Laravel (prefix `v1`)
+
+| Método | Ruta | Uso |
+|--------|------|-----|
+| POST | `/auth/login` | Login |
+| POST | `/auth/logout` | Logout |
+| GET | `/clinic` | Clínica del usuario |
+| PATCH | `/clinic/settings` | Actualizar configuración clínica |
+| GET | `/inventory` | Inventario |
+| POST | `/inventory/adjust` | Ajustar inventario |
+| GET | `/open-orders` | Órdenes abiertas |
+| POST | `/open-orders` | Crear orden |
+| POST | `/open-orders/{id}/confirm-read` | Confirmar lectura |
+| GET | `/audit-logs` | Registro de auditoría |
+
+*Nota: `users`, `products`, `lockers`, `compartments` están en el frontend pero el backend Laravel actual no los expone; las pantallas devolverán 404 hasta que se implementen.*
 
 ## Estructura principal de `/src`
 

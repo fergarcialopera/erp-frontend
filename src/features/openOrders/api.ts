@@ -22,12 +22,7 @@ export const createOpenOrder = async (data: CreateOpenOrderBody): Promise<OpenOr
   return res.data;
 };
 
-export const cancelOpenOrder = async (id: string): Promise<OpenOrder> => {
-  const res = await apiClient.patch<OpenOrder>(ENDPOINTS.OPEN_ORDERS.CANCEL(id));
-  return res.data;
-};
-
-export const retireOpenOrder = async (id: string): Promise<OpenOrder> => {
-  const res = await apiClient.patch<OpenOrder>(ENDPOINTS.OPEN_ORDERS.RETIRE(id));
+export const confirmReadOpenOrder = async (id: string): Promise<OpenOrder> => {
+  const res = await apiClient.post<OpenOrder>(ENDPOINTS.OPEN_ORDERS.CONFIRM_READ(id));
   return res.data;
 };
