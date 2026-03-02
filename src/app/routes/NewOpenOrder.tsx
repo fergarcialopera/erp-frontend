@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/app/providers/AuthContext";
+import { useAuth } from "@/app/providers/useAuth";
 import { useLockers } from "@/features/lockers/queries";
 import { useCompartments } from "@/features/compartments/queries";
 import { useProducts } from "@/features/products/queries";

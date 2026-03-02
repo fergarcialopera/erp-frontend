@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuth } from "@/app/providers/AuthContext";
+import { useAuth } from "@/app/providers/useAuth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -35,10 +35,24 @@ export default function LoginPage() {
       await login(data.email, data.password);
       navigate("/dashboard", { replace: true });
     } catch (err: unknown) {
-      const msg =
+      if (err instanceof Error) {
+        setError(err.message);
+        return;
+      }
+      const data =
         err && typeof err === "object" && "response" in err
-          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          ? (err as { response?: { data?: Record<string, unknown> } }).response?.data
           : null;
+      const msg =
+        typeof data?.message === "string"
+          ? data.message
+          : typeof data?.detail === "string"
+            ? data.detail
+            : Array.isArray(data?.detail)
+              ? (data.detail as { msg?: string }[]).map((d) => d.msg ?? String(d)).join(", ")
+              : typeof data?.error === "string"
+                ? data.error
+                : null;
       setError(msg || "Credenciales inválidas");
     }
   };

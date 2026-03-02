@@ -1,5 +1,5 @@
 import { DataTable, Column } from "@/components/DataTable";
-import { useAuth } from "@/app/providers/AuthContext";
+import { useAuth } from "@/app/providers/useAuth";
 import { useInventory } from "@/features/inventory/queries";
 import type { CompartmentInventory } from "@/types/models";
 

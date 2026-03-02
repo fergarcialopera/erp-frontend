@@ -1,7 +1,7 @@
 import { DataTable, Column } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/app/providers/AuthContext";
+import { useAuth } from "@/app/providers/useAuth";
 import { useUsers } from "@/features/users/queries";
 import { Plus } from "lucide-react";
 import { User } from "@/types/models";

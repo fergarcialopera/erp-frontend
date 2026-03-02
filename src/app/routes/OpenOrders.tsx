@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { DataTable, Column } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/app/providers/AuthContext";
+import { useAuth } from "@/app/providers/useAuth";
 import { useOpenOrders } from "@/features/openOrders/queries";
 import { Plus } from "lucide-react";
 import type { OpenOrder } from "@/types/models";

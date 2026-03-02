@@ -11,17 +11,33 @@ Frontend del ERP (MVP) para clínicas con lockers y compartimentos. Multi-tenant
 
 Crea un archivo `.env` en la raíz (o `.env.local`):
 
-| Variable              | Descripción                          | Por defecto (si no se define)   |
-|-----------------------|--------------------------------------|----------------------------------|
-| `VITE_API_BASE_URL`   | URL base del backend (sin `/api/v1`) | `http://localhost:8000`          |
+| Variable                 | Descripción                          | Por defecto   |
+|--------------------------|--------------------------------------|---------------|
+| `VITE_API_BASE_URL`      | URL base del backend (sin `/api/v1`) | Proxy / `localhost:8000` |
+| `VITE_LOGIN_FORMAT`      | `json` o `form` (form-urlencoded)    | `json`        |
+| `VITE_LOGIN_USER_FIELD`  | `email` o `username`                 | `email`       |
 
 Ejemplo:
 
 ```env
 VITE_API_BASE_URL=http://localhost:8000
+# Si el backend espera form-urlencoded con "username":
+# VITE_LOGIN_FORMAT=form
+# VITE_LOGIN_USER_FIELD=username
 ```
 
-Todas las peticiones se hacen a `${VITE_API_BASE_URL}/api/v1/...`. No se hardcodea la base ni el basepath en componentes; se centraliza en `src/config/env.ts` y `src/config/endpoints.ts`.
+- **En desarrollo sin `.env`**: las peticiones van al mismo origen (`/api/v1/...`) y Vite las reenvía al backend vía proxy. El backend debe estar en `http://localhost:8000`.
+- **Con `.env` o en producción**: las peticiones van directamente a `VITE_API_BASE_URL/api/v1/...`.
+
+**Importante**: El backend debe exponer `POST /api/v1/auth/login`. Si el error es "The route api/v1/auth/login could not be found", comprueba que el backend tenga esa ruta registrada.
+
+### Login: formato del body
+
+Por defecto el frontend envía JSON: `{ "email": "...", "password": "..." }` con `Content-Type: application/json`.
+
+Si en Postman el login funciona con otro formato, ajusta en `.env`:
+- **Form-urlencoded** (FastAPI OAuth2, etc.): `VITE_LOGIN_FORMAT=form`
+- **Campo "username" en vez de "email"**: `VITE_LOGIN_USER_FIELD=username`
 
 ## Comandos
 

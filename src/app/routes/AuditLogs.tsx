@@ -1,5 +1,5 @@
 import { DataTable, Column } from "@/components/DataTable";
-import { useAuth } from "@/app/providers/AuthContext";
+import { useAuth } from "@/app/providers/useAuth";
 import { useAuditLogs } from "@/features/auditLogs/queries";
 import type { AuditLog } from "@/types/models";
 

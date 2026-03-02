@@ -1,4 +1,4 @@
-import { useAuth } from "@/app/providers/AuthContext";
+import { useAuth } from "@/app/providers/useAuth";
 import { Package, Lock, ClipboardList, Warehouse, Users, AlertTriangle } from "lucide-react";
 
 const stats = [

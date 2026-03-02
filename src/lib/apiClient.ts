@@ -1,6 +1,6 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { toast } from "sonner";
-import { getApiBaseUrl } from "@/config/endpoints";
+import { getApiBaseUrl, ENDPOINTS } from "@/config/endpoints";
 
 /** Cliente axios: baseURL = API_BASE_URL + API_BASEPATH; rutas desde config/endpoints. */
 export const apiClient = axios.create({
@@ -29,7 +29,10 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const isLoginRequest = error.config?.url?.includes(ENDPOINTS.AUTH.LOGIN);
+    if (error.response?.status === 401 && !isLoginRequest) {
+      // 401 en otras rutas = sesión expirada, cerrar y redirigir.
+      // 401 en login = credenciales inválidas; no redirigir, dejar que Login maneje el error.
       localStorage.removeItem("auth_token");
       localStorage.removeItem("clinic_id");
       localStorage.removeItem("auth_user");
@@ -38,9 +41,14 @@ apiClient.interceptors.response.use(
       toast.error("Sin permisos", {
         description: "No tienes los accesos necesarios para esta acción.",
       });
-    } else {
+    } else if (!isLoginRequest) {
+      // No mostrar toast en login; el formulario ya muestra el error.
       const message =
-        error.response?.data?.message || error.message || "Ocurrió un error inesperado";
+        error.response?.data?.message ||
+        error.response?.data?.detail ||
+        error.response?.data?.error ||
+        error.message ||
+        "Ocurrió un error inesperado";
       toast.error("Error", { description: message });
     }
     return Promise.reject(error);

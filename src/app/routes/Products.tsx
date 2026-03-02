@@ -3,7 +3,7 @@ import { useProducts } from "@/features/products/queries";
 import { DataTable, Column } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/app/providers/AuthContext";
+import { useAuth } from "@/app/providers/useAuth";
 import { Plus } from "lucide-react";
 import { Product } from "@/types/models";
 
