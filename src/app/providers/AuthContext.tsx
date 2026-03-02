@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 import { User, Role } from "@/types/models";
 import { AuthState, hasPermission } from "@/types/auth";
-import { apiClient } from "@/lib/api-client";
-import { ENDPOINTS } from "@/lib/endpoints";
+import { apiClient } from "@/lib/apiClient";
+import { ENDPOINTS } from "@/config/endpoints";
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => void | Promise<void>;
   can: (requiredRole: Role) => boolean;
   isRole: (role: Role) => boolean;
 }
@@ -29,26 +29,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
 
   const login = useCallback(async (email: string, password: string) => {
-    const { data } = await apiClient.post(ENDPOINTS.auth.login, { email, password });
+    const { data } = await apiClient.post<{ token: string; user: User; clinic_id?: string }>(
+      ENDPOINTS.AUTH.LOGIN,
+      { email, password },
+    );
     const { token, user, clinic_id } = data;
+    const clinicId = clinic_id ?? user.clinic_id;
 
     localStorage.setItem("auth_token", token);
-    localStorage.setItem("clinic_id", clinic_id);
+    if (clinicId) localStorage.setItem("clinic_id", clinicId);
     localStorage.setItem("auth_user", JSON.stringify(user));
 
     setState({
       token,
-      clinicId: clinic_id,
+      clinicId: clinicId ?? null,
       user,
       isAuthenticated: true,
     });
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("clinic_id");
-    localStorage.removeItem("auth_user");
-    setState({ token: null, clinicId: null, user: null, isAuthenticated: false });
+  const logout = useCallback(async () => {
+    try {
+      // Llamar al backend para invalidar el token (blacklist/revocación de sesión).
+      // El token actual se envía en el header; el backend debe marcarlo como inválido.
+      await apiClient.post(ENDPOINTS.AUTH.LOGOUT);
+    } catch {
+      // Si el backend falla (red, 401, etc.), igual cerramos sesión en el cliente.
+    } finally {
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("clinic_id");
+      localStorage.removeItem("auth_user");
+      setState({ token: null, clinicId: null, user: null, isAuthenticated: false });
+      // Recarga completa: evita tokens en memoria, cache de React Query y estado residual.
+      // El token queda invalidado en el cliente; el backend debe haberlo revocado.
+      window.location.href = "/login";
+    }
   }, []);
 
   const can = useCallback(
@@ -56,13 +71,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!state.user) return false;
       return hasPermission(state.user.role, requiredRole);
     },
-    [state.user]
+    [state.user],
   );
 
-  const isRole = useCallback(
-    (role: Role) => state.user?.role === role,
-    [state.user]
-  );
+  const isRole = useCallback((role: Role) => state.user?.role === role, [state.user]);
 
   return (
     <AuthContext.Provider value={{ ...state, login, logout, can, isRole }}>

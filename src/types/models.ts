@@ -7,7 +7,7 @@ export type OpenOrderStatus = "PENDING" | "RETIRED" | "CANCELLED";
 export type ActorType = "USER" | "SYSTEM";
 
 export interface Clinic {
-  id: string;
+  id: string; // ulid
   name: string;
   settings: {
     open_latency_ms?: number;
@@ -20,6 +20,7 @@ export interface User {
   clinic_id: string;
   name: string;
   email: string;
+  password?: string;
   role: Role;
   is_active: boolean;
 }
@@ -91,4 +92,26 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   per_page: number;
+}
+
+/** Filtros GET /api/v1/inventory */
+export interface InventoryFilters {
+  locker_id?: string;
+  compartment_id?: string;
+  product_id?: string;
+}
+
+/** Filtros GET /api/v1/open-orders */
+export interface OpenOrderFilters {
+  status?: OpenOrderStatus;
+  from?: string;
+  to?: string;
+}
+
+/** Filtros GET /api/v1/audit-logs */
+export interface AuditLogFilters {
+  entity_type?: string;
+  entity_id?: string;
+  from?: string;
+  to?: string;
 }

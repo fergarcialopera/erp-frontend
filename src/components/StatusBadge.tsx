@@ -1,7 +1,14 @@
 import { OpenOrderStatus, CompartmentStatus } from "@/types/models";
 import { cn } from "@/lib/utils";
 
-type BadgeVariant = "pending" | "retired" | "cancelled" | "available" | "maintenance" | "active" | "inactive";
+type BadgeVariant =
+  | "pending"
+  | "retired"
+  | "cancelled"
+  | "available"
+  | "maintenance"
+  | "active"
+  | "inactive";
 
 const variants: Record<BadgeVariant, string> = {
   pending: "bg-accent/15 text-accent border-accent/25",
@@ -38,18 +45,23 @@ export function StatusBadge({ status, type = "order", className }: StatusBadgePr
   } else if (type === "compartment") {
     variant = compartmentStatusMap[status as CompartmentStatus] || "retired";
   } else {
-    variant = status === "true" || status === "active" ? "active" : "inactive";
+    variant =
+      status === "true" || status === "active" || status === "Activo" ? "active" : "inactive";
   }
+
+  const label =
+    type === "active" ? (variant === "active" ? "Activo" : "Inactivo") : (status as string);
 
   return (
     <span
       className={cn(
         "inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium border",
         variants[variant],
-        className
+        className,
       )}
+      role="status"
     >
-      {status}
+      {label}
     </span>
   );
 }

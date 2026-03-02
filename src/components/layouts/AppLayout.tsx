@@ -1,7 +1,7 @@
 import { Outlet, useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/app/providers/AuthContext";
 import { Separator } from "@/components/ui/separator";
 
 const PAGE_TITLES: Record<string, string> = {
@@ -36,9 +36,7 @@ export default function AppLayout() {
             <Separator orientation="vertical" className="h-5" />
             <h1 className="text-sm font-semibold truncate">{title}</h1>
             <div className="ml-auto flex items-center gap-3">
-              <span className="text-xs text-muted-foreground hidden sm:block">
-                {user?.name}
-              </span>
+              <span className="text-xs text-muted-foreground hidden sm:block">{user?.name}</span>
               <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center">
                 <span className="text-[11px] font-medium text-primary-foreground">
                   {user?.name?.charAt(0)?.toUpperCase() || "U"}

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/app/providers/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -34,8 +34,12 @@ export default function LoginPage() {
     try {
       await login(data.email, data.password);
       navigate("/dashboard", { replace: true });
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Credenciales inválidas");
+    } catch (err: unknown) {
+      const msg =
+        err && typeof err === "object" && "response" in err
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : null;
+      setError(msg || "Credenciales inválidas");
     }
   };
 
@@ -88,9 +92,7 @@ export default function LoginPage() {
                 className="h-10"
                 {...register("email")}
               />
-              {errors.email && (
-                <p className="text-xs text-destructive">{errors.email.message}</p>
-              )}
+              {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
             </div>
 
             <div className="space-y-2">
@@ -116,11 +118,7 @@ export default function LoginPage() {
           </form>
 
           <div className="mt-4 pt-4 border-t">
-            <Button
-              variant="outline"
-              className="w-full text-xs"
-              onClick={handleDemoLogin}
-            >
+            <Button variant="outline" className="w-full text-xs" onClick={handleDemoLogin}>
               Acceso demo (Admin)
             </Button>
           </div>

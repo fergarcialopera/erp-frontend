@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/app/providers/AuthContext";
 import {
   Sidebar,
   SidebarContent,
@@ -76,11 +76,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {mainNav.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                  >
+                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
                     <NavLink
                       to={item.url}
                       end={item.url === "/dashboard"}
@@ -106,11 +102,7 @@ export function AppSidebar() {
               <SidebarMenu>
                 {adminNav.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive(item.url)}
-                      tooltip={item.title}
-                    >
+                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
                       <NavLink
                         to={item.url}
                         className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
@@ -132,9 +124,7 @@ export function AppSidebar() {
         <Separator className="mb-3 bg-sidebar-border" />
         {!collapsed && user && (
           <div className="px-2 mb-2 animate-fade-in">
-            <div className="text-xs font-medium text-sidebar-foreground truncate">
-              {user.name}
-            </div>
+            <div className="text-xs font-medium text-sidebar-foreground truncate">{user.name}</div>
             <div className="text-[10px] text-sidebar-foreground/50 truncate">{user.email}</div>
             <div className="mt-1">
               <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-sidebar-primary/20 text-sidebar-primary">

@@ -8,7 +8,8 @@ export interface LoginRequest {
 export interface LoginResponse {
   token: string;
   user: User;
-  clinic_id: string;
+  /** Opcional: si no viene, se usa user.clinic_id */
+  clinic_id?: string;
 }
 
 export interface AuthState {

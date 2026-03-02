@@ -32,6 +32,9 @@ interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];
   isLoading?: boolean;
+  /** Si true, se muestra mensaje de error (p. ej. API caída) con opción de reintentar */
+  isError?: boolean;
+  onRetry?: () => void;
   searchPlaceholder?: string;
   searchKey?: string;
   onRowClick?: (item: T) => void;
@@ -45,10 +48,12 @@ interface DataTableProps<T> {
 
 type SortDir = "asc" | "desc" | null;
 
-export function DataTable<T extends Record<string, any>>({
+export function DataTable<T extends Record<string, unknown>>({
   data,
   columns,
   isLoading,
+  isError,
+  onRetry,
   searchPlaceholder = "Buscar...",
   searchKey,
   onRowClick,
@@ -109,6 +114,26 @@ export function DataTable<T extends Record<string, any>>({
     return <SkeletonTable columns={columns.length} />;
   }
 
+  if (isError) {
+    return (
+      <div className="table-container">
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+          <p className="text-sm font-medium text-muted-foreground mb-2">
+            Error al cargar los datos.
+          </p>
+          <p className="text-xs text-muted-foreground text-center max-w-sm mb-4">
+            Comprueba la conexión o que el backend esté disponible.
+          </p>
+          {onRetry && (
+            <Button variant="outline" size="sm" onClick={onRetry}>
+              Reintentar
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="table-container">
       {/* Toolbar */}
@@ -128,18 +153,12 @@ export function DataTable<T extends Record<string, any>>({
           </div>
         )}
         {filters}
-        <div className="ml-auto flex items-center gap-2">
-          {headerAction}
-        </div>
+        <div className="ml-auto flex items-center gap-2">{headerAction}</div>
       </div>
 
       {/* Table */}
       {paged.length === 0 ? (
-        <EmptyState
-          title={emptyTitle}
-          description={emptyDescription}
-          action={emptyAction}
-        />
+        <EmptyState title={emptyTitle} description={emptyDescription} action={emptyAction} />
       ) : (
         <Table>
           <TableHeader>

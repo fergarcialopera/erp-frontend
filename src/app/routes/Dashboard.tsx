@@ -1,4 +1,4 @@
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/app/providers/AuthContext";
 import { Package, Lock, ClipboardList, Warehouse, Users, AlertTriangle } from "lucide-react";
 
 const stats = [
@@ -9,11 +9,41 @@ const stats = [
 ];
 
 const recentOrders = [
-  { id: "ORD-001", product: "Guantes estériles L", locker: "LOC-A1", status: "PENDING", time: "Hace 12 min" },
-  { id: "ORD-002", product: "Jeringa 10ml", locker: "LOC-B3", status: "RETIRED", time: "Hace 45 min" },
-  { id: "ORD-003", product: "Mascarilla N95", locker: "LOC-A2", status: "PENDING", time: "Hace 1h" },
-  { id: "ORD-004", product: "Alcohol gel 500ml", locker: "LOC-C1", status: "CANCELLED", time: "Hace 2h" },
-  { id: "ORD-005", product: "Vendaje elástico", locker: "LOC-A1", status: "RETIRED", time: "Hace 3h" },
+  {
+    id: "ORD-001",
+    product: "Guantes estériles L",
+    locker: "LOC-A1",
+    status: "PENDING",
+    time: "Hace 12 min",
+  },
+  {
+    id: "ORD-002",
+    product: "Jeringa 10ml",
+    locker: "LOC-B3",
+    status: "RETIRED",
+    time: "Hace 45 min",
+  },
+  {
+    id: "ORD-003",
+    product: "Mascarilla N95",
+    locker: "LOC-A2",
+    status: "PENDING",
+    time: "Hace 1h",
+  },
+  {
+    id: "ORD-004",
+    product: "Alcohol gel 500ml",
+    locker: "LOC-C1",
+    status: "CANCELLED",
+    time: "Hace 2h",
+  },
+  {
+    id: "ORD-005",
+    product: "Vendaje elástico",
+    locker: "LOC-A1",
+    status: "RETIRED",
+    time: "Hace 3h",
+  },
 ];
 
 const statusStyles: Record<string, string> = {
@@ -28,9 +58,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="page-header">
-        <h2 className="page-title">
-          Bienvenido, {user?.name?.split(" ")[0] || "Usuario"}
-        </h2>
+        <h2 className="page-title">Bienvenido, {user?.name?.split(" ")[0] || "Usuario"}</h2>
         <p className="page-description">Resumen operativo del sistema</p>
       </div>
 
@@ -61,25 +89,44 @@ export default function DashboardPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b">
-              <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">Referencia</th>
-              <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">Producto</th>
-              <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden sm:table-cell">Locker</th>
-              <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">Estado</th>
-              <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden md:table-cell">Tiempo</th>
+              <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">
+                Referencia
+              </th>
+              <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">
+                Producto
+              </th>
+              <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden sm:table-cell">
+                Locker
+              </th>
+              <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">
+                Estado
+              </th>
+              <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden md:table-cell">
+                Tiempo
+              </th>
             </tr>
           </thead>
           <tbody>
             {recentOrders.map((order) => (
-              <tr key={order.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+              <tr
+                key={order.id}
+                className="border-b last:border-0 hover:bg-muted/30 transition-colors"
+              >
                 <td className="p-3 text-sm font-mono text-xs">{order.id}</td>
                 <td className="p-3 text-sm">{order.product}</td>
-                <td className="p-3 text-sm font-mono text-xs hidden sm:table-cell">{order.locker}</td>
+                <td className="p-3 text-sm font-mono text-xs hidden sm:table-cell">
+                  {order.locker}
+                </td>
                 <td className="p-3">
-                  <span className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium ${statusStyles[order.status]}`}>
+                  <span
+                    className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium ${statusStyles[order.status]}`}
+                  >
                     {order.status}
                   </span>
                 </td>
-                <td className="p-3 text-xs text-muted-foreground hidden md:table-cell">{order.time}</td>
+                <td className="p-3 text-xs text-muted-foreground hidden md:table-cell">
+                  {order.time}
+                </td>
               </tr>
             ))}
           </tbody>

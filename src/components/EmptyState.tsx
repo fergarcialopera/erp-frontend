@@ -14,13 +14,20 @@ export function EmptyState({
   icon,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4 animate-fade-in">
-      <div className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center mb-4">
+    <section
+      className="flex flex-col items-center justify-center py-16 px-4 animate-fade-in"
+      aria-label={title}
+      role="status"
+    >
+      <div
+        className="h-12 w-12 rounded-lg bg-muted flex items-center justify-center mb-4"
+        aria-hidden
+      >
         {icon || <FileQuestion className="h-6 w-6 text-muted-foreground" />}
       </div>
       <h3 className="text-sm font-semibold mb-1">{title}</h3>
       <p className="text-xs text-muted-foreground text-center max-w-sm">{description}</p>
       {action && <div className="mt-4">{action}</div>}
-    </div>
+    </section>
   );
 }
