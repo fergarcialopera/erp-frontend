@@ -1,5 +1,5 @@
 import React, { createContext, useState, useCallback } from "react";
-import { User, Role } from "@/types/models";
+import { User, Role, mapUserFromApiResponse } from "@/types/models";
 import { AuthState, hasPermission } from "@/types/auth";
 import { apiClient } from "@/lib/apiClient";
 import { ENDPOINTS } from "@/config/endpoints";
@@ -16,6 +16,18 @@ function decodeJwtPayload(token: string): Record<string, unknown> {
   } catch {
     return {};
   }
+}
+
+/** Obtiene el nombre para mostrar desde el JWT; evita usar sub (id) como nombre. */
+function getNameFromJwtPayload(payload: Record<string, unknown>): string {
+  const name =
+    payload.name ??
+    payload.nombre ??
+    payload.full_name ??
+    payload.preferred_username ??
+    payload.email;
+  if (name != null && String(name).trim() !== "") return String(name).trim();
+  return "";
 }
 
 interface AuthContextType extends AuthState {
@@ -62,16 +74,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error("La respuesta no incluye token");
     }
 
-    // Extraer user del payload del JWT (sub, clinic_id, role, etc.)
     const jwtPayload = decodeJwtPayload(token);
-    const user: User = {
-      id: String(jwtPayload.sub ?? ""),
-      clinic_id: String(jwtPayload.clinic_id ?? ""),
-      name: String(jwtPayload.name ?? jwtPayload.sub ?? ""),
-      email: String(jwtPayload.email ?? ""),
-      role: (jwtPayload.role as Role) ?? "READONLY",
-      is_active: true,
-    };
+
+    // Si el endpoint devuelve el objeto user (id, clinic_id, name, email, role, is_active, ...), normalizarlo
+    const resUser = res.user as Record<string, unknown> | undefined;
+    let user: User;
+    if (resUser && typeof resUser === "object" && resUser.id != null) {
+      user = mapUserFromApiResponse({
+        id: resUser.id as string,
+        clinic_id: (resUser.clinic_id as string) ?? (jwtPayload.clinic_id as string),
+        name: (resUser.name as string) ?? getNameFromJwtPayload(jwtPayload),
+        email: resUser.email as string,
+        role: (resUser.role as Role) ?? (jwtPayload.role as Role),
+        is_active: resUser.is_active as boolean,
+      });
+    } else {
+      // Construir user solo desde JWT; el nombre no debe ser sub (id)
+      const displayName = getNameFromJwtPayload(jwtPayload);
+      user = {
+        id: String(jwtPayload.sub ?? ""),
+        clinic_id: String(jwtPayload.clinic_id ?? ""),
+        name: displayName || String(jwtPayload.email ?? ""),
+        email: String(jwtPayload.email ?? ""),
+        role: (jwtPayload.role as Role) ?? "READONLY",
+        is_active: true,
+      };
+    }
     const clinicId = user.clinic_id || undefined;
 
     localStorage.setItem("auth_token", token);

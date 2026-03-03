@@ -25,6 +25,30 @@ export interface User {
   is_active: boolean;
 }
 
+/** Respuesta del endpoint de usuario (login o GET /users/:id). */
+export interface UserApiResponse {
+  id: string;
+  clinic_id: string;
+  name: string;
+  email: string;
+  role: Role;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Convierte la respuesta del API al modelo User (solo campos usados en la app). */
+export function mapUserFromApiResponse(data: Partial<UserApiResponse>): User {
+  return {
+    id: String(data.id ?? ""),
+    clinic_id: String(data.clinic_id ?? ""),
+    name: String(data.name ?? ""),
+    email: String(data.email ?? ""),
+    role: (data.role as Role) ?? "READONLY",
+    is_active: data.is_active !== false,
+  };
+}
+
 export interface Locker {
   id: string;
   clinic_id: string;
