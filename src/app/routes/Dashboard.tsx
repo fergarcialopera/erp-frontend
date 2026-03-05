@@ -1,12 +1,14 @@
 import { useAuth } from "@/app/providers/useAuth";
-import { useOpenOrders } from "@/features/openOrders/queries";
+import { useDashboard } from "@/features/dashboard/queries";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Package, Lock, ClipboardList, AlertTriangle } from "lucide-react";
 import type { OpenOrder } from "@/types/models";
 
 export default function DashboardPage() {
   const { user, clinicId } = useAuth();
-  const { data: orders = [], isLoading, isError } = useOpenOrders(clinicId);
+  const { data: dashboard, isLoading, isError } = useDashboard(clinicId);
+
+  const orders: OpenOrder[] = dashboard?.latest_orders ?? [];
 
   const formatRequestedAt = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -31,27 +33,31 @@ export default function DashboardPage() {
         <p className="page-description">Resumen operativo del sistema</p>
       </div>
 
-      {/* Placeholder para estadísticas cuando existan endpoints */}
+      {/* Estadísticas desde GET /dashboard */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="stat-card animate-fade-in opacity-60">
+        <div className="stat-card animate-fade-in">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Productos
             </span>
             <Package className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="text-2xl font-bold text-muted-foreground">—</div>
-          <p className="text-[11px] text-muted-foreground mt-1">Resumen no disponible</p>
+          <div className="text-2xl font-bold">
+            {isLoading ? "…" : dashboard?.active_products_count ?? "—"}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">Productos activos</p>
         </div>
-        <div className="stat-card animate-fade-in opacity-60">
+        <div className="stat-card animate-fade-in">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Lockers
             </span>
             <Lock className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="text-2xl font-bold text-muted-foreground">—</div>
-          <p className="text-[11px] text-muted-foreground mt-1">Resumen no disponible</p>
+          <div className="text-2xl font-bold">
+            {isLoading ? "…" : dashboard?.available_lockers_count ?? "—"}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">Lockers disponibles</p>
         </div>
         <div className="stat-card animate-fade-in">
           <div className="flex items-center justify-between mb-3">
@@ -61,23 +67,25 @@ export default function DashboardPage() {
             <ClipboardList className="h-4 w-4 text-muted-foreground" />
           </div>
           <div className="text-2xl font-bold">
-            {isLoading ? "…" : orders.filter((o) => o.status === "PENDING").length}
+            {isLoading ? "…" : dashboard?.pending_orders_count ?? "—"}
           </div>
           <p className="text-[11px] text-muted-foreground mt-1">Solicitudes de apertura</p>
         </div>
-        <div className="stat-card animate-fade-in opacity-60">
+        <div className="stat-card animate-fade-in">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Inventario bajo
             </span>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div className="text-2xl font-bold text-muted-foreground">—</div>
-          <p className="text-[11px] text-muted-foreground mt-1">Resumen no disponible</p>
+          <div className="text-2xl font-bold">
+            {isLoading ? "…" : dashboard?.has_low_stock != null ? (dashboard.has_low_stock ? "Sí" : "No") : "—"}
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-1">Requiere atención</p>
         </div>
       </div>
 
-      {/* Órdenes recientes (datos reales) */}
+      {/* Órdenes recientes desde GET /dashboard */}
       <div className="table-container">
         <div className="p-4 border-b">
           <h3 className="text-sm font-semibold">Órdenes recientes</h3>
@@ -85,11 +93,11 @@ export default function DashboardPage() {
         </div>
         {isLoading ? (
           <div className="p-8 text-center text-sm text-muted-foreground">
-            Cargando órdenes…
+            Cargando…
           </div>
         ) : isError ? (
           <div className="p-8 text-center text-sm text-muted-foreground">
-            No se pudieron cargar las órdenes. Vuelve a intentarlo más tarde.
+            No se pudieron cargar los datos del dashboard. Vuelve a intentarlo más tarde.
           </div>
         ) : orders.length === 0 ? (
           <div className="p-8 text-center">

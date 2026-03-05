@@ -99,6 +99,15 @@ export interface OpenOrder {
   meta?: Record<string, unknown>;
 }
 
+/** Respuesta del endpoint GET /dashboard. */
+export interface DashboardData {
+  active_products_count: number;
+  available_lockers_count: number;
+  pending_orders_count: number;
+  has_low_stock: boolean;
+  latest_orders: OpenOrder[];
+}
+
 export interface AuditLog {
   id: string;
   clinic_id: string;

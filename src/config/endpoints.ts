@@ -28,6 +28,9 @@ export const getApiDocsUrl = () => buildUrl(API_DOCS_PATH.replace(/^\//, ""));
 
 /** Paths relativos al baseURL del apiClient. Alineados con el backend Laravel (prefix v1). */
 export const ENDPOINTS = {
+  DASHBOARD: {
+    GET: "/dashboard",
+  },
   AUTH: {
     LOGIN: "/auth/login",
     LOGOUT: "/auth/logout",
