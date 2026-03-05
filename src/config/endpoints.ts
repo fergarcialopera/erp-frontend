@@ -20,6 +20,12 @@ const resource = (base: string) =>
     DETAIL: (id: string) => `${base}/${id}`,
   }) as const;
 
+/** Path del spec OpenAPI (JSON). El backend sirve la documentación en este path. */
+export const API_DOCS_PATH = "/api-docs.json";
+
+/** URL absoluta del spec (misma base que apiClient). */
+export const getApiDocsUrl = () => buildUrl(API_DOCS_PATH.replace(/^\//, ""));
+
 /** Paths relativos al baseURL del apiClient. Alineados con el backend Laravel (prefix v1). */
 export const ENDPOINTS = {
   AUTH: {

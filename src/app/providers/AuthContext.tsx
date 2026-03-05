@@ -2,6 +2,7 @@ import React, { createContext, useState, useCallback } from "react";
 import { User, Role, mapUserFromApiResponse } from "@/types/models";
 import { AuthState, hasPermission } from "@/types/auth";
 import { apiClient } from "@/lib/apiClient";
+import { unwrapData } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
 import { LOGIN_FORMAT, LOGIN_USER_FIELD } from "@/config/env";
 
@@ -66,8 +67,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ? { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
       : undefined;
     const { data } = await apiClient.post(ENDPOINTS.AUTH.LOGIN, body, config);
-    // Formato: { access_token, token_type, expires_in }
-    const res = (data ?? {}) as Record<string, unknown>;
+    // Respuesta según api-docs: puede ser { data: { access_token, user?, ... } } o directo { access_token, user?, ... }
+    const raw = (data ?? {}) as Record<string, unknown>;
+    const res = (unwrapData(raw) as Record<string, unknown>) ?? raw;
     const token = (res.access_token ?? res.token) as string | undefined;
 
     if (!token) {
