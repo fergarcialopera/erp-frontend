@@ -18,7 +18,7 @@ const PAGE_TITLES: Record<string, string> = {
 function getPageTitle(pathname: string): string {
   if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
   if (pathname.startsWith("/lockers/")) return "Detalle de Locker";
-  return "LockerHub";
+  return "LockERP";
 }
 
 export default function AppLayout() {

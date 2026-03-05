@@ -1,4 +1,4 @@
-# LockerHub — ERP MVP (Frontend)
+# LockERP — ERP MVP (Frontend)
 
 Frontend del ERP (MVP) para clínicas con lockers y compartimentos. Multi-tenant por `clinic_id`. Backoffice para administradores y responsables; rol de solo lectura (READONLY) para consulta.
 

@@ -81,7 +81,7 @@ export default function LoginPage() {
           <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center mb-4">
             <Lock className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-semibold">LockerHub</h1>
+          <h1 className="text-xl font-semibold">LockERP</h1>
           <p className="text-sm text-muted-foreground mt-1">Acceso al sistema</p>
         </div>
 
