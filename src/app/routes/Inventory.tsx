@@ -70,7 +70,8 @@ type AdjustMode = "add" | "withdraw";
 const baseColumns = (
   onAdd: (row: InventoryRow) => void,
   onWithdraw: (row: InventoryRow) => void,
-  onDelete: (row: InventoryRow) => void
+  onDelete: (row: InventoryRow) => void,
+  canDelete: boolean
 ): Column<InventoryRow>[] => [
   {
     key: "locker_code",
@@ -140,15 +141,17 @@ const baseColumns = (
         >
           <Plus className="h-3.5 w-3.5" />
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-          onClick={() => onDelete(r)}
-          aria-label={`Eliminar entrada de ${r.product_name ?? r.product_id}`}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </Button>
+        {canDelete && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={() => onDelete(r)}
+            aria-label={`Eliminar entrada de ${r.product_name ?? r.product_id}`}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        )}
       </div>
     ),
   },
@@ -157,7 +160,9 @@ const baseColumns = (
 export default function InventoryPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { clinicId } = useAuth();
+  const { clinicId, can } = useAuth();
+  /** Solo ADMIN puede eliminar entradas; RESPONSABLE solo puede retirar o añadir. */
+  const canDeleteEntry = can("ADMIN");
   const {
     data: inventory = [],
     isLoading: inventoryLoading,
@@ -332,9 +337,10 @@ export default function InventoryPage() {
     () => baseColumns(
       (row) => openAdjustModal(row, "add"),
       (row) => openAdjustModal(row, "withdraw"),
-      handleDeleteEntry
+      handleDeleteEntry,
+      canDeleteEntry
     ),
-    []
+    [canDeleteEntry]
   );
 
   const compartmentsLoading = compartmentQueries.some((q) => q.isLoading);
