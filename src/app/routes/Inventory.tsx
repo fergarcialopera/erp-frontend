@@ -170,8 +170,16 @@ export default function InventoryPage() {
     isError,
     refetch,
   } = useInventory(clinicId);
-  const { data: lockers = [] } = useLockers(clinicId);
-  const { data: products = [] } = useProducts(clinicId, { activeOnly: false });
+  const {
+    data: lockers = [],
+    isLoading: lockersLoading,
+    isFetching: lockersFetching,
+  } = useLockers(clinicId);
+  const {
+    data: products = [],
+    isLoading: productsLoading,
+    isFetching: productsFetching,
+  } = useProducts(clinicId, { activeOnly: false });
 
   const [adjustModal, setAdjustModal] = useState<{
     row: InventoryRow;
@@ -343,9 +351,15 @@ export default function InventoryPage() {
     [canDeleteEntry]
   );
 
-  const compartmentsLoading = compartmentQueries.some((q) => q.isLoading);
+  const compartmentsLoading = compartmentQueries.some((q) => q.isLoading || q.isFetching);
   const isLoading =
-    inventoryLoading || inventoryFetching || compartmentsLoading;
+    inventoryLoading ||
+    inventoryFetching ||
+    lockersLoading ||
+    lockersFetching ||
+    productsLoading ||
+    productsFetching ||
+    compartmentsLoading;
 
   const isAdd = adjustModal?.mode === "add";
 

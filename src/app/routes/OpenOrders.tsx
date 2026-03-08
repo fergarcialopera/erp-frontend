@@ -158,10 +158,21 @@ export default function OpenOrdersPage() {
     isError,
     refetch,
   } = useOpenOrders(clinicId);
-  const isLoading = ordersLoading || ordersFetching;
-  const { data: lockers = [] } = useLockers(clinicId);
-  const { data: products = [] } = useProducts(clinicId, { activeOnly: false });
-  const { data: users = [] } = useUsers(clinicId);
+  const {
+    data: lockers = [],
+    isLoading: lockersLoading,
+    isFetching: lockersFetching,
+  } = useLockers(clinicId);
+  const {
+    data: products = [],
+    isLoading: productsLoading,
+    isFetching: productsFetching,
+  } = useProducts(clinicId, { activeOnly: false });
+  const {
+    data: users = [],
+    isLoading: usersLoading,
+    isFetching: usersFetching,
+  } = useUsers(clinicId);
 
   const compartmentQueries = useQueries({
     queries: lockers.map((locker) => ({
@@ -219,6 +230,18 @@ export default function OpenOrdersPage() {
       (a, b) => new Date(b.requested_at).getTime() - new Date(a.requested_at).getTime()
     );
   }, [orders, lockers, products, users, compartmentQueries]);
+
+  const compartmentsLoading = compartmentQueries.some((q) => q.isLoading || q.isFetching);
+  const isLoading =
+    ordersLoading ||
+    ordersFetching ||
+    lockersLoading ||
+    lockersFetching ||
+    productsLoading ||
+    productsFetching ||
+    usersLoading ||
+    usersFetching ||
+    compartmentsLoading;
 
   return (
     <div className="space-y-6">

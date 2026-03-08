@@ -75,8 +75,13 @@ export default function AuditLogsPage() {
     isError,
     refetch,
   } = useAuditLogs(clinicId);
-  const { data: users = [] } = useUsers(clinicId);
-  const isLoading = logsLoading || logsFetching;
+  const {
+    data: users = [],
+    isLoading: usersLoading,
+    isFetching: usersFetching,
+  } = useUsers(clinicId);
+  const isLoading =
+    logsLoading || logsFetching || usersLoading || usersFetching;
 
   const records: AuditLogRow[] = useMemo(() => {
     const userMap = new Map(users.map((u) => [u.id, u]));

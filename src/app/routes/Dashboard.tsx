@@ -15,17 +15,37 @@ type OrderRow = OpenOrder & {
 };
 
 export default function DashboardPage() {
-  const { user, clinicId } = useAuth();
+  const { user, clinicId, can } = useAuth();
   const {
     data: dashboard,
     isLoading: dashboardLoading,
     isFetching: dashboardFetching,
     isError,
   } = useDashboard(clinicId);
-  const isLoading = dashboardLoading || dashboardFetching;
-  const { data: lockers = [] } = useLockers(clinicId);
-  const { data: products = [] } = useProducts(clinicId, { activeOnly: false });
-  const { data: users = [] } = useUsers(clinicId);
+  const {
+    data: lockers = [],
+    isLoading: lockersLoading,
+    isFetching: lockersFetching,
+  } = useLockers(clinicId);
+  const {
+    data: products = [],
+    isLoading: productsLoading,
+    isFetching: productsFetching,
+  } = useProducts(clinicId, { activeOnly: false });
+  const {
+    data: users = [],
+    isLoading: usersLoading,
+    isFetching: usersFetching,
+  } = useUsers(clinicId, { enabled: can("ADMIN") });
+
+  const isLoading =
+    dashboardLoading ||
+    dashboardFetching ||
+    lockersLoading ||
+    lockersFetching ||
+    productsLoading ||
+    productsFetching ||
+    (can("ADMIN") ? (usersLoading || usersFetching) : false);
 
   const orders: OrderRow[] = useMemo(() => {
     const raw = dashboard?.latest_orders ?? [];
