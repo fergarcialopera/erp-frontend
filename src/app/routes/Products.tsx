@@ -110,17 +110,19 @@ export default function ProductsPage() {
           {
             key: "actions",
             header: "",
+            sortable: false,
             render: (p) => (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 gap-1.5"
-                onClick={() => openEditModal(p)}
-                aria-label={`Editar ${p.name}`}
-              >
-                <Pencil className="h-3.5 w-3.5" />
-                Editar
-              </Button>
+              <div className="flex items-center justify-end gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => openEditModal(p)}
+                  aria-label={`Editar ${p.name}`}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             ),
           } as Column<Product>,
         ]
