@@ -98,7 +98,7 @@ export default function DashboardPage() {
           <div className="text-2xl font-bold">
             {isLoading ? "…" : dashboard?.pending_orders_count ?? "—"}
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">Solicitudes de apertura</p>
+          <p className="text-[11px] text-muted-foreground mt-1">Órdenes de retirada pendientes</p>
         </div>
         <div className="stat-card animate-fade-in">
           <div className="flex items-center justify-between mb-3">
@@ -114,11 +114,11 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Órdenes recientes desde GET /dashboard */}
+      {/* Órdenes de retirada recientes desde GET /dashboard */}
       <div className="table-container">
         <div className="p-4 border-b">
-          <h3 className="text-sm font-semibold">Órdenes recientes</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Últimas solicitudes de apertura</p>
+          <h3 className="text-sm font-semibold">Órdenes de retirada recientes</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Últimas órdenes de retirada de productos</p>
         </div>
         {isLoading ? (
           <div className="p-8 text-center text-sm text-muted-foreground">
@@ -131,10 +131,10 @@ export default function DashboardPage() {
         ) : orders.length === 0 ? (
           <div className="p-8 text-center">
             <p className="text-sm font-medium text-muted-foreground">
-              No hay órdenes de apertura registradas
+              No hay órdenes de retirada registradas
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Las solicitudes de apertura de compartimientos aparecerán aquí cuando existan.
+              Las órdenes de retirada aparecerán aquí cuando existan.
             </p>
           </div>
         ) : (
@@ -157,7 +157,7 @@ export default function DashboardPage() {
                   Usuario
                 </th>
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden md:table-cell">
-                  Solicitado
+                  Retirado
                 </th>
               </tr>
             </thead>
