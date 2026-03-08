@@ -82,6 +82,13 @@ export interface CompartmentInventory {
   product_id: string;
   qty_available: number;
   qty_reserved: number;
+  /** Datos expandidos (si el API los incluye) */
+  locker_id?: string;
+  locker_name?: string;
+  compartment_name?: string;
+  compartment_code?: string;
+  product_name?: string;
+  product_sku?: string;
 }
 
 export interface OpenOrder {

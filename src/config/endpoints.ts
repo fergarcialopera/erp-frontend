@@ -48,7 +48,9 @@ export const ENDPOINTS = {
   PRODUCTS: resource("/products"),
   INVENTORY: {
     LIST: "/inventory",
-    ADJUST: "/inventory/adjust",
+    ADD: "/inventory/add",
+    REMOVE: "/inventory/remove",
+    DELETE: (id: string) => `/inventory/${id}`,
   },
   OPEN_ORDERS: {
     LIST: "/open-orders",

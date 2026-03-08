@@ -10,14 +10,28 @@ export const fetchInventory = async (
   return unwrapList<CompartmentInventory>(res.data);
 };
 
-export interface AdjustInventoryBody {
+export interface AddInventoryBody {
   compartment_id: string;
   product_id: string;
-  quantity_delta: number;
-  reason?: string;
+  quantity: number;
 }
 
-export const adjustInventory = async (data: AdjustInventoryBody) => {
-  const res = await apiClient.post(ENDPOINTS.INVENTORY.ADJUST, data);
+export interface RemoveInventoryBody {
+  compartment_id: string;
+  product_id: string;
+  quantity: number;
+}
+
+export const addInventory = async (data: AddInventoryBody) => {
+  const res = await apiClient.post(ENDPOINTS.INVENTORY.ADD, data);
   return unwrapData<unknown>(res.data);
+};
+
+export const removeInventory = async (data: RemoveInventoryBody) => {
+  const res = await apiClient.post(ENDPOINTS.INVENTORY.REMOVE, data);
+  return unwrapData<unknown>(res.data);
+};
+
+export const deleteInventoryEntry = async (id: string): Promise<void> => {
+  await apiClient.delete(ENDPOINTS.INVENTORY.DELETE(id));
 };
