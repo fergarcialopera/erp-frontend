@@ -10,26 +10,33 @@ import type { Locker } from "@/types/models";
 const columns: Column<Locker>[] = [
   {
     key: "code",
-    header: "Código",
+    header: "CÓDIGO",
     sortable: true,
     render: (l) => <span className="font-mono text-xs font-medium">{l.code}</span>,
   },
-  { key: "name", header: "Nombre", sortable: true },
+  { key: "name", header: "NOMBRE", sortable: true },
   {
     key: "location",
-    header: "Ubicación",
+    header: "UBICACIÓN",
     render: (l) => <span className="text-muted-foreground">{l.location || "—"}</span>,
   },
   {
     key: "is_active",
-    header: "Estado",
+    header: "ESTADO",
     render: (l) => <StatusBadge status={l.is_active ? "Activo" : "Inactivo"} type="active" />,
   },
 ];
 
 export default function LockersPage() {
   const { clinicId, can } = useAuth();
-  const { data: records, isLoading, isError, refetch } = useLockers(clinicId);
+  const {
+    data: records,
+    isLoading: lockersLoading,
+    isFetching: lockersFetching,
+    isError,
+    refetch,
+  } = useLockers(clinicId);
+  const isLoading = lockersLoading || lockersFetching;
   const navigate = useNavigate();
 
   return (

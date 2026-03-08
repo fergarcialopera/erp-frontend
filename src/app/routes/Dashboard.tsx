@@ -16,7 +16,13 @@ type OrderRow = OpenOrder & {
 
 export default function DashboardPage() {
   const { user, clinicId } = useAuth();
-  const { data: dashboard, isLoading, isError } = useDashboard(clinicId);
+  const {
+    data: dashboard,
+    isLoading: dashboardLoading,
+    isFetching: dashboardFetching,
+    isError,
+  } = useDashboard(clinicId);
+  const isLoading = dashboardLoading || dashboardFetching;
   const { data: lockers = [] } = useLockers(clinicId);
   const { data: products = [] } = useProducts(clinicId, { activeOnly: false });
   const { data: users = [] } = useUsers(clinicId);
@@ -142,22 +148,22 @@ export default function DashboardPage() {
             <thead>
               <tr className="border-b">
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">
-                  Referencia
+                  REFERENCIA
                 </th>
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">
-                  Cantidad
+                  CANTIDAD
                 </th>
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden sm:table-cell">
-                  Locker
+                  LOCKER
                 </th>
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">
-                  Estado
+                  ESTADO
                 </th>
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden md:table-cell">
-                  Usuario
+                  USUARIO
                 </th>
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden md:table-cell">
-                  Retirado
+                  RETIRADO
                 </th>
               </tr>
             </thead>

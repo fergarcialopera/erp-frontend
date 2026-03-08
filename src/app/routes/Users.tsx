@@ -38,10 +38,10 @@ const roleStyles: Record<string, string> = {
 };
 
 const columns: Column<User>[] = [
-  { key: "name", header: "Nombre", sortable: true },
+  { key: "name", header: "NOMBRE", sortable: true },
   {
     key: "email",
-    header: "Email",
+    header: "EMAIL",
     render: (u) => <span className="text-muted-foreground">{u.email}</span>,
   },
   {
@@ -57,7 +57,7 @@ const columns: Column<User>[] = [
   },
   {
     key: "is_active",
-    header: "Estado",
+    header: "ESTADO",
     render: (u) => <StatusBadge status={u.is_active ? "Activo" : "Inactivo"} type="active" />,
   },
 ];
@@ -77,7 +77,14 @@ const ROLES: Role[] = ["ADMIN", "RESPONSABLE", "READONLY"];
 export default function UsersPage() {
   const queryClient = useQueryClient();
   const { clinicId } = useAuth();
-  const { data: records, isLoading, isError, refetch } = useUsers(clinicId);
+  const {
+    data: records,
+    isLoading: usersLoading,
+    isFetching: usersFetching,
+    isError,
+    refetch,
+  } = useUsers(clinicId);
+  const isLoading = usersLoading || usersFetching;
   const [modalOpen, setModalOpen] = useState(false);
 
   const {

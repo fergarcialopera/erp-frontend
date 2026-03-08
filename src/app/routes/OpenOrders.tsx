@@ -32,7 +32,7 @@ const baseColumns = (
 ): Column<OpenOrderRow>[] => [
   {
     key: "product_id",
-    header: "ID producto",
+    header: "ID PRODUCTO",
     sortable: true,
     render: (o) => (
       <span className="font-mono text-xs text-muted-foreground">
@@ -42,7 +42,7 @@ const baseColumns = (
   },
   {
     key: "product_name",
-    header: "Producto",
+    header: "PRODUCTO",
     sortable: true,
     render: (o) => (
       <span className="text-sm">{o.product_name ?? o.product_id}</span>
@@ -50,13 +50,13 @@ const baseColumns = (
   },
   {
     key: "quantity",
-    header: "Cantidad",
+    header: "CANTIDAD",
     sortable: true,
     render: (o) => <span className="tabular-nums">{o.quantity}</span>,
   },
   {
     key: "locker_name",
-    header: "Locker",
+    header: "LOCKER",
     sortable: true,
     render: (o) => (
       <span className="text-sm font-mono">
@@ -66,7 +66,7 @@ const baseColumns = (
   },
   {
     key: "compartment_name",
-    header: "Compartimento",
+    header: "COMPARTIMENTO",
     sortable: true,
     render: (o) => (
       <span className="text-sm font-mono">
@@ -76,13 +76,13 @@ const baseColumns = (
   },
   {
     key: "status",
-    header: "Estado",
+    header: "ESTADO",
     sortable: true,
     render: (o) => <StatusBadge status={o.status} type="order" />,
   },
   {
     key: "requested_by_user_name",
-    header: "Responsable",
+    header: "RESPONSABLE",
     sortable: true,
     render: (o) => (
       <span className="text-sm">{o.requested_by_user_name ?? o.requested_by_user_id}</span>
@@ -90,7 +90,7 @@ const baseColumns = (
   },
   {
     key: "requested_at",
-    header: "Retirado",
+    header: "RETIRADO",
     sortable: true,
     render: (o) => (
       <span className="text-xs text-muted-foreground">
@@ -106,7 +106,7 @@ const baseColumns = (
   },
   {
     key: "read_at",
-    header: "Confirmado",
+    header: "CONFIRMADO",
     sortable: true,
     render: (o) => (
       <span className="text-xs text-muted-foreground">

@@ -74,7 +74,7 @@ const baseColumns = (
 ): Column<InventoryRow>[] => [
   {
     key: "locker_code",
-    header: "Locker",
+    header: "LOCKER",
     sortable: true,
     render: (r) => (
       <span className="text-sm font-mono">{r.locker_code ?? r.locker_id ?? "—"}</span>
@@ -82,7 +82,7 @@ const baseColumns = (
   },
   {
     key: "compartment_name",
-    header: "Compartimento",
+    header: "COMPARTIMENTO",
     sortable: true,
     render: (r) => (
       <span className="text-sm">{r.compartment_name ?? r.compartment_code ?? r.compartment_id ?? "—"}</span>
@@ -90,7 +90,7 @@ const baseColumns = (
   },
   {
     key: "product_sku",
-    header: "ID producto",
+    header: "ID PRODUCTO",
     sortable: true,
     render: (r) => (
       <span className="font-mono text-xs text-muted-foreground">
@@ -100,7 +100,7 @@ const baseColumns = (
   },
   {
     key: "product_name",
-    header: "Producto",
+    header: "PRODUCTO",
     sortable: true,
     render: (r) => (
       <span className="text-sm">{r.product_name ?? r.product_id ?? "—"}</span>
@@ -108,7 +108,7 @@ const baseColumns = (
   },
   {
     key: "qty_available",
-    header: "Disponibilidad",
+    header: "DISPONIBILIDAD",
     sortable: true,
     render: (r) => (
       <span className="text-sm font-medium tabular-nums">

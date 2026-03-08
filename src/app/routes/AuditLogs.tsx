@@ -14,7 +14,7 @@ const actionStyles: Record<string, string> = {
 const columns: Column<AuditLog>[] = [
   {
     key: "occurred_at",
-    header: "Fecha",
+    header: "FECHA",
     sortable: true,
     render: (l) => (
       <span className="text-xs text-muted-foreground tabular-nums">
@@ -29,7 +29,7 @@ const columns: Column<AuditLog>[] = [
   },
   {
     key: "actor_type",
-    header: "Actor",
+    header: "ACTOR",
     render: (l) => (
       <span className="text-xs">
         {l.actor_type === "SYSTEM" ? (
@@ -42,7 +42,7 @@ const columns: Column<AuditLog>[] = [
   },
   {
     key: "action",
-    header: "Acción",
+    header: "ACCIÓN",
     render: (l) => (
       <span
         className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium ${actionStyles[l.action] || "bg-muted text-muted-foreground"}`}
@@ -53,7 +53,7 @@ const columns: Column<AuditLog>[] = [
   },
   {
     key: "entity_type",
-    header: "Entidad",
+    header: "ENTIDAD",
     render: (l) => <span className="text-sm">{l.entity_type}</span>,
   },
   {
@@ -65,7 +65,14 @@ const columns: Column<AuditLog>[] = [
 
 export default function AuditLogsPage() {
   const { clinicId } = useAuth();
-  const { data: records = [], isLoading, isError, refetch } = useAuditLogs(clinicId);
+  const {
+    data: records = [],
+    isLoading: logsLoading,
+    isFetching: logsFetching,
+    isError,
+    refetch,
+  } = useAuditLogs(clinicId);
+  const isLoading = logsLoading || logsFetching;
 
   return (
     <div className="space-y-6">

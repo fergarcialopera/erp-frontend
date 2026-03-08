@@ -48,17 +48,17 @@ const baseColumns: Column<Product>[] = [
     sortable: true,
     render: (p) => <span className="font-mono text-xs">{p.sku}</span>,
   },
-  { key: "name", header: "Nombre", sortable: true },
+  { key: "name", header: "NOMBRE", sortable: true },
   {
     key: "barcode",
-    header: "Código barras",
+    header: "CÓDIGO BARRAS",
     render: (p) => (
       <span className="font-mono text-xs text-muted-foreground">{p.barcode || "—"}</span>
     ),
   },
   {
     key: "is_active",
-    header: "Estado",
+    header: "ESTADO",
     render: (p) => <StatusBadge status={p.is_active ? "Activo" : "Inactivo"} type="active" />,
   },
 ];
@@ -66,9 +66,14 @@ const baseColumns: Column<Product>[] = [
 export default function ProductsPage() {
   const queryClient = useQueryClient();
   const { clinicId, can } = useAuth();
-  const { data: records, isLoading, isError, refetch } = useProducts(clinicId, {
-    activeOnly: false,
-  });
+  const {
+    data: records,
+    isLoading: productsLoading,
+    isFetching: productsFetching,
+    isError,
+    refetch,
+  } = useProducts(clinicId, { activeOnly: false });
+  const isLoading = productsLoading || productsFetching;
   const canEdit = can("RESPONSABLE");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);

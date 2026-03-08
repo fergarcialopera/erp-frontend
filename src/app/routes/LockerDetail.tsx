@@ -9,17 +9,17 @@ import type { Compartment } from "@/types/models";
 const columns: Column<Compartment>[] = [
   {
     key: "code",
-    header: "Código",
+    header: "CÓDIGO",
     render: (c) => <span className="font-mono text-xs font-medium">{c.code}</span>,
   },
   {
     key: "status",
-    header: "Estado",
+    header: "ESTADO",
     render: (c) => <StatusBadge status={c.status} type="compartment" />,
   },
   {
     key: "is_active",
-    header: "Activo",
+    header: "ACTIVO",
     render: (c) => <StatusBadge status={c.is_active ? "Activo" : "Inactivo"} type="active" />,
   },
 ];
@@ -27,7 +27,14 @@ const columns: Column<Compartment>[] = [
 export default function LockerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: compartments = [], isLoading, isError, refetch } = useCompartments(id ?? null);
+  const {
+    data: compartments = [],
+    isLoading: compartmentsLoading,
+    isFetching: compartmentsFetching,
+    isError,
+    refetch,
+  } = useCompartments(id ?? null);
+  const isLoading = compartmentsLoading || compartmentsFetching;
 
   const availableCount = compartments.filter((c) => c.status === "AVAILABLE" && c.is_active).length;
   const maintenanceCount = compartments.filter((c) => c.status === "MAINTENANCE").length;
