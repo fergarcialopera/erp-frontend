@@ -104,6 +104,10 @@ export interface OpenOrder {
   read_at?: string;
   external_ref: string;
   meta?: Record<string, unknown>;
+  /** Datos expandidos (si el API los incluye) */
+  product_name?: string;
+  product_sku?: string;
+  requested_by_user_name?: string;
 }
 
 /** Respuesta del endpoint GET /dashboard. */

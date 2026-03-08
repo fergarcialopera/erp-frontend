@@ -9,8 +9,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/products": "Productos",
   "/inventory": "Inventario",
   "/lockers": "Lockers",
-  "/open-orders": "Órdenes de Apertura",
-  "/open-orders/new": "Nueva Orden",
+  "/open-orders": "Órdenes de retirada",
+  "/open-orders/new": "Nueva orden",
   "/users": "Usuarios",
   "/audit-logs": "Registro de Auditoría",
 };

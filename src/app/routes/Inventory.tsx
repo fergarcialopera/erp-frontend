@@ -38,7 +38,8 @@ import { addInventory, removeInventory, deleteInventoryEntry } from "@/features/
 import { useLockers } from "@/features/lockers/queries";
 import { useProducts } from "@/features/products/queries";
 import { fetchCompartmentsByLocker } from "@/features/compartments/api";
-import { PackagePlus, Plus, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ClipboardList, PackagePlus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { CompartmentInventory } from "@/types/models";
 
@@ -154,6 +155,7 @@ const baseColumns = (
 ];
 
 export default function InventoryPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { clinicId } = useAuth();
   const {
@@ -359,15 +361,27 @@ export default function InventoryPage() {
         emptyTitle="Sin inventario"
         emptyDescription="No hay registros de inventario."
         headerAction={
-          <Button
-            size="sm"
-            className="h-9 gap-1.5"
-            onClick={openNewInventoryModal}
-            aria-label="Añadir producto al inventario"
-          >
-            <PackagePlus className="h-4 w-4" />
-            Añadir producto al inventario
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5"
+              onClick={() => navigate("/open-orders")}
+              aria-label="Ver órdenes de retirada"
+            >
+              <ClipboardList className="h-4 w-4" />
+              Órdenes de retirada
+            </Button>
+            <Button
+              size="sm"
+              className="h-9 gap-1.5"
+              onClick={openNewInventoryModal}
+              aria-label="Añadir producto al inventario"
+            >
+              <PackagePlus className="h-4 w-4" />
+              Añadir producto al inventario
+            </Button>
+          </div>
         }
       />
 
