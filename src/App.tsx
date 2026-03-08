@@ -50,7 +50,7 @@ const App = () => (
               <Route
                 path="/products"
                 element={
-                  <ProtectedRoute requiredRole="RESPONSABLE">
+                  <ProtectedRoute requiredRole="ADMIN">
                     <ProductsPage />
                   </ProtectedRoute>
                 }
@@ -63,8 +63,22 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-              <Route path="/lockers" element={<LockersPage />} />
-              <Route path="/lockers/:id" element={<LockerDetailPage />} />
+              <Route
+                path="/lockers"
+                element={
+                  <ProtectedRoute requiredRole="ADMIN">
+                    <LockersPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/lockers/:id"
+                element={
+                  <ProtectedRoute requiredRole="ADMIN">
+                    <LockerDetailPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/open-orders" element={<OpenOrdersPage />} />
               <Route
                 path="/open-orders/new"

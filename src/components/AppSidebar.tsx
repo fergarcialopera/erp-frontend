@@ -30,13 +30,13 @@ import { Separator } from "@/components/ui/separator";
 
 const mainNav = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Productos", url: "/products", icon: Package },
   { title: "Inventario", url: "/inventory", icon: Warehouse },
-  { title: "Lockers", url: "/lockers", icon: Lock },
-  { title: "Órdenes", url: "/open-orders", icon: ClipboardList },
+  { title: "Órdenes de retirada", url: "/open-orders", icon: ClipboardList },
 ];
 
 const adminNav = [
+  { title: "Productos", url: "/products", icon: Package },
+  { title: "Lockers", url: "/lockers", icon: Lock },
   { title: "Usuarios", url: "/users", icon: Users },
   { title: "Auditoría", url: "/audit-logs", icon: ScrollText },
 ];
