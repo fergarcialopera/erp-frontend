@@ -108,6 +108,7 @@ export interface OpenOrder {
   product_name?: string;
   product_sku?: string;
   requested_by_user_name?: string;
+  locker_name?: string;
 }
 
 /** Respuesta del endpoint GET /dashboard. */

@@ -1,14 +1,43 @@
+import { useMemo } from "react";
 import { useAuth } from "@/app/providers/useAuth";
 import { useDashboard } from "@/features/dashboard/queries";
+import { useLockers } from "@/features/lockers/queries";
+import { useProducts } from "@/features/products/queries";
+import { useUsers } from "@/features/users/queries";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Package, Lock, ClipboardList, AlertTriangle } from "lucide-react";
 import type { OpenOrder } from "@/types/models";
 
+type OrderRow = OpenOrder & {
+  product_sku?: string;
+  locker_name?: string;
+  requested_by_user_name?: string;
+};
+
 export default function DashboardPage() {
   const { user, clinicId } = useAuth();
   const { data: dashboard, isLoading, isError } = useDashboard(clinicId);
+  const { data: lockers = [] } = useLockers(clinicId);
+  const { data: products = [] } = useProducts(clinicId, { activeOnly: false });
+  const { data: users = [] } = useUsers(clinicId);
 
-  const orders: OpenOrder[] = dashboard?.latest_orders ?? [];
+  const orders: OrderRow[] = useMemo(() => {
+    const raw = dashboard?.latest_orders ?? [];
+    const lockerMap = new Map(lockers.map((l) => [l.id, l]));
+    const productMap = new Map(products.map((p) => [p.id, p]));
+    const userMap = new Map(users.map((u) => [u.id, u]));
+    return raw.map((order) => {
+      const locker = lockerMap.get(order.locker_id);
+      const product = productMap.get(order.product_id);
+      const requestedBy = userMap.get(order.requested_by_user_id);
+      return {
+        ...order,
+        product_sku: product?.sku ?? order.product_sku,
+        locker_name: locker?.name ?? order.locker_name,
+        requested_by_user_name: requestedBy?.name ?? order.requested_by_user_name,
+      };
+    });
+  }, [dashboard?.latest_orders, lockers, products, users]);
 
   const formatRequestedAt = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -125,23 +154,31 @@ export default function DashboardPage() {
                   Estado
                 </th>
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden md:table-cell">
+                  Usuario
+                </th>
+                <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden md:table-cell">
                   Solicitado
                 </th>
               </tr>
             </thead>
             <tbody>
-              {orders.map((order: OpenOrder) => (
+              {orders.map((order) => (
                 <tr
                   key={order.id}
                   className="border-b last:border-0 hover:bg-muted/30 transition-colors"
                 >
-                  <td className="p-3 text-sm font-mono text-xs">{order.external_ref}</td>
+                  <td className="p-3 text-sm font-mono text-xs">
+                    {order.product_sku ?? order.product_id}
+                  </td>
                   <td className="p-3 text-sm tabular-nums">{order.quantity}</td>
-                  <td className="p-3 text-sm font-mono text-xs hidden sm:table-cell">
-                    {order.locker_id}
+                  <td className="p-3 text-sm hidden sm:table-cell">
+                    {order.locker_name ?? order.locker_id}
                   </td>
                   <td className="p-3">
                     <StatusBadge status={order.status} type="order" />
+                  </td>
+                  <td className="p-3 text-sm hidden md:table-cell">
+                    {order.requested_by_user_name ?? order.requested_by_user_id}
                   </td>
                   <td className="p-3 text-xs text-muted-foreground hidden md:table-cell">
                     {formatRequestedAt(order.requested_at)}
