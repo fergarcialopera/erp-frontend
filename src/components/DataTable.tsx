@@ -48,7 +48,7 @@ interface DataTableProps<T> {
 
 type SortDir = "asc" | "desc" | null;
 
-export function DataTable<T extends Record<string, unknown>>({
+export function DataTable<T extends object>({
   data,
   columns,
   isLoading,

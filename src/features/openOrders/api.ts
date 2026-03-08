@@ -11,17 +11,22 @@ export interface CreateOpenOrderBody {
   meta?: Record<string, unknown>;
 }
 
-export const fetchOpenOrders = async (filters?: OpenOrderFilters): Promise<OpenOrder[]> => {
-  const res = await apiClient.get(ENDPOINTS.OPEN_ORDERS.LIST, { params: filters });
+export const fetchOrders = async (filters?: OpenOrderFilters): Promise<OpenOrder[]> => {
+  const res = await apiClient.get(ENDPOINTS.ORDERS.LIST, { params: filters });
   return unwrapList<OpenOrder>(res.data);
 };
 
-export const createOpenOrder = async (data: CreateOpenOrderBody): Promise<OpenOrder> => {
-  const res = await apiClient.post(ENDPOINTS.OPEN_ORDERS.CREATE, data);
+export const fetchOrderById = async (id: string): Promise<OpenOrder> => {
+  const res = await apiClient.get(ENDPOINTS.ORDERS.DETAIL(id));
   return unwrapData<OpenOrder>(res.data);
 };
 
-export const confirmReadOpenOrder = async (id: string): Promise<OpenOrder> => {
-  const res = await apiClient.post(ENDPOINTS.OPEN_ORDERS.CONFIRM_READ(id));
+export const createOpenOrder = async (data: CreateOpenOrderBody): Promise<OpenOrder> => {
+  const res = await apiClient.post(ENDPOINTS.ORDERS.CREATE, data);
+  return unwrapData<OpenOrder>(res.data);
+};
+
+export const confirmReadOrder = async (id: string): Promise<OpenOrder> => {
+  const res = await apiClient.post(ENDPOINTS.ORDERS.CONFIRM_READ(id));
   return unwrapData<OpenOrder>(res.data);
 };

@@ -7,6 +7,11 @@ export const fetchLockers = async (): Promise<Locker[]> => {
   const res = await apiClient.get(ENDPOINTS.LOCKERS.LIST);
   return unwrapList<Locker>(res.data);
 };
+
+export const fetchLockerById = async (id: string): Promise<Locker> => {
+  const res = await apiClient.get(ENDPOINTS.LOCKERS.DETAIL(id));
+  return unwrapData<Locker>(res.data);
+};
 export const createLocker = async (data: Partial<Locker>) => {
   const res = await apiClient.post(ENDPOINTS.LOCKERS.CREATE, data);
   return unwrapData<Locker>(res.data);

@@ -56,6 +56,8 @@ export interface Locker {
   name: string;
   location?: string;
   is_active: boolean;
+  /** Incluido en GET /lockers/:id */
+  compartments?: Compartment[];
 }
 
 export interface Compartment {
@@ -82,8 +84,13 @@ export interface CompartmentInventory {
   product_id: string;
   qty_available: number;
   qty_reserved: number;
-  /** Datos expandidos (si el API los incluye) */
+  /** Objetos enriquecidos (GET /inventory) */
+  product?: Product;
+  compartment?: Compartment;
+  locker?: Locker;
+  /** Fallbacks planos (si el API los incluye) */
   locker_id?: string;
+  locker_code?: string;
   locker_name?: string;
   compartment_name?: string;
   compartment_code?: string;
@@ -91,6 +98,7 @@ export interface CompartmentInventory {
   product_sku?: string;
 }
 
+/** Order con relaciones enriquecidas (GET /orders, GET /orders/:id, dashboard latest_orders) */
 export interface OpenOrder {
   id: string;
   clinic_id: string;
@@ -104,7 +112,12 @@ export interface OpenOrder {
   read_at?: string;
   external_ref: string;
   meta?: Record<string, unknown>;
-  /** Datos expandidos (si el API los incluye) */
+  /** Objetos enriquecidos desde el API */
+  product?: Product;
+  locker?: Locker;
+  compartment?: Compartment;
+  requested_by?: User;
+  /** Fallbacks planos (legacy o cuando no vienen embebidos) */
   product_name?: string;
   product_sku?: string;
   requested_by_user_name?: string;
@@ -149,7 +162,7 @@ export interface InventoryFilters {
   product_id?: string;
 }
 
-/** Filtros GET /api/v1/open-orders */
+/** Filtros GET /api/v1/orders */
 export interface OpenOrderFilters {
   status?: OpenOrderStatus;
   from?: string;

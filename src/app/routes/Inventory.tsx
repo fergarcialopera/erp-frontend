@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { DataTable, Column } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,21 +35,28 @@ import {
 import { useAuth } from "@/app/providers/useAuth";
 import { useInventory } from "@/features/inventory/queries";
 import { addInventory, removeInventory, deleteInventoryEntry } from "@/features/inventory/api";
-import { useLockers } from "@/features/lockers/queries";
+import { useLockers, useLocker } from "@/features/lockers/queries";
 import { useProducts } from "@/features/products/queries";
-import { fetchCompartmentsByLocker } from "@/features/compartments/api";
 import { useNavigate } from "react-router-dom";
 import { ClipboardList, PackagePlus, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { CompartmentInventory } from "@/types/models";
 
-/** Fila de inventario con datos enriquecidos para mostrar nombres */
-type InventoryRow = CompartmentInventory & {
-  locker_code?: string;
-  compartment_name?: string;
-  product_name?: string;
-  product_sku?: string;
-};
+/** Helper: mostrar locker desde fila enriquecida o fallback */
+function rowLockerDisplay(r: CompartmentInventory): string {
+  return r.locker?.code ?? r.locker_code ?? r.locker_id ?? "—";
+}
+function rowCompartmentDisplay(r: CompartmentInventory): string {
+  return r.compartment?.code ?? r.compartment_name ?? r.compartment_code ?? r.compartment_id ?? "—";
+}
+function rowProductSku(r: CompartmentInventory): string {
+  return r.product?.sku ?? r.product_sku ?? r.product_id ?? "—";
+}
+function rowProductName(r: CompartmentInventory): string {
+  return r.product?.name ?? r.product_name ?? r.product_id ?? "—";
+}
+
+type InventoryRow = CompartmentInventory;
 
 const quantitySchema = z.object({
   quantity: z.coerce.number().int().min(1, "Indica al menos 1 unidad"),
@@ -78,7 +85,7 @@ const baseColumns = (
     header: "LOCKER",
     sortable: true,
     render: (r) => (
-      <span className="text-sm font-mono">{r.locker_code ?? r.locker_id ?? "—"}</span>
+      <span className="text-sm font-mono">{rowLockerDisplay(r)}</span>
     ),
   },
   {
@@ -86,7 +93,7 @@ const baseColumns = (
     header: "COMPARTIMENTO",
     sortable: true,
     render: (r) => (
-      <span className="text-sm">{r.compartment_name ?? r.compartment_code ?? r.compartment_id ?? "—"}</span>
+      <span className="text-sm">{rowCompartmentDisplay(r)}</span>
     ),
   },
   {
@@ -95,7 +102,7 @@ const baseColumns = (
     sortable: true,
     render: (r) => (
       <span className="font-mono text-xs text-muted-foreground">
-        {r.product_sku ?? r.product_id ?? "—"}
+        {rowProductSku(r)}
       </span>
     ),
   },
@@ -104,7 +111,7 @@ const baseColumns = (
     header: "PRODUCTO",
     sortable: true,
     render: (r) => (
-      <span className="text-sm">{r.product_name ?? r.product_id ?? "—"}</span>
+      <span className="text-sm">{rowProductName(r)}</span>
     ),
   },
   {
@@ -128,7 +135,7 @@ const baseColumns = (
           size="sm"
           className="h-8"
           onClick={() => onWithdraw(r)}
-          aria-label={`Retirar unidades de ${r.product_name ?? r.product_id}`}
+          aria-label={`Retirar unidades de ${rowProductName(r)}`}
         >
           Retirar
         </Button>
@@ -137,7 +144,7 @@ const baseColumns = (
           size="sm"
           className="h-8 w-8 p-0"
           onClick={() => onAdd(r)}
-          aria-label={`Añadir unidades de ${r.product_name ?? r.product_id}`}
+          aria-label={`Añadir unidades de ${rowProductName(r)}`}
         >
           <Plus className="h-3.5 w-3.5" />
         </Button>
@@ -147,7 +154,7 @@ const baseColumns = (
             size="sm"
             className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={() => onDelete(r)}
-            aria-label={`Eliminar entrada de ${r.product_name ?? r.product_id}`}
+            aria-label={`Eliminar entrada de ${rowProductName(r)}`}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
@@ -181,6 +188,13 @@ export default function InventoryPage() {
     isFetching: productsFetching,
   } = useProducts(clinicId, { activeOnly: false });
 
+  const newInventoryForm = useForm<NewInventoryForm>({
+    resolver: zodResolver(newInventorySchema),
+    defaultValues: { locker_id: "", compartment_id: "", product_id: "", quantity: 1 },
+  });
+  const selectedNewLockerId = newInventoryForm.watch("locker_id");
+  const { data: selectedLocker } = useLocker(selectedNewLockerId || null);
+
   const [adjustModal, setAdjustModal] = useState<{
     row: InventoryRow;
     mode: AdjustMode;
@@ -199,39 +213,17 @@ export default function InventoryPage() {
     defaultValues: { quantity: 1 },
   });
 
-  const newInventoryForm = useForm<NewInventoryForm>({
-    resolver: zodResolver(newInventorySchema),
-    defaultValues: { locker_id: "", compartment_id: "", product_id: "", quantity: 1 },
-  });
-  const selectedNewLockerId = newInventoryForm.watch("locker_id");
-
-  const compartmentQueries = useQueries({
-    queries: lockers.map((locker) => ({
-      queryKey: ["compartments", locker.id],
-      queryFn: () => fetchCompartmentsByLocker(locker.id),
-    })),
-  });
-
-  const records: InventoryRow[] = useMemo(() => {
-    const allCompartments = compartmentQueries.flatMap((q) => q.data ?? []);
-    const compartmentMap = new Map(allCompartments.map((c) => [c.id, c]));
-    const lockerMap = new Map(lockers.map((l) => [l.id, l]));
-    const productMap = new Map(products.map((p) => [p.id, p]));
-
-    return inventory.map((row) => {
-      const compartment = compartmentMap.get(row.compartment_id);
-      const locker = compartment ? lockerMap.get(compartment.locker_id) : undefined;
-      const product = productMap.get(row.product_id);
-      return {
-        ...row,
-        locker_id: compartment?.locker_id ?? row.locker_id,
-        locker_code: locker?.code ?? row.locker_code,
-        compartment_name: compartment?.code ?? row.compartment_name ?? row.compartment_code,
-        product_name: product?.name ?? row.product_name,
-        product_sku: product?.sku ?? row.product_sku,
-      };
-    });
-  }, [inventory, lockers, products, compartmentQueries]);
+  const records: InventoryRow[] = useMemo(
+    () =>
+      inventory.map((r) => ({
+        ...r,
+        product_name: rowProductName(r),
+        product_sku: rowProductSku(r),
+        locker_code: rowLockerDisplay(r),
+        compartment_name: rowCompartmentDisplay(r),
+      })),
+    [inventory]
+  );
 
   const addMutation = useMutation({
     mutationFn: (params: { compartment_id: string; product_id: string; quantity: number }) =>
@@ -275,12 +267,9 @@ export default function InventoryPage() {
   const activeLockers = useMemo(() => lockers.filter((l) => l.is_active), [lockers]);
   const activeProducts = useMemo(() => products.filter((p) => p.is_active), [products]);
   const compartmentsForNewLocker = useMemo(() => {
-    if (!selectedNewLockerId) return [];
-    const idx = lockers.findIndex((l) => l.id === selectedNewLockerId);
-    if (idx < 0) return [];
-    const list = compartmentQueries[idx]?.data ?? [];
+    const list = selectedLocker?.compartments ?? [];
     return list.filter((c) => c.status === "AVAILABLE" && c.is_active);
-  }, [lockers, selectedNewLockerId, compartmentQueries]);
+  }, [selectedLocker?.compartments]);
 
   const openAdjustModal = (row: InventoryRow, mode: AdjustMode) => {
     setAdjustModal({ row, mode });
@@ -351,15 +340,13 @@ export default function InventoryPage() {
     [canDeleteEntry]
   );
 
-  const compartmentsLoading = compartmentQueries.some((q) => q.isLoading || q.isFetching);
   const isLoading =
     inventoryLoading ||
     inventoryFetching ||
     lockersLoading ||
     lockersFetching ||
     productsLoading ||
-    productsFetching ||
-    compartmentsLoading;
+    productsFetching;
 
   const isAdd = adjustModal?.mode === "add";
 
@@ -417,12 +404,12 @@ export default function InventoryPage() {
                       ? "Indica cuántas unidades quieres añadir al inventario."
                       : "Indica cuántas unidades quieres retirar del stock disponible."}
                     {" "}
-                    Producto: <strong>{adjustModal.row.product_name ?? adjustModal.row.product_id}</strong>
+                    Producto: <strong>{rowProductName(adjustModal.row)}</strong>
                   </p>
                   <p className="text-muted-foreground text-sm">
-                    Locker: <strong className="text-foreground font-mono">{adjustModal.row.locker_code ?? adjustModal.row.locker_id ?? "—"}</strong>
+                    Locker: <strong className="text-foreground font-mono">{rowLockerDisplay(adjustModal.row)}</strong>
                     {" · "}
-                    Compartimento: <strong className="text-foreground font-mono">{adjustModal.row.compartment_name ?? adjustModal.row.compartment_code ?? adjustModal.row.compartment_id ?? "—"}</strong>
+                    Compartimento: <strong className="text-foreground font-mono">{rowCompartmentDisplay(adjustModal.row)}</strong>
                     {" · "}
                     Unidades actuales: <strong className="text-foreground">{adjustModal.row.qty_available}</strong>
                   </p>
@@ -610,10 +597,10 @@ export default function InventoryPage() {
                 <div className="space-y-2">
                   <p>
                     ¿Eliminar esta entrada? Se borrará la fila de inventario para{" "}
-                    <strong>{deleteConfirmRow.product_name ?? deleteConfirmRow.product_id}</strong> en{" "}
-                    <strong className="font-mono">{deleteConfirmRow.locker_code ?? deleteConfirmRow.locker_id}</strong>
+                    <strong>{rowProductName(deleteConfirmRow)}</strong> en{" "}
+                    <strong className="font-mono">{rowLockerDisplay(deleteConfirmRow)}</strong>
                     {" / "}
-                    <strong className="font-mono">{deleteConfirmRow.compartment_name ?? deleteConfirmRow.compartment_id}</strong>.
+                    <strong className="font-mono">{rowCompartmentDisplay(deleteConfirmRow)}</strong>.
                   </p>
                   <p className="text-foreground font-medium">
                     Cantidad actual: <strong>{deleteConfirmRow.qty_available}</strong> disponibles

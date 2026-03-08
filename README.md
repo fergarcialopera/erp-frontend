@@ -91,11 +91,16 @@ El cliente Axios (`src/lib/apiClient.ts`) añade estos headers y maneja:
 | POST | `/auth/logout` | Logout |
 | GET | `/clinic` | Clínica del usuario |
 | PATCH | `/clinic/settings` | Actualizar configuración clínica |
-| GET | `/inventory` | Inventario |
-| POST | `/inventory/adjust` | Ajustar inventario |
-| GET | `/open-orders` | Órdenes abiertas |
-| POST | `/open-orders` | Crear orden |
-| POST | `/open-orders/{id}/confirm-read` | Confirmar lectura |
+| GET | `/inventory` | Inventario (respuesta enriquecida: product, compartment, locker) |
+| POST | `/inventory/add` | Añadir inventario |
+| POST | `/inventory/remove` | Retirar inventario |
+| DELETE | `/inventory/{id}` | Eliminar entrada |
+| GET | `/orders` | Listado de órdenes (enriquecido: product, locker, compartment, requested_by) |
+| GET | `/orders/{id}` | Detalle de orden |
+| POST | `/orders` | Crear orden |
+| POST | `/orders/{id}/confirm-read` | Confirmar lectura |
+| GET | `/lockers/{id}` | Detalle de locker (incluye compartments[]) |
+| GET | `/dashboard` | Dashboard (latest_orders enriquecidos) |
 | GET | `/audit-logs` | Registro de auditoría |
 
 *Nota: `users`, `products`, `lockers`, `compartments` están en el frontend pero el backend Laravel actual no los expone; las pantallas devolverán 404 hasta que se implementen.*
@@ -103,7 +108,7 @@ El cliente Axios (`src/lib/apiClient.ts`) añade estos headers y maneja:
 ## Estructura principal de `/src`
 
 - `app/` — providers (Auth), rutas (Login, Dashboard, Products, etc.).
-- `features/` — por recurso: `auth`, `clinics`, `users`, `lockers`, `compartments`, `products`, `inventory`, `openOrders`, `auditLogs` (api + queries React Query).
+- `features/` — por recurso: `auth`, `clinics`, `users`, `lockers`, `compartments`, `products`, `inventory`, `openOrders` (orders API), `auditLogs` (api + queries React Query).
 - `components/` — UI compartida, DataTable, EmptyState, layouts, shadcn/ui.
 - `lib/` — apiClient, utils, hooks.
 - `types/` — modelos de dominio y auth.

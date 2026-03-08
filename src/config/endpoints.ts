@@ -42,7 +42,6 @@ export const ENDPOINTS = {
   USERS: resource("/users"),
   LOCKERS: resource("/lockers"),
   COMPARTMENTS: {
-    LIST_BY_LOCKER: (lockerId: string) => `/lockers/${lockerId}/compartments`,
     DETAIL: (id: string) => `/compartments/${id}`,
   },
   PRODUCTS: resource("/products"),
@@ -52,10 +51,11 @@ export const ENDPOINTS = {
     REMOVE: "/inventory/remove",
     DELETE: (id: string) => `/inventory/${id}`,
   },
-  OPEN_ORDERS: {
-    LIST: "/open-orders",
-    CREATE: "/open-orders",
-    CONFIRM_READ: (id: string) => `/open-orders/${id}/confirm-read`,
+  ORDERS: {
+    LIST: "/orders",
+    CREATE: "/orders",
+    DETAIL: (id: string) => `/orders/${id}`,
+    CONFIRM_READ: (id: string) => `/orders/${id}/confirm-read`,
   },
   AUDIT_LOGS: { LIST: "/audit-logs" },
 } as const;

@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { DataTable, Column } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { useCompartments } from "@/features/compartments/queries";
+import { useLocker } from "@/features/lockers/queries";
 import { ArrowLeft } from "lucide-react";
 import type { Compartment } from "@/types/models";
 
@@ -28,13 +28,14 @@ export default function LockerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const {
-    data: compartments = [],
-    isLoading: compartmentsLoading,
-    isFetching: compartmentsFetching,
+    data: locker,
+    isLoading: lockerLoading,
+    isFetching: lockerFetching,
     isError,
     refetch,
-  } = useCompartments(id ?? null);
-  const isLoading = compartmentsLoading || compartmentsFetching;
+  } = useLocker(id ?? null);
+  const compartments = locker?.compartments ?? [];
+  const isLoading = lockerLoading || lockerFetching;
 
   const availableCount = compartments.filter((c) => c.status === "AVAILABLE" && c.is_active).length;
   const maintenanceCount = compartments.filter((c) => c.status === "MAINTENANCE").length;
@@ -52,7 +53,7 @@ export default function LockerDetailPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="page-header mb-0">
-          <h2 className="page-title">Locker {id ?? "—"}</h2>
+          <h2 className="page-title">Locker {locker?.code ?? id ?? "—"}</h2>
           <p className="page-description">Compartimientos asignados</p>
         </div>
       </div>

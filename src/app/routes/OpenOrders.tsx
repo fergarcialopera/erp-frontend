@@ -5,26 +5,29 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/app/providers/useAuth";
 import { useOpenOrders } from "@/features/openOrders/queries";
-import { confirmReadOpenOrder } from "@/features/openOrders/api";
-import { useLockers } from "@/features/lockers/queries";
-import { useProducts } from "@/features/products/queries";
-import { useUsers } from "@/features/users/queries";
-import { fetchCompartmentsByLocker } from "@/features/compartments/api";
-import { useQueries } from "@tanstack/react-query";
+import { confirmReadOrder } from "@/features/openOrders/api";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
 import type { OpenOrder } from "@/types/models";
 
-/** Fila de orden con datos enriquecidos para mostrar nombres */
-type OpenOrderRow = OpenOrder & {
-  product_name?: string;
-  product_sku?: string;
-  requested_by_user_name?: string;
-  locker_name?: string;
-  locker_code?: string;
-  compartment_name?: string;
-  compartment_code?: string;
-};
+/** Helper: texto de producto desde order enriquecido o fallback */
+function orderProductSku(o: OpenOrder): string {
+  return o.product?.sku ?? o.product_sku ?? o.product_id ?? "—";
+}
+function orderProductName(o: OpenOrder): string {
+  return o.product?.name ?? o.product_name ?? o.product_id ?? "—";
+}
+function orderLockerDisplay(o: OpenOrder): string {
+  return o.locker?.code ?? o.locker_code ?? o.locker?.name ?? o.locker_name ?? o.locker_id ?? "—";
+}
+function orderCompartmentDisplay(o: OpenOrder): string {
+  return o.compartment?.code ?? o.compartment_code ?? o.compartment_name ?? o.compartment_id ?? "—";
+}
+function orderRequestedByDisplay(o: OpenOrder): string {
+  return o.requested_by?.name ?? o.requested_by_user_name ?? o.requested_by_user_id ?? "—";
+}
+
+type OpenOrderRow = OpenOrder;
 
 const baseColumns = (
   onConfirm: (order: OpenOrderRow) => void,
@@ -36,7 +39,7 @@ const baseColumns = (
     sortable: true,
     render: (o) => (
       <span className="font-mono text-xs text-muted-foreground">
-        {o.product_sku ?? o.product_id}
+        {orderProductSku(o)}
       </span>
     ),
   },
@@ -45,7 +48,7 @@ const baseColumns = (
     header: "PRODUCTO",
     sortable: true,
     render: (o) => (
-      <span className="text-sm">{o.product_name ?? o.product_id}</span>
+      <span className="text-sm">{orderProductName(o)}</span>
     ),
   },
   {
@@ -60,7 +63,7 @@ const baseColumns = (
     sortable: true,
     render: (o) => (
       <span className="text-sm font-mono">
-        {o.locker_code ?? o.locker_name ?? o.locker_id ?? "—"}
+        {orderLockerDisplay(o)}
       </span>
     ),
   },
@@ -70,7 +73,7 @@ const baseColumns = (
     sortable: true,
     render: (o) => (
       <span className="text-sm font-mono">
-        {o.compartment_code ?? o.compartment_name ?? o.compartment_id ?? "—"}
+        {orderCompartmentDisplay(o)}
       </span>
     ),
   },
@@ -85,7 +88,7 @@ const baseColumns = (
     header: "RESPONSABLE",
     sortable: true,
     render: (o) => (
-      <span className="text-sm">{o.requested_by_user_name ?? o.requested_by_user_id}</span>
+      <span className="text-sm">{orderRequestedByDisplay(o)}</span>
     ),
   },
   {
@@ -158,33 +161,11 @@ export default function OpenOrdersPage() {
     isError,
     refetch,
   } = useOpenOrders(clinicId);
-  const {
-    data: lockers = [],
-    isLoading: lockersLoading,
-    isFetching: lockersFetching,
-  } = useLockers(clinicId);
-  const {
-    data: products = [],
-    isLoading: productsLoading,
-    isFetching: productsFetching,
-  } = useProducts(clinicId, { activeOnly: false });
-  const {
-    data: users = [],
-    isLoading: usersLoading,
-    isFetching: usersFetching,
-  } = useUsers(clinicId);
-
-  const compartmentQueries = useQueries({
-    queries: lockers.map((locker) => ({
-      queryKey: ["compartments", locker.id],
-      queryFn: () => fetchCompartmentsByLocker(locker.id),
-    })),
-  });
 
   const confirmMutation = useMutation({
-    mutationFn: (id: string) => confirmReadOpenOrder(id),
+    mutationFn: (id: string) => confirmReadOrder(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["openOrders", clinicId] });
+      queryClient.invalidateQueries({ queryKey: ["orders", clinicId] });
       toast.success("Retirada confirmada", {
         description: "La orden se ha marcado como retirada correctamente.",
       });
@@ -205,43 +186,20 @@ export default function OpenOrdersPage() {
   );
 
   const records: OpenOrderRow[] = useMemo(() => {
-    const allCompartments = compartmentQueries.flatMap((q) => q.data ?? []);
-    const compartmentMap = new Map(allCompartments.map((c) => [c.id, c]));
-    const lockerMap = new Map(lockers.map((l) => [l.id, l]));
-    const productMap = new Map(products.map((p) => [p.id, p]));
-    const userMap = new Map(users.map((u) => [u.id, u]));
-    const enriched = orders.map((order) => {
-      const locker = lockerMap.get(order.locker_id);
-      const compartment = compartmentMap.get(order.compartment_id);
-      const product = productMap.get(order.product_id);
-      const user = userMap.get(order.requested_by_user_id);
-      return {
-        ...order,
-        locker_name: locker?.name ?? order.locker_name,
-        locker_code: locker?.code ?? order.locker_code,
-        compartment_name: compartment?.code ?? order.compartment_name ?? order.compartment_code,
-        compartment_code: compartment?.code ?? order.compartment_code,
-        product_name: product?.name ?? order.product_name,
-        product_sku: product?.sku ?? order.product_sku,
-        requested_by_user_name: user?.name ?? order.requested_by_user_name,
-      };
-    });
-    return [...enriched].sort(
+    const sorted = [...orders].sort(
       (a, b) => new Date(b.requested_at).getTime() - new Date(a.requested_at).getTime()
     );
-  }, [orders, lockers, products, users, compartmentQueries]);
+    return sorted.map((o) => ({
+      ...o,
+      product_name: orderProductName(o),
+      product_sku: orderProductSku(o),
+      locker_code: orderLockerDisplay(o),
+      compartment_code: orderCompartmentDisplay(o),
+      requested_by_user_name: orderRequestedByDisplay(o),
+    }));
+  }, [orders]);
 
-  const compartmentsLoading = compartmentQueries.some((q) => q.isLoading || q.isFetching);
-  const isLoading =
-    ordersLoading ||
-    ordersFetching ||
-    lockersLoading ||
-    lockersFetching ||
-    productsLoading ||
-    productsFetching ||
-    usersLoading ||
-    usersFetching ||
-    compartmentsLoading;
+  const isLoading = ordersLoading || ordersFetching;
 
   return (
     <div className="space-y-6">

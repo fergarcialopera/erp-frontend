@@ -15,8 +15,7 @@ import {
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/app/providers/useAuth";
-import { useLockers } from "@/features/lockers/queries";
-import { useCompartments } from "@/features/compartments/queries";
+import { useLockers, useLocker } from "@/features/lockers/queries";
 import { useProducts } from "@/features/products/queries";
 import { createOpenOrder } from "@/features/openOrders/api";
 import { useQueryClient } from "@tanstack/react-query";
@@ -50,8 +49,8 @@ export default function NewOpenOrderPage() {
   });
 
   const selectedLockerId = watch("locker_id");
-  const { data: compartments = [] } = useCompartments(selectedLockerId || null);
-
+  const { data: selectedLocker } = useLocker(selectedLockerId || null);
+  const compartments = selectedLocker?.compartments ?? [];
   const activeLockers = lockers.filter((l) => l.is_active);
   const availableCompartments = compartments.filter((c) => c.status === "AVAILABLE" && c.is_active);
   const activeProducts = products.filter((p) => p.is_active);
@@ -66,7 +65,7 @@ export default function NewOpenOrderPage() {
         meta: data.external_ref ? { external_ref: data.external_ref } : undefined,
       });
       toast.success("Orden creada", { description: "Reserva de stock procesada correctamente." });
-      queryClient.invalidateQueries({ queryKey: ["openOrders", clinicId] });
+      queryClient.invalidateQueries({ queryKey: ["orders", clinicId] });
       navigate("/open-orders", { replace: true });
     } catch {
       // Error ya mostrado por interceptor
