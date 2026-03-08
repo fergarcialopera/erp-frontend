@@ -109,6 +109,9 @@ export interface OpenOrder {
   product_sku?: string;
   requested_by_user_name?: string;
   locker_name?: string;
+  locker_code?: string;
+  compartment_name?: string;
+  compartment_code?: string;
 }
 
 /** Respuesta del endpoint GET /dashboard. */

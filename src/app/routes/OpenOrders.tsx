@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/app/providers/useAuth";
 import { useOpenOrders } from "@/features/openOrders/queries";
 import { confirmReadOpenOrder } from "@/features/openOrders/api";
+import { useLockers } from "@/features/lockers/queries";
 import { useProducts } from "@/features/products/queries";
 import { useUsers } from "@/features/users/queries";
+import { fetchCompartmentsByLocker } from "@/features/compartments/api";
+import { useQueries } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
 import type { OpenOrder } from "@/types/models";
@@ -17,6 +20,10 @@ type OpenOrderRow = OpenOrder & {
   product_name?: string;
   product_sku?: string;
   requested_by_user_name?: string;
+  locker_name?: string;
+  locker_code?: string;
+  compartment_name?: string;
+  compartment_code?: string;
 };
 
 const baseColumns = (
@@ -46,6 +53,26 @@ const baseColumns = (
     header: "Cantidad",
     sortable: true,
     render: (o) => <span className="tabular-nums">{o.quantity}</span>,
+  },
+  {
+    key: "locker_name",
+    header: "Locker",
+    sortable: true,
+    render: (o) => (
+      <span className="text-sm font-mono">
+        {o.locker_code ?? o.locker_name ?? o.locker_id ?? "—"}
+      </span>
+    ),
+  },
+  {
+    key: "compartment_name",
+    header: "Compartimento",
+    sortable: true,
+    render: (o) => (
+      <span className="text-sm font-mono">
+        {o.compartment_code ?? o.compartment_name ?? o.compartment_id ?? "—"}
+      </span>
+    ),
   },
   {
     key: "status",
@@ -132,8 +159,16 @@ export default function OpenOrdersPage() {
     refetch,
   } = useOpenOrders(clinicId);
   const isLoading = ordersLoading || ordersFetching;
+  const { data: lockers = [] } = useLockers(clinicId);
   const { data: products = [] } = useProducts(clinicId, { activeOnly: false });
   const { data: users = [] } = useUsers(clinicId);
+
+  const compartmentQueries = useQueries({
+    queries: lockers.map((locker) => ({
+      queryKey: ["compartments", locker.id],
+      queryFn: () => fetchCompartmentsByLocker(locker.id),
+    })),
+  });
 
   const confirmMutation = useMutation({
     mutationFn: (id: string) => confirmReadOpenOrder(id),
@@ -159,19 +194,31 @@ export default function OpenOrdersPage() {
   );
 
   const records: OpenOrderRow[] = useMemo(() => {
+    const allCompartments = compartmentQueries.flatMap((q) => q.data ?? []);
+    const compartmentMap = new Map(allCompartments.map((c) => [c.id, c]));
+    const lockerMap = new Map(lockers.map((l) => [l.id, l]));
     const productMap = new Map(products.map((p) => [p.id, p]));
     const userMap = new Map(users.map((u) => [u.id, u]));
-    return orders.map((order) => {
+    const enriched = orders.map((order) => {
+      const locker = lockerMap.get(order.locker_id);
+      const compartment = compartmentMap.get(order.compartment_id);
       const product = productMap.get(order.product_id);
       const user = userMap.get(order.requested_by_user_id);
       return {
         ...order,
+        locker_name: locker?.name ?? order.locker_name,
+        locker_code: locker?.code ?? order.locker_code,
+        compartment_name: compartment?.code ?? order.compartment_name ?? order.compartment_code,
+        compartment_code: compartment?.code ?? order.compartment_code,
         product_name: product?.name ?? order.product_name,
         product_sku: product?.sku ?? order.product_sku,
         requested_by_user_name: user?.name ?? order.requested_by_user_name,
       };
     });
-  }, [orders, products, users]);
+    return [...enriched].sort(
+      (a, b) => new Date(b.requested_at).getTime() - new Date(a.requested_at).getTime()
+    );
+  }, [orders, lockers, products, users, compartmentQueries]);
 
   return (
     <div className="space-y-6">
