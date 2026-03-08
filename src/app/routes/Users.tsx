@@ -26,8 +26,8 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/app/providers/useAuth";
 import { useUsers } from "@/features/users/queries";
-import { createUser } from "@/features/users/api";
-import { Plus } from "lucide-react";
+import { createUser, updateUser } from "@/features/users/api";
+import { Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { User, Role } from "@/types/models";
 
@@ -37,7 +37,7 @@ const roleStyles: Record<string, string> = {
   READONLY: "bg-muted text-muted-foreground border-border",
 };
 
-const columns: Column<User>[] = [
+const baseColumns: Column<User>[] = [
   { key: "name", header: "NOMBRE", sortable: true },
   {
     key: "email",
@@ -46,7 +46,7 @@ const columns: Column<User>[] = [
   },
   {
     key: "role",
-    header: "Rol",
+    header: "ROL",
     render: (u) => (
       <span
         className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium border ${roleStyles[u.role]}`}
@@ -70,15 +70,23 @@ const newUserSchema = z.object({
   is_active: z.boolean(),
 });
 
+const editUserSchema = z.object({
+  name: z.string().trim().min(1, "El nombre es obligatorio").max(255),
+  email: z.string().trim().email("Email no válido").max(255),
+  role: z.enum(["ADMIN", "RESPONSABLE", "READONLY"] as const),
+  is_active: z.boolean(),
+});
+
 type NewUserForm = z.infer<typeof newUserSchema>;
+type EditUserForm = z.infer<typeof editUserSchema>;
 
 const ROLES: Role[] = ["ADMIN", "RESPONSABLE", "READONLY"];
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
-  const { clinicId } = useAuth();
+  const { clinicId, can } = useAuth();
   const {
-    data: records,
+    data: records = [],
     isLoading: usersLoading,
     isFetching: usersFetching,
     isError,
@@ -86,6 +94,8 @@ export default function UsersPage() {
   } = useUsers(clinicId);
   const isLoading = usersLoading || usersFetching;
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const canEdit = can("ADMIN");
 
   const {
     register,
@@ -127,6 +137,68 @@ export default function UsersPage() {
 
   const isActive = watch("is_active");
 
+  const editForm = useForm<EditUserForm>({
+    resolver: zodResolver(editUserSchema),
+    defaultValues: { name: "", email: "", role: "READONLY", is_active: true },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: EditUserForm }) =>
+      updateUser(id, {
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        is_active: data.is_active,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users", clinicId] });
+      toast.success("Usuario actualizado", {
+        description: "Los cambios se han guardado correctamente.",
+      });
+      setEditingUser(null);
+    },
+  });
+
+  const openEditModal = (user: User) => {
+    setEditingUser(user);
+    editForm.reset({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      is_active: user.is_active,
+    });
+  };
+
+  const onEditSubmit = (data: EditUserForm) => {
+    if (editingUser) updateMutation.mutate({ id: editingUser.id, data });
+  };
+
+  const columns: Column<User>[] = [
+    ...baseColumns,
+    ...(canEdit
+      ? [
+          {
+            key: "actions",
+            header: "",
+            sortable: false,
+            render: (u) => (
+              <div className="flex items-center justify-end gap-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => openEditModal(u)}
+                  aria-label={`Editar ${u.name}`}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ),
+          } as Column<User>,
+        ]
+      : []),
+  ];
+
   return (
     <div className="space-y-6">
       <div className="page-header">
@@ -135,7 +207,7 @@ export default function UsersPage() {
       </div>
 
       <DataTable
-        data={records || []}
+        data={records}
         isLoading={isLoading}
         isError={isError}
         onRetry={() => refetch()}
@@ -243,6 +315,94 @@ export default function UsersPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar usuario</DialogTitle>
+            <DialogDescription>
+              Modifica los datos del usuario. La contraseña solo puede ser cambiada por el propio usuario.
+            </DialogDescription>
+          </DialogHeader>
+          {editingUser && (
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-user-name">Nombre</Label>
+                <Input
+                  id="edit-user-name"
+                  placeholder="Nombre completo"
+                  autoComplete="name"
+                  {...editForm.register("name")}
+                />
+                {editForm.formState.errors.name && (
+                  <p className="text-xs text-destructive">{editForm.formState.errors.name.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-user-email">Email</Label>
+                <Input
+                  id="edit-user-email"
+                  type="email"
+                  placeholder="usuario@ejemplo.com"
+                  autoComplete="email"
+                  {...editForm.register("email")}
+                />
+                {editForm.formState.errors.email && (
+                  <p className="text-xs text-destructive">{editForm.formState.errors.email.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Rol</Label>
+                <Select
+                  value={editForm.watch("role")}
+                  onValueChange={(value) => editForm.setValue("role", value as Role)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar rol" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROLES.map((role) => (
+                      <SelectItem key={role} value={role}>
+                        {role}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <Label htmlFor="edit-user-active">Usuario activo</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Si está desactivado, no podrá iniciar sesión.
+                  </p>
+                </div>
+                <Switch
+                  id="edit-user-active"
+                  checked={editForm.watch("is_active")}
+                  onCheckedChange={(checked) => editForm.setValue("is_active", checked)}
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditingUser(null)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={
+                    editForm.formState.isSubmitting || updateMutation.isPending
+                  }
+                >
+                  {updateMutation.isPending ? "Guardando…" : "Guardar"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </div>
