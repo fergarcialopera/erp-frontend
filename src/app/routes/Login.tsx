@@ -35,25 +35,38 @@ export default function LoginPage() {
       await login(data.email, data.password);
       navigate("/dashboard", { replace: true });
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
+      const errorWithResponse =
+        err && typeof err === "object" && "response" in err
+          ? (err as { response?: { status?: number; data?: Record<string, unknown> } })
+          : null;
+
+      const status = errorWithResponse?.response?.status;
+      const responseData = errorWithResponse?.response?.data;
+
+      // Mensajes amigables según status de la API
+      if (status === 404) {
+        setError("Usuario no encontrado");
         return;
       }
-      const data =
-        err && typeof err === "object" && "response" in err
-          ? (err as { response?: { data?: Record<string, unknown> } }).response?.data
-          : null;
+      if (status === 401) {
+        setError("Credenciales inválidas");
+        return;
+      }
+
       const msg =
-        typeof data?.message === "string"
-          ? data.message
-          : typeof data?.detail === "string"
-            ? data.detail
-            : Array.isArray(data?.detail)
-              ? (data.detail as { msg?: string }[]).map((d) => d.msg ?? String(d)).join(", ")
-              : typeof data?.error === "string"
-                ? data.error
-                : null;
-      setError(msg || "Credenciales inválidas");
+        typeof responseData?.message === "string"
+          ? responseData.message
+          : typeof responseData?.detail === "string"
+            ? responseData.detail
+            : Array.isArray(responseData?.detail)
+              ? (responseData.detail as { msg?: string }[]).map((d) => d.msg ?? String(d)).join(", ")
+              : typeof responseData?.error === "string"
+                ? responseData.error
+                : err instanceof Error
+                  ? err.message
+                  : null;
+
+      setError(msg || "Ocurrió un error al iniciar sesión. Inténtalo de nuevo.");
     }
   };
 
