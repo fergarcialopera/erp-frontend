@@ -165,7 +165,7 @@ export default function OpenOrdersPage() {
   const confirmMutation = useMutation({
     mutationFn: (id: string) => confirmReadOrder(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orders", clinicId] });
+      queryClient.invalidateQueries({ queryKey: ["dispenses", clinicId] });
       toast.success("Retirada confirmada", {
         description: "La orden se ha marcado como retirada correctamente.",
       });

@@ -3,8 +3,13 @@ import { unwrapData, unwrapList } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
 import { User } from "@/types/models";
 
-export const fetchUsers = async (): Promise<User[]> => {
-  const res = await apiClient.get(ENDPOINTS.USERS.LIST);
+export const fetchUsers = async (params?: {
+  active_only?: boolean;
+}): Promise<User[]> => {
+  const res = await apiClient.get(ENDPOINTS.USERS.LIST, {
+    params:
+      params?.active_only !== undefined ? { active_only: params.active_only } : undefined,
+  });
   return unwrapList<User>(res.data);
 };
 export const createUser = async (data: Partial<User>) => {

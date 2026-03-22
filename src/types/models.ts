@@ -98,7 +98,7 @@ export interface CompartmentInventory {
   product_sku?: string;
 }
 
-/** Order con relaciones enriquecidas (GET /orders, GET /orders/:id, dashboard latest_orders) */
+/** Dispensación / orden de retirada (GET /dispenses, GET /dispenses/:id, dashboard latest_dispenses) */
 export interface OpenOrder {
   id: string;
   clinic_id: string;
@@ -155,14 +155,12 @@ export interface PaginatedResponse<T> {
   per_page: number;
 }
 
-/** Filtros GET /api/v1/inventory */
+/** Filtros GET /api/v1/inventory (el backend acepta `compartment_id`) */
 export interface InventoryFilters {
-  locker_id?: string;
   compartment_id?: string;
-  product_id?: string;
 }
 
-/** Filtros GET /api/v1/orders */
+/** Filtros GET /api/v1/dispenses (`status`; `from`/`to` reservados para filtrado futuro en cliente) */
 export interface OpenOrderFilters {
   status?: OpenOrderStatus;
   from?: string;

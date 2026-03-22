@@ -3,8 +3,13 @@ import { unwrapData, unwrapList } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
 import { Locker } from "@/types/models";
 
-export const fetchLockers = async (): Promise<Locker[]> => {
-  const res = await apiClient.get(ENDPOINTS.LOCKERS.LIST);
+export const fetchLockers = async (params?: {
+  active_only?: boolean;
+}): Promise<Locker[]> => {
+  const res = await apiClient.get(ENDPOINTS.LOCKERS.LIST, {
+    params:
+      params?.active_only !== undefined ? { active_only: params.active_only } : undefined,
+  });
   return unwrapList<Locker>(res.data);
 };
 

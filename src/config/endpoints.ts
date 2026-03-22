@@ -20,11 +20,14 @@ const resource = (base: string) =>
     DETAIL: (id: string) => `${base}/${id}`,
   }) as const;
 
-/** Path del spec OpenAPI (JSON). El backend sirve la documentación en este path. */
+/** Path del spec OpenAPI (JSON) en el servidor Laravel (raíz de la app, no bajo `/api/v1`). */
 export const API_DOCS_PATH = "/api-docs.json";
 
-/** URL absoluta del spec (misma base que apiClient). */
-export const getApiDocsUrl = () => buildUrl(API_DOCS_PATH.replace(/^\//, ""));
+/** URL absoluta del spec OpenAPI (documentación en la raíz del backend, ver `lock-erp/routes/web.php`). */
+export const getApiDocsUrl = () => {
+  const base = API_BASE_URL.trim() || "http://localhost:8000";
+  return `${base.replace(/\/$/, "")}${API_DOCS_PATH}`;
+};
 
 /** Paths relativos al baseURL del apiClient. Alineados con el backend Laravel (prefix v1). */
 export const ENDPOINTS = {
@@ -47,15 +50,16 @@ export const ENDPOINTS = {
   PRODUCTS: resource("/products"),
   INVENTORY: {
     LIST: "/inventory",
+    ADJUST: "/inventory/adjust",
     ADD: "/inventory/add",
     REMOVE: "/inventory/remove",
     DELETE: (id: string) => `/inventory/${id}`,
   },
-  ORDERS: {
-    LIST: "/orders",
-    CREATE: "/orders",
-    DETAIL: (id: string) => `/orders/${id}`,
-    CONFIRM_READ: (id: string) => `/orders/${id}/confirm-read`,
+  /** Dispensaciones (listado/detalle/confirm-read); la creación es vía POST /inventory/remove. */
+  DISPENSES: {
+    LIST: "/dispenses",
+    DETAIL: (id: string) => `/dispenses/${id}`,
+    CONFIRM_READ: (id: string) => `/dispenses/${id}/confirm-read`,
   },
   AUDIT_LOGS: { LIST: "/audit-logs" },
 } as const;

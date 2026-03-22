@@ -245,6 +245,7 @@ export default function InventoryPage() {
       removeInventory(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["inventory", clinicId] });
+      queryClient.invalidateQueries({ queryKey: ["dispenses", clinicId] });
       toast.success("Unidades retiradas", {
         description: "El stock disponible se ha actualizado.",
       });

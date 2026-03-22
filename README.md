@@ -85,30 +85,31 @@ El cliente Axios (`src/lib/apiClient.ts`) añade estos headers y maneja:
 
 ### Rutas del backend Laravel (prefix `v1`)
 
+Contrato detallado: OpenAPI en `{backend}/api-docs.json` (proyecto `lock-erp`, `docs/openapi.yaml`).
+
 | Método | Ruta | Uso |
 |--------|------|-----|
 | POST | `/auth/login` | Login |
 | POST | `/auth/logout` | Logout |
 | GET | `/clinic` | Clínica del usuario |
 | PATCH | `/clinic/settings` | Actualizar configuración clínica |
-| GET | `/inventory` | Inventario (respuesta enriquecida: product, compartment, locker) |
-| POST | `/inventory/add` | Añadir inventario |
-| POST | `/inventory/remove` | Retirar inventario |
+| GET | `/dashboard` | Dashboard (`pending_dispenses_count`, `latest_dispenses`, …) |
+| GET | `/inventory` | Inventario enriquecido (query opcional `compartment_id`) |
+| POST | `/inventory/adjust` | Ajustar `qty_available` |
+| POST | `/inventory/add` | Añadir unidades |
+| POST | `/inventory/remove` | Retirar unidades y **crear dispensación** (PENDING) |
 | DELETE | `/inventory/{id}` | Eliminar entrada |
-| GET | `/orders` | Listado de órdenes (enriquecido: product, locker, compartment, requested_by) |
-| GET | `/orders/{id}` | Detalle de orden |
-| POST | `/orders` | Crear orden |
-| POST | `/orders/{id}/confirm-read` | Confirmar lectura |
-| GET | `/lockers/{id}` | Detalle de locker (incluye compartments[]) |
-| GET | `/dashboard` | Dashboard (latest_orders enriquecidos) |
-| GET | `/audit-logs` | Registro de auditoría |
+| GET | `/dispenses` | Listado dispensaciones (query opcional `status`) |
+| GET | `/dispenses/{id}` | Detalle dispensación |
+| POST | `/dispenses/{id}/confirm-read` | Confirmar lectura / retiro |
+| GET/POST/PATCH/DELETE | `/products`, `/users`, `/lockers`, `/compartments` | CRUD según OpenAPI |
 
-*Nota: `users`, `products`, `lockers`, `compartments` están en el frontend pero el backend Laravel actual no los expone; las pantallas devolverán 404 hasta que se implementen.*
+*La pantalla “Nueva orden” solicita retirada vía `POST /inventory/remove` (no existe `POST /dispenses`).*
 
 ## Estructura principal de `/src`
 
 - `app/` — providers (Auth), rutas (Login, Dashboard, Products, etc.).
-- `features/` — por recurso: `auth`, `clinics`, `users`, `lockers`, `compartments`, `products`, `inventory`, `openOrders` (orders API), `auditLogs` (api + queries React Query).
+- `features/` — por recurso: `auth`, `clinics`, `users`, `lockers`, `compartments`, `products`, `inventory`, `openOrders` (dispensaciones + alta vía `inventory/remove`), `auditLogs`.
 - `components/` — UI compartida, DataTable, EmptyState, layouts, shadcn/ui.
 - `lib/` — apiClient, utils, hooks.
 - `types/` — modelos de dominio y auth.

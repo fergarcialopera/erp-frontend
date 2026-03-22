@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import type { AuditLogFilters } from "@/types/models";
 import { fetchAuditLogs } from "./api";
 
-export const useAuditLogs = (clinicId: string | null, filters?: AuditLogFilters) => {
+export const useAuditLogs = (clinicId: string | null) => {
   return useQuery({
-    queryKey: ["auditLogs", clinicId, filters],
-    queryFn: () => fetchAuditLogs(filters),
+    queryKey: ["auditLogs", clinicId],
+    queryFn: () => fetchAuditLogs(),
     enabled: !!clinicId,
   });
 };

@@ -57,15 +57,14 @@ export default function NewOpenOrderPage() {
 
   const onSubmit = async (data: OrderForm) => {
     try {
-      const order = await createOpenOrder({
-        locker_id: data.locker_id,
+      await createOpenOrder({
         compartment_id: data.compartment_id,
         product_id: data.product_id,
         quantity: data.quantity,
-        meta: data.external_ref ? { external_ref: data.external_ref } : undefined,
       });
       toast.success("Orden creada", { description: "Reserva de stock procesada correctamente." });
-      queryClient.invalidateQueries({ queryKey: ["orders", clinicId] });
+      queryClient.invalidateQueries({ queryKey: ["dispenses", clinicId] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard", clinicId] });
       navigate("/open-orders", { replace: true });
     } catch {
       // Error ya mostrado por interceptor

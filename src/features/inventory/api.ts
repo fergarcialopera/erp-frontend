@@ -6,7 +6,11 @@ import type { CompartmentInventory, InventoryFilters } from "@/types/models";
 export const fetchInventory = async (
   filters?: InventoryFilters,
 ): Promise<CompartmentInventory[]> => {
-  const res = await apiClient.get(ENDPOINTS.INVENTORY.LIST, { params: filters });
+  const params =
+    filters?.compartment_id != null && filters.compartment_id !== ""
+      ? { compartment_id: filters.compartment_id }
+      : undefined;
+  const res = await apiClient.get(ENDPOINTS.INVENTORY.LIST, { params });
   return unwrapList<CompartmentInventory>(res.data);
 };
 
