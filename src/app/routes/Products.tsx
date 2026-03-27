@@ -74,7 +74,7 @@ export default function ProductsPage() {
     refetch,
   } = useProducts(clinicId, { activeOnly: false });
   const isLoading = productsLoading || productsFetching;
-  const canEdit = can("RESPONSABLE");
+  const canEdit = can("TECHNICIAN");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 

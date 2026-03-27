@@ -1,4 +1,4 @@
-import { OpenOrderStatus, CompartmentStatus } from "@/types/models";
+import { CompartmentStatus } from "@/types/models";
 import { cn } from "@/lib/utils";
 
 type BadgeVariant =
@@ -20,12 +20,6 @@ const variants: Record<BadgeVariant, string> = {
   inactive: "bg-muted/50 text-muted-foreground/70 border-border/50",
 };
 
-const orderStatusMap: Record<OpenOrderStatus, BadgeVariant> = {
-  PENDING: "pending",
-  RETIRED: "retired",
-  CANCELLED: "cancelled",
-};
-
 const compartmentStatusMap: Record<CompartmentStatus, BadgeVariant> = {
   AVAILABLE: "available",
   MAINTENANCE: "maintenance",
@@ -33,16 +27,14 @@ const compartmentStatusMap: Record<CompartmentStatus, BadgeVariant> = {
 
 interface StatusBadgeProps {
   status: string;
-  type?: "order" | "compartment" | "active";
+  type?: "compartment" | "active";
   className?: string;
 }
 
-export function StatusBadge({ status, type = "order", className }: StatusBadgeProps) {
+export function StatusBadge({ status, type = "compartment", className }: StatusBadgeProps) {
   let variant: BadgeVariant;
 
-  if (type === "order") {
-    variant = orderStatusMap[status as OpenOrderStatus] || "retired";
-  } else if (type === "compartment") {
+  if (type === "compartment") {
     variant = compartmentStatusMap[status as CompartmentStatus] || "retired";
   } else {
     variant =

@@ -1,5 +1,5 @@
 /**
- * Helpers para adaptar las respuestas del API al formato documentado en /api-docs.json.
+ * Helpers para adaptar las respuestas del API al formato documentado en /docs.
  * El spec (OpenAPI/YAML) suele definir respuestas con envelope { data: T } o { data: T[], meta?, links? }.
  */
 

@@ -1,8 +1,6 @@
-export type Role = "ADMIN" | "RESPONSABLE" | "READONLY";
+export type Role = "ADMIN" | "TECHNICIAN" | "STAFF";
 
 export type CompartmentStatus = "AVAILABLE" | "MAINTENANCE";
-
-export type OpenOrderStatus = "PENDING" | "RETIRED" | "CANCELLED";
 
 export type ActorType = "USER" | "SYSTEM";
 
@@ -38,13 +36,18 @@ export interface UserApiResponse {
 }
 
 /** Convierte la respuesta del API al modelo User (solo campos usados en la app). */
+function normalizeRole(role: unknown): Role {
+  if (role === "ADMIN" || role === "TECHNICIAN" || role === "STAFF") return role;
+  return "STAFF";
+}
+
 export function mapUserFromApiResponse(data: Partial<UserApiResponse>): User {
   return {
     id: String(data.id ?? ""),
     clinic_id: String(data.clinic_id ?? ""),
     name: String(data.name ?? ""),
     email: String(data.email ?? ""),
-    role: (data.role as Role) ?? "READONLY",
+    role: normalizeRole(data.role),
     is_active: data.is_active !== false,
   };
 }
@@ -98,42 +101,47 @@ export interface CompartmentInventory {
   product_sku?: string;
 }
 
-/** Dispensación / orden de retirada (GET /dispenses, GET /dispenses/:id, dashboard latest_dispenses) */
-export interface OpenOrder {
+export interface EntryLog {
   id: string;
   clinic_id: string;
-  requested_by_user_id: string;
-  locker_id: string;
-  compartment_id: string;
-  product_id: string;
+  sku: string;
+  name?: string;
   quantity: number;
-  status: OpenOrderStatus;
-  requested_at: string;
-  read_at?: string;
-  external_ref: string;
-  meta?: Record<string, unknown>;
-  /** Objetos enriquecidos desde el API */
-  product?: Product;
-  locker?: Locker;
-  compartment?: Compartment;
-  requested_by?: User;
-  /** Fallbacks planos (legacy o cuando no vienen embebidos) */
+  note?: string;
+  created_at?: string;
+}
+
+export interface ExitLog {
+  id: string;
+  clinic_id: string;
+  sku: string;
+  quantity: number;
+  note?: string;
+  created_at?: string;
+  requested_by_user_id?: string;
+  locker_id?: string;
+  compartment_id?: string;
+  product_id?: string;
   product_name?: string;
   product_sku?: string;
-  requested_by_user_name?: string;
   locker_name?: string;
   locker_code?: string;
   compartment_name?: string;
   compartment_code?: string;
+  requested_by_user_name?: string;
+  requested_by?: User;
+  product?: Product;
+  locker?: Locker;
+  compartment?: Compartment;
 }
 
-/** Respuesta del endpoint GET /dashboard. */
+/** Datos agregados para la vista de dashboard. */
 export interface DashboardData {
   active_products_count: number;
   available_lockers_count: number;
-  pending_orders_count: number;
+  pending_exits_count: number;
   has_low_stock: boolean;
-  latest_orders: OpenOrder[];
+  latest_exits: ExitLog[];
 }
 
 export interface AuditLog {
@@ -153,18 +161,6 @@ export interface PaginatedResponse<T> {
   total: number;
   page: number;
   per_page: number;
-}
-
-/** Filtros GET /api/v1/inventory (el backend acepta `compartment_id`) */
-export interface InventoryFilters {
-  compartment_id?: string;
-}
-
-/** Filtros GET /api/v1/dispenses (`status`; `from`/`to` reservados para filtrado futuro en cliente) */
-export interface OpenOrderFilters {
-  status?: OpenOrderStatus;
-  from?: string;
-  to?: string;
 }
 
 /** Filtros GET /api/v1/audit-logs */

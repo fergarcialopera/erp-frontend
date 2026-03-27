@@ -20,20 +20,8 @@ const resource = (base: string) =>
     DETAIL: (id: string) => `${base}/${id}`,
   }) as const;
 
-/** Path del spec OpenAPI (JSON) en el servidor Laravel (raíz de la app, no bajo `/api/v1`). */
-export const API_DOCS_PATH = "/api-docs.json";
-
-/** URL absoluta del spec OpenAPI (documentación en la raíz del backend, ver `lock-erp/routes/web.php`). */
-export const getApiDocsUrl = () => {
-  const base = API_BASE_URL.trim() || "http://localhost:8000";
-  return `${base.replace(/\/$/, "")}${API_DOCS_PATH}`;
-};
-
 /** Paths relativos al baseURL del apiClient. Alineados con el backend Laravel (prefix v1). */
 export const ENDPOINTS = {
-  DASHBOARD: {
-    GET: "/dashboard",
-  },
   AUTH: {
     LOGIN: "/auth/login",
     LOGOUT: "/auth/logout",
@@ -50,16 +38,16 @@ export const ENDPOINTS = {
   PRODUCTS: resource("/products"),
   INVENTORY: {
     LIST: "/inventory",
-    ADJUST: "/inventory/adjust",
-    ADD: "/inventory/add",
-    REMOVE: "/inventory/remove",
-    DELETE: (id: string) => `/inventory/${id}`,
   },
-  /** Dispensaciones (listado/detalle/confirm-read); la creación es vía POST /inventory/remove. */
-  DISPENSES: {
-    LIST: "/dispenses",
-    DETAIL: (id: string) => `/dispenses/${id}`,
-    CONFIRM_READ: (id: string) => `/dispenses/${id}/confirm-read`,
+  /** Registro de entradas de stock (backend v2). */
+  ENTRY_LOGS: {
+    LIST: "/entry-logs",
+    CREATE: "/entry-logs",
+  },
+  /** Registro de salidas de stock (backend v2). */
+  EXIT_LOGS: {
+    LIST: "/exit-logs",
+    CREATE: "/exit-logs",
   },
   AUDIT_LOGS: { LIST: "/audit-logs" },
 } as const;

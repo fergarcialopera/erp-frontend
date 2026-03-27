@@ -3,9 +3,9 @@ import { unwrapData, unwrapList } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
 import { Product } from "@/types/models";
 
-export const fetchProducts = async (params?: { active_only?: boolean }): Promise<Product[]> => {
+export const fetchProducts = async (params?: { active?: boolean }): Promise<Product[]> => {
   const res = await apiClient.get(ENDPOINTS.PRODUCTS.LIST, {
-    params: params?.active_only !== undefined ? { active_only: params.active_only } : undefined,
+    params: params?.active !== undefined ? { active: params.active } : undefined,
   });
   return unwrapList<Product>(res.data);
 };

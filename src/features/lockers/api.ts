@@ -4,11 +4,11 @@ import { ENDPOINTS } from "@/config/endpoints";
 import { Locker } from "@/types/models";
 
 export const fetchLockers = async (params?: {
-  active_only?: boolean;
+  active?: boolean;
 }): Promise<Locker[]> => {
   const res = await apiClient.get(ENDPOINTS.LOCKERS.LIST, {
     params:
-      params?.active_only !== undefined ? { active_only: params.active_only } : undefined,
+      params?.active !== undefined ? { active: params.active } : undefined,
   });
   return unwrapList<Locker>(res.data);
 };

@@ -21,8 +21,8 @@ export interface AuthState {
 
 export const ROLE_HIERARCHY: Record<Role, number> = {
   ADMIN: 3,
-  RESPONSABLE: 2,
-  READONLY: 1,
+  TECHNICIAN: 2,
+  STAFF: 1,
 };
 
 export function hasPermission(userRole: Role, requiredRole: Role): boolean {

@@ -31,7 +31,7 @@ import { Separator } from "@/components/ui/separator";
 const mainNav = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Inventario", url: "/inventory", icon: Warehouse },
-  { title: "Órdenes de retirada", url: "/open-orders", icon: ClipboardList },
+  { title: "Salidas de stock", url: "/exit-logs", icon: ClipboardList },
 ];
 
 const adminNav = [

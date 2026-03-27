@@ -33,8 +33,8 @@ import { User, Role } from "@/types/models";
 
 const roleStyles: Record<string, string> = {
   ADMIN: "bg-accent/15 text-accent border-accent/25",
-  RESPONSABLE: "bg-soft/30 text-soft-foreground border-soft/40",
-  READONLY: "bg-muted text-muted-foreground border-border",
+  TECHNICIAN: "bg-soft/30 text-soft-foreground border-soft/40",
+  STAFF: "bg-muted text-muted-foreground border-border",
 };
 
 const baseColumns: Column<User>[] = [
@@ -66,21 +66,21 @@ const newUserSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio").max(255),
   email: z.string().trim().email("Email no válido").max(255),
   password: z.string().min(6, "Mínimo 6 caracteres").max(128),
-  role: z.enum(["ADMIN", "RESPONSABLE", "READONLY"] as const),
+  role: z.enum(["ADMIN", "TECHNICIAN", "STAFF"] as const),
   is_active: z.boolean(),
 });
 
 const editUserSchema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio").max(255),
   email: z.string().trim().email("Email no válido").max(255),
-  role: z.enum(["ADMIN", "RESPONSABLE", "READONLY"] as const),
+  role: z.enum(["ADMIN", "TECHNICIAN", "STAFF"] as const),
   is_active: z.boolean(),
 });
 
 type NewUserForm = z.infer<typeof newUserSchema>;
 type EditUserForm = z.infer<typeof editUserSchema>;
 
-const ROLES: Role[] = ["ADMIN", "RESPONSABLE", "READONLY"];
+const ROLES: Role[] = ["ADMIN", "TECHNICIAN", "STAFF"];
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
@@ -106,7 +106,7 @@ export default function UsersPage() {
     watch,
   } = useForm<NewUserForm>({
     resolver: zodResolver(newUserSchema),
-    defaultValues: { role: "READONLY", is_active: true },
+    defaultValues: { role: "STAFF", is_active: true },
   });
 
   const createMutation = useMutation({
@@ -121,7 +121,7 @@ export default function UsersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users", clinicId] });
       toast.success("Usuario creado", { description: "El usuario se ha registrado correctamente." });
-      reset({ name: "", email: "", password: "", role: "READONLY", is_active: true });
+      reset({ name: "", email: "", password: "", role: "STAFF", is_active: true });
       setModalOpen(false);
     },
   });
@@ -131,7 +131,7 @@ export default function UsersPage() {
   };
 
   const openModal = () => {
-    reset({ name: "", email: "", password: "", role: "READONLY", is_active: true });
+    reset({ name: "", email: "", password: "", role: "STAFF", is_active: true });
     setModalOpen(true);
   };
 
@@ -139,7 +139,7 @@ export default function UsersPage() {
 
   const editForm = useForm<EditUserForm>({
     resolver: zodResolver(editUserSchema),
-    defaultValues: { name: "", email: "", role: "READONLY", is_active: true },
+    defaultValues: { name: "", email: "", role: "STAFF", is_active: true },
   });
 
   const updateMutation = useMutation({

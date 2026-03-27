@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import type { InventoryFilters } from "@/types/models";
 import { fetchInventory } from "./api";
 
-export const useInventory = (clinicId: string | null, filters?: InventoryFilters) => {
+export const useInventory = (clinicId: string | null) => {
   return useQuery({
-    queryKey: ["inventory", clinicId, filters],
-    queryFn: () => fetchInventory(filters),
+    queryKey: ["inventory", clinicId],
+    queryFn: fetchInventory,
     enabled: !!clinicId,
   });
 };

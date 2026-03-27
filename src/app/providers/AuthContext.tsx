@@ -31,6 +31,11 @@ function getNameFromJwtPayload(payload: Record<string, unknown>): string {
   return "";
 }
 
+function normalizeRole(role: unknown): Role {
+  if (role === "ADMIN" || role === "TECHNICIAN" || role === "STAFF") return role;
+  return "STAFF";
+}
+
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void | Promise<void>;
@@ -87,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clinic_id: (resUser.clinic_id as string) ?? (jwtPayload.clinic_id as string),
         name: (resUser.name as string) ?? getNameFromJwtPayload(jwtPayload),
         email: resUser.email as string,
-        role: (resUser.role as Role) ?? (jwtPayload.role as Role),
+        role: normalizeRole(resUser.role ?? jwtPayload.role),
         is_active: resUser.is_active as boolean,
       });
     } else {
@@ -98,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clinic_id: String(jwtPayload.clinic_id ?? ""),
         name: displayName || String(jwtPayload.email ?? ""),
         email: String(jwtPayload.email ?? ""),
-        role: (jwtPayload.role as Role) ?? "READONLY",
+        role: normalizeRole(jwtPayload.role),
         is_active: true,
       };
     }

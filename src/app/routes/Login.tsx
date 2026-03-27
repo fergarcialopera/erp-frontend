@@ -70,23 +70,6 @@ export default function LoginPage() {
     }
   };
 
-  // Demo: allow quick access with mock auth
-  const handleDemoLogin = () => {
-    // Set demo user in localStorage directly
-    const demoUser = {
-      id: "demo-001",
-      clinic_id: "clinic-001",
-      name: "Admin Demo",
-      email: "admin@demo.com",
-      role: "ADMIN" as const,
-      is_active: true,
-    };
-    localStorage.setItem("auth_token", "demo-token");
-    localStorage.setItem("clinic_id", "clinic-001");
-    localStorage.setItem("auth_user", JSON.stringify(demoUser));
-    window.location.href = "/dashboard";
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm animate-fade-in">
@@ -144,11 +127,6 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-4 pt-4 border-t">
-            <Button variant="outline" className="w-full text-xs" onClick={handleDemoLogin}>
-              Acceso demo (Admin)
-            </Button>
-          </div>
         </div>
 
         <p className="text-center text-[11px] text-muted-foreground mt-6">

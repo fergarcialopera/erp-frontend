@@ -12,8 +12,9 @@ import ProductsPage from "@/app/routes/Products";
 import InventoryPage from "@/app/routes/Inventory";
 import LockersPage from "@/app/routes/Lockers";
 import LockerDetailPage from "@/app/routes/LockerDetail";
-import OpenOrdersPage from "@/app/routes/OpenOrders";
-import NewOpenOrderPage from "@/app/routes/NewOpenOrder";
+import ExitLogsPage from "@/app/routes/ExitLogs";
+import NewExitLogPage from "@/app/routes/NewExitLog";
+import NewEntryLogPage from "@/app/routes/NewEntryLog";
 import UsersPage from "@/app/routes/Users";
 import AuditLogsPage from "@/app/routes/AuditLogs";
 import NotFound from "@/app/routes/NotFound";
@@ -58,7 +59,7 @@ const App = () => (
               <Route
                 path="/inventory"
                 element={
-                  <ProtectedRoute requiredRole="RESPONSABLE">
+                  <ProtectedRoute requiredRole="TECHNICIAN">
                     <InventoryPage />
                   </ProtectedRoute>
                 }
@@ -79,12 +80,20 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-              <Route path="/open-orders" element={<OpenOrdersPage />} />
+              <Route path="/exit-logs" element={<ExitLogsPage />} />
               <Route
-                path="/open-orders/new"
+                path="/exit-logs/new"
                 element={
-                  <ProtectedRoute requiredRole="RESPONSABLE">
-                    <NewOpenOrderPage />
+                  <ProtectedRoute requiredRole="TECHNICIAN">
+                    <NewExitLogPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/entry-logs/new"
+                element={
+                  <ProtectedRoute requiredRole="TECHNICIAN">
+                    <NewEntryLogPage />
                   </ProtectedRoute>
                 }
               />

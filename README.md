@@ -1,137 +1,165 @@
-# LockERP — ERP MVP (Frontend)
+# LockERP Frontend
 
-Frontend del ERP (MVP) para clínicas con lockers y compartimentos. Multi-tenant por `clinic_id`. Backoffice para administradores y responsables; rol de solo lectura (READONLY) para consulta.
+Aplicación frontend para gestión de inventario clínico con lockers.
 
-## Requisitos
+---
 
-- **Node.js** 18+ y **npm**
-- Backend API (opcional para desarrollo: la UI maneja errores y estados vacíos si la API no está disponible)
+## 1) Requisitos previos (instalaciones recomendadas)
 
-## Variables de entorno
+Antes de empezar, asegúrate de tener instalado:
 
-Crea un archivo `.env` en la raíz (o `.env.local`):
+- `Git` (para clonar el repositorio)
+- `Node.js` **18 o superior** (recomendado: versión LTS)
+- `npm` (viene con Node.js)
+- Un editor como **VS Code** o **Cursor**
 
-| Variable                 | Descripción                          | Por defecto   |
-|--------------------------|--------------------------------------|---------------|
-| `VITE_API_BASE_URL`      | URL base del backend (sin basepath)  | Proxy / `localhost:8000` |
-| `VITE_API_BASEPATH`      | BasePath de la API (ej. `/api/v1`)   | `/api/v1`     |
-| `VITE_LOGIN_FORMAT`      | `json` o `form` (form-urlencoded)    | `json`        |
-| `VITE_LOGIN_USER_FIELD`  | `email` o `username`                 | `email`       |
+### Comprobar que todo está instalado
 
-Ejemplo:
+En terminal:
+
+```bash
+git --version
+node -v
+npm -v
+```
+
+Si alguno falla, instálalo antes de continuar.
+
+---
+
+## 2) Arquitectura local (muy importante)
+
+- **Backend API:** `http://localhost:8080`
+- **Frontend (Vite):** `http://localhost:8081`
+
+No uses el mismo puerto para backend y frontend.
+
+---
+
+## 3) Instalación del proyecto
+
+```bash
+npm install
+```
+
+Este comando descarga todas las dependencias del frontend.
+
+---
+
+## 4) Configuración de entorno
+
+Crea un archivo `.env.local` en la raíz del proyecto (puedes copiar desde `.env.example`).
+
+Ejemplo mínimo recomendado:
 
 ```env
-VITE_API_BASE_URL=http://localhost:8000
-# Si el backend espera form-urlencoded con "username":
+VITE_API_BASE_URL=http://localhost:8080
+VITE_API_BASEPATH=/api/v1
+```
+
+Opcionales de login (solo si tu backend lo requiere):
+
+```env
 # VITE_LOGIN_FORMAT=form
 # VITE_LOGIN_USER_FIELD=username
 ```
 
-- **En desarrollo sin `.env`**: las peticiones van al mismo origen (`/api/v1/...`) y Vite las reenvía al backend vía proxy. El backend debe estar en `http://localhost:8000`.
-- **Con `.env` o en producción**: las peticiones van directamente a `VITE_API_BASE_URL/api/v1/...`.
+---
 
-**Importante**: El backend debe exponer las rutas que usa el frontend. Si ves errores como "The route api/v1/products could not be found", el backend no tiene esa ruta registrada. Ver tabla de rutas esperadas más abajo.
-
-### Login: formato del body
-
-Por defecto el frontend envía JSON: `{ "email": "...", "password": "..." }` con `Content-Type: application/json`.
-
-Si en Postman el login funciona con otro formato, ajusta en `.env`:
-- **Form-urlencoded** (FastAPI OAuth2, etc.): `VITE_LOGIN_FORMAT=form`
-- **Campo "username" en vez de "email"**: `VITE_LOGIN_USER_FIELD=username`
-
-## Comandos
+## 5) Arranque en desarrollo
 
 ```bash
-# Instalar dependencias
-npm install
+npm run dev
+```
 
-# Desarrollo (puerto 8080)
+Después abre:
+
+- [http://localhost:8081](http://localhost:8081)
+
+---
+
+## 6) Flujo recomendado para levantar todo
+
+1. Levanta primero el backend en `8080`.
+2. Levanta el frontend con `npm run dev`.
+3. Abre `http://localhost:8081`.
+4. Inicia sesión con un usuario real del backend.
+
+---
+
+## 7) Scripts útiles
+
+```bash
+# Desarrollo
 npm run dev
 
 # Build de producción
 npm run build
 
-# Vista previa del build
-npm run preview
+---
 
-# Lint
-npm run lint
-npm run lint:fix
+## 8) Variables de entorno disponibles
 
-# Formatear código (Prettier)
-npm run format
-npm run format:check
+| Variable | Descripción | Valor recomendado |
+|---|---|---|
+| `VITE_API_BASE_URL` | URL base del backend (sin basepath) | `http://localhost:8080` |
+| `VITE_API_BASEPATH` | Prefijo de API | `/api/v1` |
+| `VITE_LOGIN_FORMAT` | Formato del body de login (`json` o `form`) | `json` |
+| `VITE_LOGIN_USER_FIELD` | Campo de usuario en login (`email` o `username`) | `email` |
 
-# Tests
-npm run test
-```
+---
 
-## API — BasePath y headers
+## 9) Rutas principales de la aplicación
 
-- **BasePath**: `/api/v1` por defecto (configurable con `VITE_API_BASEPATH`).
-- **Autenticación**: header `Authorization: Bearer <token>` (token tras `POST /api/v1/auth/login`).
-- **Clinic scope**: header `X-Clinic-Id: <clinic_id>` en todas las peticiones autenticadas.
+- `/login`
+- `/dashboard`
+- `/inventory` (solo lectura)
+- `/entry-logs/new` (registrar entrada)
+- `/exit-logs`
+- `/exit-logs/new` (registrar salida)
+- `/products`
+- `/lockers`
+- `/users` (admin)
+- `/audit-logs` (admin)
 
-### Logout (`POST /api/v1/auth/logout`)
+---
 
-El frontend llama a este endpoint al cerrar sesión. **El backend debe invalidar el token** (p. ej. añadirlo a una blacklist o revocar la sesión) para que no vuelva a ser válido hasta un nuevo login. El frontend envía el token en `Authorization`; tras la llamada, limpia el almacenamiento local y recarga la app.
+## 10) Estructura del código (resumen)
 
-El cliente Axios (`src/lib/apiClient.ts`) añade estos headers y maneja:
+- `src/app/routes` -> pantallas/rutas
+- `src/features` -> acceso a API y lógica por dominio
+- `src/components` -> componentes reutilizables UI
+- `src/lib` -> cliente HTTP y utilidades
+- `src/types` -> tipos de dominio
+- `src/config` -> entorno y endpoints
 
-- **401**: cierre de sesión y redirección a `/login`.
-- **403**: toast "Sin permisos".
-- Otros errores: toast con mensaje normalizado.
+---
 
-### Rutas del backend Laravel (prefix `v1`)
+## 11) Problemas comunes y soluciones
 
-Contrato detallado: OpenAPI en `{backend}/api-docs.json` (proyecto `lock-erp`, `docs/openapi.yaml`).
+- **La app no carga datos**
+  - Verifica que el backend esté en `http://localhost:8080`.
+  - Verifica `.env.local` y reinicia `npm run dev`.
 
-| Método | Ruta | Uso |
-|--------|------|-----|
-| POST | `/auth/login` | Login |
-| POST | `/auth/logout` | Logout |
-| GET | `/clinic` | Clínica del usuario |
-| PATCH | `/clinic/settings` | Actualizar configuración clínica |
-| GET | `/dashboard` | Dashboard (`pending_dispenses_count`, `latest_dispenses`, …) |
-| GET | `/inventory` | Inventario enriquecido (query opcional `compartment_id`) |
-| POST | `/inventory/adjust` | Ajustar `qty_available` |
-| POST | `/inventory/add` | Añadir unidades |
-| POST | `/inventory/remove` | Retirar unidades y **crear dispensación** (PENDING) |
-| DELETE | `/inventory/{id}` | Eliminar entrada |
-| GET | `/dispenses` | Listado dispensaciones (query opcional `status`) |
-| GET | `/dispenses/{id}` | Detalle dispensación |
-| POST | `/dispenses/{id}/confirm-read` | Confirmar lectura / retiro |
-| GET/POST/PATCH/DELETE | `/products`, `/users`, `/lockers`, `/compartments` | CRUD según OpenAPI |
+- **Error de CORS o red**
+  - Comprueba que backend y frontend estén en puertos correctos.
+  - Revisa que el backend acepte origen `http://localhost:8081`.
 
-*La pantalla “Nueva orden” solicita retirada vía `POST /inventory/remove` (no existe `POST /dispenses`).*
+- **Puerto ocupado**
+  - Si `8081` está ocupado, libera el puerto o cambia temporalmente el puerto del frontend en `vite.config.ts`.
 
-## Estructura principal de `/src`
+- **Cambiaste `.env.local` y no se aplica**
+  - Detén y vuelve a levantar el frontend (`npm run dev`).
 
-- `app/` — providers (Auth), rutas (Login, Dashboard, Products, etc.).
-- `features/` — por recurso: `auth`, `clinics`, `users`, `lockers`, `compartments`, `products`, `inventory`, `openOrders` (dispensaciones + alta vía `inventory/remove`), `auditLogs`.
-- `components/` — UI compartida, DataTable, EmptyState, layouts, shadcn/ui.
-- `lib/` — apiClient, utils, hooks.
-- `types/` — modelos de dominio y auth.
-- `config/` — env y endpoints.
+- **`npm install` falla**
+  - Borra `node_modules` y `package-lock.json`, luego ejecuta `npm install` otra vez.
 
-## Cómo probar en local
+---
 
-1. `npm install`
-2. `npm run dev`
-3. Abre `http://localhost:8080` (o el puerto que indique Vite).
-4. **Sin backend**: usa "Acceso demo (Admin)" en la pantalla de login para entrar con usuario de prueba; las pantallas cargarán vacías o en estado de error con opción "Reintentar" (toasts si la API falla).
-5. **Con backend**: configura `VITE_API_BASE_URL` y haz login con credenciales reales; las peticiones irán a `/api/v1/...` con token y `X-Clinic-Id`.
+## 12) Recomendaciones para desarrolladores nuevos
 
-## Rutas principales
-
-- `/login` — Inicio de sesión (y demo).
-- `/dashboard` — Resumen.
-- `/products`, `/inventory`, `/lockers`, `/lockers/:id`, `/open-orders`, `/open-orders/new` — Operaciones (RESPONSABLE o ADMIN según pantalla).
-- `/users`, `/audit-logs` — Solo ADMIN.
-
-## Notas
-
-- Si el backend no está levantado, la UI no se rompe: se muestran toasts de error y estados vacíos o de error con "Reintentar".
-- Los tipos en `src/types/models.ts` reflejan el dominio (snake_case del backend: User, Locker, Compartment, Product, CompartmentInventory, OpenOrder, AuditLog, etc.).
-- Paleta y tema: no modificar (Tailwind/shadcn con colores del ERP).
+- Haz cambios pequeños y valídalos con `npm run build`.
+- Antes de enviar cambios, ejecuta `npm run lint`.
+- Si tocas contratos API, revisa siempre la documentación del backend en:
+  - [http://localhost:8080/docs](http://localhost:8080/docs)
+- Evita crear “compatibilidades ocultas”: mantén el frontend alineado al dominio real de backend.
