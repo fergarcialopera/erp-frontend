@@ -48,6 +48,13 @@ export const ENDPOINTS = {
   EXIT_LOGS: {
     LIST: "/exit-logs",
     CREATE: "/exit-logs",
+    DETAIL: (id: string) => `/exit-logs/${id}`,
+    CONFIRM: (id: string) => `/exit-logs/${id}/confirm`,
+    CANCEL: (id: string) => `/exit-logs/${id}/cancel`,
+  },
+  INCIDENTS: {
+    LIST: "/incidents",
+    CREATE: "/incidents",
   },
   AUDIT_LOGS: { LIST: "/audit-logs" },
 } as const;

@@ -15,6 +15,8 @@ import LockerDetailPage from "@/app/routes/LockerDetail";
 import ExitLogsPage from "@/app/routes/ExitLogs";
 import NewExitLogPage from "@/app/routes/NewExitLog";
 import NewEntryLogPage from "@/app/routes/NewEntryLog";
+import IncidentsPage from "@/app/routes/Incidents";
+import NewIncidentPage from "@/app/routes/NewIncident";
 import UsersPage from "@/app/routes/Users";
 import AuditLogsPage from "@/app/routes/AuditLogs";
 import NotFound from "@/app/routes/NotFound";
@@ -81,6 +83,22 @@ const App = () => (
                 }
               />
               <Route path="/exit-logs" element={<ExitLogsPage />} />
+              <Route
+                path="/incidents"
+                element={
+                  <ProtectedRoute requiredRole="TECHNICIAN">
+                    <IncidentsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/incidents/new"
+                element={
+                  <ProtectedRoute requiredRole="TECHNICIAN">
+                    <NewIncidentPage />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/exit-logs/new"
                 element={

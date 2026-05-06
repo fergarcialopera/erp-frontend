@@ -4,6 +4,7 @@ import {
   Warehouse,
   Lock,
   ClipboardList,
+  AlertTriangle,
   Users,
   ScrollText,
   LogOut,
@@ -32,6 +33,7 @@ const mainNav = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Inventario", url: "/inventory", icon: Warehouse },
   { title: "Salidas de stock", url: "/exit-logs", icon: ClipboardList },
+  { title: "Incidencias", url: "/incidents", icon: AlertTriangle },
 ];
 
 const adminNav = [

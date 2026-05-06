@@ -10,6 +10,10 @@ export interface CreateExitLogBody {
   note?: string;
 }
 
+export interface UpdateExitLogBody {
+  quantity: number;
+}
+
 function mapRawExitLog(d: Record<string, unknown>): ExitLog {
   return {
     id: String(d.id ?? ""),
@@ -47,6 +51,32 @@ export const createExitLog = async (data: CreateExitLogBody): Promise<ExitLog> =
     note: data.note,
   };
   const res = await apiClient.post(ENDPOINTS.EXIT_LOGS.CREATE, requestBody);
+  const responseData = unwrapData<Record<string, unknown>>(res.data);
+  return mapRawExitLog(responseData);
+};
+
+export const getExitLog = async (id: string): Promise<ExitLog> => {
+  const res = await apiClient.get(ENDPOINTS.EXIT_LOGS.DETAIL(id));
+  const responseData = unwrapData<Record<string, unknown>>(res.data);
+  return mapRawExitLog(responseData);
+};
+
+export const updateExitLog = async (id: string, data: UpdateExitLogBody): Promise<ExitLog> => {
+  const res = await apiClient.patch(ENDPOINTS.EXIT_LOGS.DETAIL(id), {
+    quantity: data.quantity,
+  });
+  const responseData = unwrapData<Record<string, unknown>>(res.data);
+  return mapRawExitLog(responseData);
+};
+
+export const confirmExitLog = async (id: string): Promise<ExitLog> => {
+  const res = await apiClient.post(ENDPOINTS.EXIT_LOGS.CONFIRM(id));
+  const responseData = unwrapData<Record<string, unknown>>(res.data);
+  return mapRawExitLog(responseData);
+};
+
+export const cancelExitLog = async (id: string): Promise<ExitLog> => {
+  const res = await apiClient.post(ENDPOINTS.EXIT_LOGS.CANCEL(id));
   const responseData = unwrapData<Record<string, unknown>>(res.data);
   return mapRawExitLog(responseData);
 };

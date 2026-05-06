@@ -135,6 +135,23 @@ export interface ExitLog {
   compartment?: Compartment;
 }
 
+export type IncidentSource = "ERP" | "LOCKER";
+
+export interface Incident {
+  id: string;
+  clinic_id: string;
+  title?: string;
+  description: string;
+  source: IncidentSource | string;
+  status?: string;
+  reported_by_user_id?: string;
+  reported_by_user_name?: string;
+  locker_id?: string;
+  compartment_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 /** Datos agregados para la vista de dashboard. */
 export interface DashboardData {
   active_products_count: number;
