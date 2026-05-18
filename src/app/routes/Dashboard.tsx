@@ -11,19 +11,38 @@ import {
   useUpdateExitLog,
 } from "@/features/exitLogs/queries";
 import { useQueryClient } from "@tanstack/react-query";
-import { Package, Lock, ClipboardList, AlertTriangle } from "lucide-react";
-import type { ExitLog } from "@/types/models";
+import { Link } from "react-router-dom";
+import { Package, Lock, ClipboardList, AlertTriangle, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useMemo, useReducer, useState } from "react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
-function exitProductSku(o: ExitLog): string {
-  return o.product?.sku ?? o.product_sku ?? o.sku ?? o.product_id ?? "—";
-}
-function exitLockerName(o: ExitLog): string {
-  return o.locker?.name ?? o.locker_name ?? o.locker?.code ?? o.locker_id ?? "—";
-}
-function exitRequestedByName(o: ExitLog): string {
-  return o.requested_by?.name ?? o.requested_by_user_name ?? o.requested_by_user_id ?? "—";
+const EXIT_STATUS_LABEL: Record<string, string> = {
+  DRAFT: "Borrador",
+  CONFIRMED: "Confirmada",
+  CANCELLED: "Cancelada",
+};
+
+const EXIT_STATUS_CLASS: Record<string, string> = {
+  DRAFT: "bg-accent/15 text-accent border-accent/25",
+  CONFIRMED: "bg-success/10 text-success border-success/20",
+  CANCELLED: "bg-muted/50 text-muted-foreground border-border/50",
+};
+
+function ExitStatusBadge({ status }: { status: string }) {
+  const key = status.toUpperCase();
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium border",
+        EXIT_STATUS_CLASS[key] ?? "bg-muted text-muted-foreground border-border",
+      )}
+      role="status"
+    >
+      {EXIT_STATUS_LABEL[key] ?? status}
+    </span>
+  );
 }
 
 type DraftAction =
@@ -284,9 +303,17 @@ export default function DashboardPage() {
 
       {/* Salidas de stock recientes */}
       <div className="table-container">
-        <div className="p-4 border-b">
-          <h3 className="text-sm font-semibold">Salidas de stock recientes</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Últimos movimientos de salida registrados</p>
+        <div className="p-4 border-b flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">Salidas de stock recientes</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Últimas 5 salidas registradas</p>
+          </div>
+          <Button variant="outline" size="sm" className="shrink-0" asChild>
+            <Link to="/exit-logs">
+              Ver todas
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
         </div>
         {isLoading ? (
           <div className="p-8 text-center text-sm text-muted-foreground">
@@ -310,7 +337,7 @@ export default function DashboardPage() {
             <thead>
               <tr className="border-b">
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">
-                  REFERENCIA
+                  PRODUCTO
                 </th>
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">
                   CANTIDAD
@@ -325,7 +352,7 @@ export default function DashboardPage() {
                   USUARIO
                 </th>
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden md:table-cell">
-                  RETIRADO
+                  FECHA
                 </th>
               </tr>
             </thead>
@@ -335,19 +362,18 @@ export default function DashboardPage() {
                   key={exit.id}
                   className="border-b last:border-0 hover:bg-muted/30 transition-colors"
                 >
-                  <td className="p-3 text-sm font-mono text-xs">
-                    {exitProductSku(exit)}
+                  <td className="p-3">
+                    <p className="text-sm font-medium leading-snug">{exit.product_summary}</p>
+                    <p className="text-xs text-muted-foreground font-mono mt-0.5">{exit.product_sku}</p>
                   </td>
-                  <td className="p-3 text-sm tabular-nums">{exit.quantity}</td>
-                  <td className="p-3 text-sm hidden sm:table-cell">
-                    {exitLockerName(exit)}
+                  <td className="p-3 text-sm tabular-nums">{exit.total_quantity}</td>
+                  <td className="p-3 text-sm hidden sm:table-cell">{exit.locker_summary}</td>
+                  <td className="p-3">
+                    <ExitStatusBadge status={exit.status} />
                   </td>
-                  <td className="p-3 text-sm">Registrado</td>
-                  <td className="p-3 text-sm hidden md:table-cell">
-                    {exitRequestedByName(exit)}
-                  </td>
+                  <td className="p-3 text-sm hidden md:table-cell">{exit.created_by_name}</td>
                   <td className="p-3 text-xs text-muted-foreground hidden md:table-cell">
-                    {formatRequestedAt(exit.created_at ?? "")}
+                    {formatRequestedAt(exit.created_at)}
                   </td>
                 </tr>
               ))}

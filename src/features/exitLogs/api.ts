@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/apiClient";
 import { unwrapData, unwrapList } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
-import type { ExitLog } from "@/types/models";
+import type { DashboardRecentExit, ExitLog } from "@/types/models";
 
 /** Línea para crear borrador POST /exit-logs (OpenAPI erp). */
 export interface CreateExitLogItem {
@@ -82,6 +82,53 @@ export const fetchExitLogs = async (): Promise<ExitLog[]> => {
   const rows = unwrapList<Record<string, unknown>>(res.data);
   return rows.map(mapRawExitLogListRow);
 };
+
+function summarizeLabels(values: (string | null | undefined)[]): string {
+  const unique = [...new Set(values.map((v) => v?.trim()).filter((v): v is string => !!v))];
+  if (unique.length === 0) return "—";
+  if (unique.length === 1) return unique[0];
+  return `${unique[0]} (+${unique.length - 1})`;
+}
+
+/** Resumen legible de un borrador/salida para tablas. */
+export function mapExitLogDetailToRecentSummary(detail: ExitLogDetail): DashboardRecentExit {
+  const header = detail.exit_log;
+  const items = detail.items;
+  const productNames = items.map((line) => line.product?.name);
+  const productSkus = items.map((line) => line.product?.sku);
+  const lockerNames = items.map((line) => line.locker?.name ?? line.locker?.device_id);
+
+  return {
+    id: header.id,
+    status: header.status ?? "DRAFT",
+    created_at: header.created_at ?? new Date().toISOString(),
+    created_by_name:
+      header.created_by?.name?.trim() ||
+      header.created_by?.email?.trim() ||
+      "—",
+    product_summary: summarizeLabels(productNames),
+    product_sku: summarizeLabels(productSkus),
+    total_quantity: items.reduce((sum, line) => sum + line.requested_quantity, 0),
+    locker_summary: summarizeLabels(lockerNames),
+  };
+}
+
+/** Últimas N salidas con datos enriquecidos (GET detalle por id). */
+export async function fetchRecentExitSummaries(limit: number): Promise<DashboardRecentExit[]> {
+  const headers = [...(await fetchExitLogs())].sort(
+    (a, b) => new Date(String(b.created_at ?? "")).getTime() - new Date(String(a.created_at ?? "")).getTime(),
+  );
+  const top = headers.slice(0, limit);
+  const details = await Promise.all(top.map((row) => getExitLog(row.id).catch(() => null)));
+  return details.filter((row): row is ExitLogDetail => row !== null).map(mapExitLogDetailToRecentSummary);
+}
+
+/** Lista completa de salidas: una fila por línea de producto, con datos enriquecidos. */
+export async function fetchExitLogsEnriched(): Promise<ExitLog[]> {
+  const headers = await fetchExitLogs();
+  const details = await Promise.all(headers.map((row) => getExitLog(row.id).catch(() => null)));
+  return details.flatMap((detail) => (detail ? flattenExitLogDetail(detail) : []));
+}
 
 /**
  * Crea un borrador de salida (POST /exit-logs).

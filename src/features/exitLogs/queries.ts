@@ -3,7 +3,7 @@ import {
   cancelExitLog,
   confirmExitLog,
   createExitLog,
-  fetchExitLogs,
+  fetchExitLogsEnriched,
   getExitLog,
   updateExitLog,
   type CreateExitLogBody,
@@ -13,7 +13,7 @@ import {
 export const useExitLogs = (clinicId: string | null) => {
   return useQuery({
     queryKey: ["exit-logs", clinicId],
-    queryFn: fetchExitLogs,
+    queryFn: fetchExitLogsEnriched,
     enabled: !!clinicId,
   });
 };

@@ -153,13 +153,25 @@ export interface Incident {
   updated_at?: string;
 }
 
+/** Resumen de una salida para el widget del dashboard (detalle enriquecido). */
+export interface DashboardRecentExit {
+  id: string;
+  status: string;
+  created_at: string;
+  created_by_name: string;
+  product_summary: string;
+  product_sku: string;
+  total_quantity: number;
+  locker_summary: string;
+}
+
 /** Datos agregados para la vista de dashboard. */
 export interface DashboardData {
   active_products_count: number;
   available_lockers_count: number;
   pending_exits_count: number;
   has_low_stock: boolean;
-  latest_exits: ExitLog[];
+  latest_exits: DashboardRecentExit[];
 }
 
 export interface AuditLog {
