@@ -15,7 +15,7 @@ interface ConfirmExitDialogProps {
   items: PendingExitItem[];
   loading: boolean;
   onOpenChange: (open: boolean) => void;
-  onSetQty: (exitLogId: string, quantity: number) => void;
+  onSetQty: (productId: string, quantity: number) => void;
   onCancelDrafts: () => void;
   onConfirm: () => void;
 }
@@ -42,20 +42,21 @@ export function ConfirmExitDialog({
         <div className="space-y-2 max-h-[50vh] overflow-auto pr-1">
           {items.map((item) => (
             <div
-              key={item.exitLogId}
-              className="border rounded-md p-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+              key={item.productId}
+              className="rounded-lg border bg-muted/15 p-3 flex items-start gap-3"
             >
-              <div>
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium">{item.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  SKU: {item.sku} | Solicitada: {item.quantity}
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  SKU: {item.sku} · Solicitada: {item.quantity}
                 </p>
               </div>
               <QuantityInput
                 value={item.confirmedQuantity}
                 min={0}
-                onChange={(qty) => onSetQty(item.exitLogId, qty)}
+                onChange={(qty) => onSetQty(item.productId, qty)}
                 disabled={loading}
+                aria-label={`Cantidad confirmada de ${item.name}`}
               />
             </div>
           ))}

@@ -8,7 +8,7 @@ import { ClipboardList, PackagePlus, Plus } from "lucide-react";
 import type { CompartmentInventory } from "@/types/models";
 
 function rowLockerDisplay(r: CompartmentInventory): string {
-  return r.locker?.code ?? r.locker_code ?? r.locker_id ?? "—";
+  return r.locker?.code ?? r.locker?.name ?? r.locker_code ?? r.locker_name ?? r.locker_id ?? "—";
 }
 function rowCompartmentDisplay(r: CompartmentInventory): string {
   return r.compartment?.code ?? r.compartment_name ?? r.compartment_code ?? r.compartment_id ?? "—";

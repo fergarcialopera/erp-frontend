@@ -13,5 +13,7 @@ export interface ExitDraftItem extends ProductSearchItem {
 
 export interface PendingExitItem extends ExitDraftItem {
   exitLogId: string;
+  /** Id de línea en exit_log_items (PATCH /exit-logs/{id}). */
+  exitLogItemId: string;
   confirmedQuantity: number;
 }

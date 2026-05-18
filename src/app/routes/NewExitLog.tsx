@@ -54,8 +54,7 @@ export default function NewExitLogPage() {
         return;
       }
       await createExitLog({
-        sku: selectedProduct.sku,
-        quantity: data.quantity,
+        items: [{ product_id: data.product_id, quantity: data.quantity }],
         note: data.note,
       });
       toast.success("Salida registrada", { description: "El movimiento de salida se registró correctamente." });

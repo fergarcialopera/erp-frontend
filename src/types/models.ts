@@ -117,6 +117,7 @@ export interface ExitLog {
   sku: string;
   quantity: number;
   note?: string;
+  status?: string;
   created_at?: string;
   requested_by_user_id?: string;
   locker_id?: string;

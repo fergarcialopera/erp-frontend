@@ -22,15 +22,15 @@ export function ProductSearchResults({
   }
   if (!hasQuery) {
     return (
-      <div className="flex items-center justify-center h-full text-center">
-        <p className="text-sm text-muted-foreground">
-          Escribe al menos <span className="font-medium">2 caracteres</span> para buscar en inventario.
-        </p>
-      </div>
+      <p className="text-sm text-muted-foreground">
+        Escribe al menos <span className="font-medium">2 caracteres</span> para buscar en inventario.
+      </p>
     );
   }
   if (results.length === 0) {
-    return <p className="text-sm text-muted-foreground">No hay resultados para esa búsqueda.</p>;
+    return (
+      <p className="text-sm text-muted-foreground">No hay resultados para esa búsqueda.</p>
+    );
   }
 
   return (

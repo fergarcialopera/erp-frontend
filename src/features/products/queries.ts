@@ -8,7 +8,7 @@ export const useProducts = (
   const activeOnly = options?.activeOnly ?? true;
   return useQuery({
     queryKey: ["products", clinicId, activeOnly],
-    queryFn: () => fetchProducts({ active: activeOnly }),
+    queryFn: () => (activeOnly ? fetchProducts({ active: true }) : fetchProducts()),
     enabled: !!clinicId,
   });
 };

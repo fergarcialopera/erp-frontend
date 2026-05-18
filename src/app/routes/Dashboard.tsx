@@ -56,7 +56,10 @@ function draftReducer(state: ExitDraftItem[], action: DraftAction): ExitDraftIte
   if (action.type === "setItems") {
     return action.items;
   }
-  return [];
+  if (action.type === "clear") {
+    return [];
+  }
+  return state;
 }
 
 export default function DashboardPage() {
@@ -103,73 +106,71 @@ export default function DashboardPage() {
 
   const executeDraft = async () => {
     if (!canExecute || draft.length === 0) return;
-    const results = await Promise.allSettled(
-      draft.map((item) =>
-        createExitMutation.mutateAsync({
-          sku: item.sku,
+    try {
+      const detail = await createExitMutation.mutateAsync({
+        note: "Salida desde dashboard",
+        items: draft.map((item) => ({
+          product_id: item.productId,
           quantity: item.quantity,
-          note: `Dashboard quick exit - ${item.name}`,
-        }),
-      ),
-    );
+        })),
+      });
 
-    const created: PendingExitItem[] = [];
-    const failedProductIds = new Set<string>();
+      const exitLogId = detail.exit_log.id;
+      const created: PendingExitItem[] = detail.items
+        .map((line) => {
+          const source = draft.find((d) => d.productId === line.product?.id);
+          if (!source) return null;
+          return {
+            ...source,
+            exitLogId,
+            exitLogItemId: line.id,
+            confirmedQuantity: line.requested_quantity,
+          };
+        })
+        .filter((row): row is PendingExitItem => row !== null);
 
-    results.forEach((result, idx) => {
-      const source = draft[idx];
-      if (result.status === "fulfilled" && result.value.id) {
-        created.push({
-          ...source,
-          exitLogId: result.value.id,
-          confirmedQuantity: source.quantity,
+      if (created.length > 0) {
+        setPendingConfirmation(created);
+        setConfirmDialogOpen(true);
+        dispatch({ type: "clear" });
+        toast.success("Salida en borrador creada", {
+          description: "Revisa cantidades reales y confirma la salida.",
         });
       } else {
-        failedProductIds.add(source.productId);
+        toast.error("No se pudo preparar la salida", {
+          description: "Revisa los productos del borrador e inténtalo de nuevo.",
+        });
       }
-    });
-
-    if (created.length > 0) {
-      setPendingConfirmation(created);
-      setConfirmDialogOpen(true);
-    }
-
-    if (failedProductIds.size > 0) {
-      toast.error("Algunas salidas no se pudieron crear", {
-        description: "Los productos con error se mantienen en el borrador para reintento.",
-      });
-    } else {
-      toast.success("Salida en borrador creada", {
-        description: "Revisa cantidades reales y confirma la salida.",
+    } catch {
+      toast.error("No se pudo crear el borrador de salida", {
+        description: "Los productos se mantienen en el panel para reintentar.",
       });
     }
-
-    const failedItems = draft.filter((item) => failedProductIds.has(item.productId));
-    dispatch({ type: "setItems", items: failedItems });
   };
 
   const confirmDrafts = async () => {
     if (pendingConfirmation.length === 0 || !canExecute) return;
-    const failedIds = new Set<string>();
+    const exitLogId = pendingConfirmation[0]?.exitLogId;
+    if (!exitLogId) return;
 
-    for (const item of pendingConfirmation) {
-      try {
-        if (item.confirmedQuantity !== item.quantity) {
-          await updateExitMutation.mutateAsync({
-            id: item.exitLogId,
-            payload: { quantity: item.confirmedQuantity },
-          });
-        }
-        await confirmExitMutation.mutateAsync(item.exitLogId);
-      } catch {
-        failedIds.add(item.exitLogId);
+    const patchItems = pendingConfirmation
+      .filter((item) => item.confirmedQuantity !== item.quantity)
+      .map((item) => ({
+        item_id: item.exitLogItemId,
+        quantity: item.confirmedQuantity,
+      }));
+
+    try {
+      if (patchItems.length > 0) {
+        await updateExitMutation.mutateAsync({
+          id: exitLogId,
+          payload: { items: patchItems },
+        });
       }
-    }
-
-    if (failedIds.size > 0) {
-      setPendingConfirmation((prev) => prev.filter((item) => failedIds.has(item.exitLogId)));
-      toast.error("No se pudieron confirmar todas las salidas", {
-        description: "Se conservan en el resumen para volver a intentar.",
+      await confirmExitMutation.mutateAsync(exitLogId);
+    } catch {
+      toast.error("No se pudo confirmar la salida", {
+        description: "Revisa las cantidades e inténtalo de nuevo.",
       });
       return;
     }
@@ -188,17 +189,13 @@ export default function DashboardPage() {
 
   const cancelPendingDrafts = async () => {
     if (pendingConfirmation.length === 0 || !canExecute) return;
-    const failedIds = new Set<string>();
-    for (const item of pendingConfirmation) {
-      try {
-        await cancelExitMutation.mutateAsync(item.exitLogId);
-      } catch {
-        failedIds.add(item.exitLogId);
-      }
-    }
-    if (failedIds.size > 0) {
-      setPendingConfirmation((prev) => prev.filter((item) => failedIds.has(item.exitLogId)));
-      toast.error("No se pudieron cancelar todos los borradores");
+    const exitLogId = pendingConfirmation[0]?.exitLogId;
+    if (!exitLogId) return;
+
+    try {
+      await cancelExitMutation.mutateAsync(exitLogId);
+    } catch {
+      toast.error("No se pudo cancelar el borrador de salida");
       return;
     }
     setPendingConfirmation([]);
@@ -269,24 +266,19 @@ export default function DashboardPage() {
         <p className="page-description">Resumen operativo del sistema</p>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <div className="xl:col-span-2">
-          <ProductExitSearch
-            search={search}
-            onSearchChange={setSearch}
-            results={results}
-            isLoading={isSearchLoading}
-            canExecute={canExecute}
-            onAdd={(item) => dispatch({ type: "addItem", item })}
-            draftItems={draft}
-            onUpdateDraftQty={(productId, quantity) => dispatch({ type: "updateQty", productId, quantity })}
-            onRemoveDraftItem={(productId) => dispatch({ type: "removeItem", productId })}
-            onExecuteDraft={executeDraft}
-            isExecuting={createExitMutation.isPending}
-          />
-        </div>
-        <div />
-      </div>
+      <ProductExitSearch
+        search={search}
+        onSearchChange={setSearch}
+        results={results}
+        isLoading={isSearchLoading}
+        canExecute={canExecute}
+        onAdd={(item) => dispatch({ type: "addItem", item })}
+        draftItems={draft}
+        onUpdateDraftQty={(productId, quantity) => dispatch({ type: "updateQty", productId, quantity })}
+        onRemoveDraftItem={(productId) => dispatch({ type: "removeItem", productId })}
+        onExecuteDraft={executeDraft}
+        isExecuting={createExitMutation.isPending}
+      />
 
       {!isOperationalRole ? kpiCards : null}
 
@@ -371,10 +363,10 @@ export default function DashboardPage() {
         onOpenChange={setConfirmDialogOpen}
         items={pendingConfirmation}
         loading={isConfirming}
-        onSetQty={(exitLogId, quantity) =>
+        onSetQty={(productId, quantity) =>
           setPendingConfirmation((prev) =>
             prev.map((item) =>
-              item.exitLogId === exitLogId ? { ...item, confirmedQuantity: Math.max(0, quantity) } : item,
+              item.productId === productId ? { ...item, confirmedQuantity: Math.max(0, quantity) } : item,
             ),
           )
         }
