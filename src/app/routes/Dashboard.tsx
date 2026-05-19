@@ -3,47 +3,17 @@ import { useDashboard } from "@/features/dashboard/queries";
 import { useProductSearch } from "@/features/dashboard/useProductSearch";
 import { ProductExitSearch } from "@/features/dashboard/components/ProductExitSearch";
 import { ConfirmExitDialog } from "@/features/dashboard/components/ConfirmExitDialog";
-import type { ExitDraftItem, PendingExitItem, ProductSearchItem } from "@/features/dashboard/types";
-import {
-  useCancelExitLog,
-  useConfirmExitLog,
-  useCreateExitLog,
-  useUpdateExitLog,
-} from "@/features/exitLogs/queries";
-import { useQueryClient } from "@tanstack/react-query";
+import type { ExitDraftItem, ProductSearchItem } from "@/features/dashboard/types";
+import { useCreateExitLog } from "@/features/exitLogs/queries";
+import { mapExitLogDetailToPendingItems } from "@/features/exitLogs/mapExitLogDetailToPendingItems";
+import { useDraftExitEditor } from "@/features/exitLogs/useDraftExitEditor";
+import { OpenDraftExitButton } from "@/features/exitLogs/components/OpenDraftExitButton";
 import { Link } from "react-router-dom";
 import { Package, Lock, ClipboardList, AlertTriangle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMemo, useReducer, useState } from "react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-
-const EXIT_STATUS_LABEL: Record<string, string> = {
-  DRAFT: "Borrador",
-  CONFIRMED: "Confirmada",
-  CANCELLED: "Cancelada",
-};
-
-const EXIT_STATUS_CLASS: Record<string, string> = {
-  DRAFT: "bg-accent/15 text-accent border-accent/25",
-  CONFIRMED: "bg-success/10 text-success border-success/20",
-  CANCELLED: "bg-muted/50 text-muted-foreground border-border/50",
-};
-
-function ExitStatusBadge({ status }: { status: string }) {
-  const key = status.toUpperCase();
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium border",
-        EXIT_STATUS_CLASS[key] ?? "bg-muted text-muted-foreground border-border",
-      )}
-      role="status"
-    >
-      {EXIT_STATUS_LABEL[key] ?? status}
-    </span>
-  );
-}
+import { ExitStatusBadge } from "@/features/exitLogs/components/ExitStatusBadge";
 
 type DraftAction =
   | { type: "addItem"; item: ProductSearchItem }
@@ -83,16 +53,12 @@ function draftReducer(state: ExitDraftItem[], action: DraftAction): ExitDraftIte
 
 export default function DashboardPage() {
   const { user, clinicId } = useAuth();
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [draft, dispatch] = useReducer(draftReducer, []);
-  const [pendingConfirmation, setPendingConfirmation] = useState<PendingExitItem[]>([]);
-  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const canExecute = user?.role === "ADMIN" || user?.role === "TECHNICIAN" || user?.role === "STAFF";
+  const draftEditor = useDraftExitEditor(clinicId, canExecute);
   const { results, isLoading: isSearchLoading } = useProductSearch(clinicId, search);
   const createExitMutation = useCreateExitLog();
-  const updateExitMutation = useUpdateExitLog();
-  const confirmExitMutation = useConfirmExitLog();
-  const cancelExitMutation = useCancelExitLog();
   const {
     data: dashboard,
     isLoading: dashboardLoading,
@@ -102,11 +68,7 @@ export default function DashboardPage() {
 
   const isLoading = dashboardLoading || dashboardFetching;
   const exits = dashboard?.latest_exits ?? [];
-  const canExecute = user?.role === "ADMIN" || user?.role === "TECHNICIAN" || user?.role === "STAFF";
   const isOperationalRole = user?.role === "STAFF" || user?.role === "TECHNICIAN";
-  const isConfirming =
-    updateExitMutation.isPending || confirmExitMutation.isPending || cancelExitMutation.isPending;
-
   const formatRequestedAt = (dateStr: string) => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -134,23 +96,16 @@ export default function DashboardPage() {
         })),
       });
 
-      const exitLogId = detail.exit_log.id;
-      const created: PendingExitItem[] = detail.items
-        .map((line) => {
-          const source = draft.find((d) => d.productId === line.product?.id);
-          if (!source) return null;
-          return {
-            ...source,
-            exitLogId,
-            exitLogItemId: line.id,
-            confirmedQuantity: line.requested_quantity,
-          };
-        })
-        .filter((row): row is PendingExitItem => row !== null);
+      const created = mapExitLogDetailToPendingItems(detail)
+        .map((row) => {
+          const source = draft.find((d) => d.productId === row.productId);
+          return source
+            ? { ...row, availableStock: source.availableStock, location: source.location }
+            : row;
+        });
 
       if (created.length > 0) {
-        setPendingConfirmation(created);
-        setConfirmDialogOpen(true);
+        draftEditor.openWithItems(created);
         dispatch({ type: "clear" });
         toast.success("Salida en borrador creada", {
           description: "Revisa cantidades reales y confirma la salida.",
@@ -165,61 +120,6 @@ export default function DashboardPage() {
         description: "Los productos se mantienen en el panel para reintentar.",
       });
     }
-  };
-
-  const confirmDrafts = async () => {
-    if (pendingConfirmation.length === 0 || !canExecute) return;
-    const exitLogId = pendingConfirmation[0]?.exitLogId;
-    if (!exitLogId) return;
-
-    const patchItems = pendingConfirmation
-      .filter((item) => item.confirmedQuantity !== item.quantity)
-      .map((item) => ({
-        item_id: item.exitLogItemId,
-        quantity: item.confirmedQuantity,
-      }));
-
-    try {
-      if (patchItems.length > 0) {
-        await updateExitMutation.mutateAsync({
-          id: exitLogId,
-          payload: { items: patchItems },
-        });
-      }
-      await confirmExitMutation.mutateAsync(exitLogId);
-    } catch {
-      toast.error("No se pudo confirmar la salida", {
-        description: "Revisa las cantidades e inténtalo de nuevo.",
-      });
-      return;
-    }
-
-    setPendingConfirmation([]);
-    setConfirmDialogOpen(false);
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ["dashboard", clinicId] }),
-      queryClient.invalidateQueries({ queryKey: ["exit-logs", clinicId] }),
-      queryClient.invalidateQueries({ queryKey: ["inventory", clinicId] }),
-    ]);
-    toast.success("Salida confirmada", {
-      description: "Las cantidades reales se han confirmado correctamente.",
-    });
-  };
-
-  const cancelPendingDrafts = async () => {
-    if (pendingConfirmation.length === 0 || !canExecute) return;
-    const exitLogId = pendingConfirmation[0]?.exitLogId;
-    if (!exitLogId) return;
-
-    try {
-      await cancelExitMutation.mutateAsync(exitLogId);
-    } catch {
-      toast.error("No se pudo cancelar el borrador de salida");
-      return;
-    }
-    setPendingConfirmation([]);
-    setConfirmDialogOpen(false);
-    toast.success("Borradores cancelados");
   };
 
   const kpiCards = useMemo(
@@ -354,6 +254,9 @@ export default function DashboardPage() {
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden md:table-cell">
                   FECHA
                 </th>
+                <th className="text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 w-[100px]">
+                  ACCIONES
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -375,6 +278,17 @@ export default function DashboardPage() {
                   <td className="p-3 text-xs text-muted-foreground hidden md:table-cell">
                     {formatRequestedAt(exit.created_at)}
                   </td>
+                  <td className="p-3 text-right">
+                    {exit.status.toUpperCase() === "DRAFT" && canExecute ? (
+                      <OpenDraftExitButton
+                        exitLogId={exit.id}
+                        loading={draftEditor.openingId === exit.id}
+                        onOpen={draftEditor.openById}
+                      />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -385,19 +299,13 @@ export default function DashboardPage() {
       {isOperationalRole ? kpiCards : null}
 
       <ConfirmExitDialog
-        open={confirmDialogOpen}
-        onOpenChange={setConfirmDialogOpen}
-        items={pendingConfirmation}
-        loading={isConfirming}
-        onSetQty={(productId, quantity) =>
-          setPendingConfirmation((prev) =>
-            prev.map((item) =>
-              item.productId === productId ? { ...item, confirmedQuantity: Math.max(0, quantity) } : item,
-            ),
-          )
-        }
-        onCancelDrafts={cancelPendingDrafts}
-        onConfirm={confirmDrafts}
+        open={draftEditor.open}
+        onOpenChange={draftEditor.setOpen}
+        items={draftEditor.items}
+        loading={draftEditor.isConfirming}
+        onSetQty={draftEditor.setItemQty}
+        onCancelDrafts={draftEditor.cancelPendingDrafts}
+        onConfirm={draftEditor.confirmDrafts}
       />
     </div>
   );

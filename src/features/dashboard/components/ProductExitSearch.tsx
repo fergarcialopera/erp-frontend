@@ -36,10 +36,16 @@ export function ProductExitSearch(props: ProductExitSearchProps) {
   } = props;
   const hasQuery = search.trim().length >= 2;
   const hasSearchText = search.length > 0;
+  const hasDraft = draftItems.length > 0;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-      <div className="lg:col-span-3 bg-card border rounded-lg p-5 h-[420px] flex flex-col gap-4 min-w-0">
+      <div
+        className={cn(
+          "bg-card border rounded-lg p-5 h-[420px] flex flex-col gap-4 min-w-0",
+          hasDraft ? "lg:col-span-3" : "lg:col-span-5",
+        )}
+      >
         <div>
           <h3 className="text-lg font-semibold">Registrar salida de stock</h3>
           <p className="text-sm text-muted-foreground">
@@ -84,16 +90,18 @@ export function ProductExitSearch(props: ProductExitSearchProps) {
         </div>
       </div>
 
-      <div className="lg:col-span-2 min-w-0">
-        <ExitDraftPanel
-          items={draftItems}
-          canExecute={canExecute}
-          onUpdateQty={onUpdateDraftQty}
-          onRemove={onRemoveDraftItem}
-          onExecute={onExecuteDraft}
-          isExecuting={isExecuting}
-        />
-      </div>
+      {hasDraft ? (
+        <div className="lg:col-span-2 min-w-0">
+          <ExitDraftPanel
+            items={draftItems}
+            canExecute={canExecute}
+            onUpdateQty={onUpdateDraftQty}
+            onRemove={onRemoveDraftItem}
+            onExecute={onExecuteDraft}
+            isExecuting={isExecuting}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }
