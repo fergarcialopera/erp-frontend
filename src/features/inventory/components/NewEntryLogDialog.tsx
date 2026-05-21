@@ -26,6 +26,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/app/providers/useAuth";
 import { productsNewUrl } from "@/features/products/constants";
 import { useProducts } from "@/features/products/queries";
+import { ProductStockLocationsPanel } from "@/features/products/components/ProductStockLocationsPanel";
 import { useLockers } from "@/features/lockers/queries";
 import { useCompartments } from "@/features/compartments/queries";
 import { createEntryLog } from "@/features/entryLogs/api";
@@ -74,6 +75,7 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
     filterLockerId || null,
   );
   const activeCompartments = compartments.filter((c) => c.is_active);
+  const selectedProductId = watch("product_id");
 
   useEffect(() => {
     if (open) {
@@ -119,6 +121,7 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
         description: "El movimiento de entrada se registró correctamente.",
       });
       queryClient.invalidateQueries({ queryKey: ["inventory", clinicId] });
+      queryClient.invalidateQueries({ queryKey: ["products", "stock-locations"] });
       close();
     } catch {
       // Error mostrado por interceptor
@@ -176,6 +179,7 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
                 {errors.product_id.message}
               </p>
             )}
+            <ProductStockLocationsPanel productId={selectedProductId} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchProducts } from "./api";
+import { fetchProducts, fetchProductStockLocations } from "./api";
 
 export const useProducts = (
   clinicId: string | null,
@@ -10,5 +10,13 @@ export const useProducts = (
     queryKey: ["products", clinicId, activeOnly],
     queryFn: () => (activeOnly ? fetchProducts({ active: true }) : fetchProducts()),
     enabled: !!clinicId,
+  });
+};
+
+export const useProductStockLocations = (productId: string | undefined) => {
+  return useQuery({
+    queryKey: ["products", "stock-locations", productId],
+    queryFn: () => fetchProductStockLocations(productId!),
+    enabled: !!productId,
   });
 };

@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/apiClient";
 import { unwrapData, unwrapList } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
-import { Product } from "@/types/models";
+import { Product, ProductStockLocations } from "@/types/models";
 
 export const fetchProducts = async (params?: { active?: boolean }): Promise<Product[]> => {
   const res = await apiClient.get(ENDPOINTS.PRODUCTS.LIST, {
@@ -27,4 +27,11 @@ export const updateProduct = async (id: string, data: Partial<Product>) => {
 
 export const deleteProduct = async (id: string): Promise<void> => {
   await apiClient.delete(ENDPOINTS.PRODUCTS.DETAIL(id));
+};
+
+export const fetchProductStockLocations = async (
+  productId: string,
+): Promise<ProductStockLocations> => {
+  const res = await apiClient.get(ENDPOINTS.PRODUCTS.STOCK_LOCATIONS(productId));
+  return unwrapData<ProductStockLocations>(res.data);
 };

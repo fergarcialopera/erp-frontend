@@ -192,9 +192,12 @@ export function DataTable<T extends object>({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paged.map((item, idx) => (
+            {paged.map((item, idx) => {
+              const rowIndex = page * pageSize + idx;
+              const rowId = (item as { id?: string }).id;
+              return (
               <TableRow
-                key={item.id || idx}
+                key={rowId != null && rowId !== "" ? `${rowId}-${rowIndex}` : `row-${rowIndex}`}
                 className={onRowClick ? "cursor-pointer" : ""}
                 onClick={() => onRowClick?.(item)}
               >
@@ -204,7 +207,8 @@ export function DataTable<T extends object>({
                   </TableCell>
                 ))}
               </TableRow>
-            ))}
+            );
+            })}
           </TableBody>
         </Table>
       )}

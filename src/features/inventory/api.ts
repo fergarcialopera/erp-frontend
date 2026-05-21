@@ -33,6 +33,21 @@ function toNumber(value: unknown, fallback = 0): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function isGroupedByProduct(row: unknown): row is InventoryByProductApi {
+  return Array.isArray((row as InventoryByProductApi)?.locations);
+}
+
+/** Clave estable para React; el API puede repetir item.id / product.id entre ubicaciones. */
+function stableInventoryRowKey(row: CompartmentInventory, index: number): string {
+  const productId = row.product_id || row.product?.id || "";
+  const compartmentId = row.compartment_id || row.compartment?.id || "";
+  const lockerId = row.locker_id || row.locker?.id || "";
+  if (productId || compartmentId || lockerId) {
+    return [productId || "_", compartmentId || "_", lockerId || "_", String(index)].join(":");
+  }
+  return row.id ? `${row.id}:${index}` : `inventory-row:${index}`;
+}
+
 function mapByProductRows(item: InventoryByProductApi): CompartmentInventory[] {
   const product = item.product ?? {};
   const locations = Array.isArray(item.locations) ? item.locations : [];
@@ -44,9 +59,7 @@ function mapByProductRows(item: InventoryByProductApi): CompartmentInventory[] {
       location.qty_available !== undefined ? location.qty_available : location.quantity;
 
     return {
-      id:
-        item.id ??
-        `${String(product.id ?? "product")}-${String(compartment?.id ?? "no-comp")}-${String(locker?.id ?? "no-lock")}-${locationIndex}`,
+      id: "",
       clinic_id: String(item.clinic_id ?? product.clinic_id ?? ""),
       compartment_id: String(compartment?.id ?? ""),
       product_id: String(product.id ?? ""),
@@ -97,11 +110,13 @@ export const fetchInventory = async (): Promise<CompartmentInventory[]> => {
 
   if (!raw.length) return [];
 
-  // Compatibilidad con backend que devuelve inventario agrupado por producto + locations[].
-  if ("locations" in raw[0]) {
-    return raw.flatMap((item) => mapByProductRows(item as InventoryByProductApi));
-  }
+  const rows = raw.flatMap((entry) =>
+    isGroupedByProduct(entry) ? mapByProductRows(entry) : [entry as CompartmentInventory],
+  );
 
-  return raw as CompartmentInventory[];
+  return rows.map((row, index) => ({
+    ...row,
+    id: stableInventoryRowKey(row, index),
+  }));
 };
 

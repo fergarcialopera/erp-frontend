@@ -80,6 +80,19 @@ export interface Product {
   is_active: boolean;
 }
 
+/** GET /products/{id}/stock-locations — ubicación con stock > 0. */
+export interface ProductStockLocation {
+  quantity: number;
+  locker?: { id: string; name?: string; device_id?: string | null } | null;
+  compartment?: { id: string; code?: string } | null;
+}
+
+export interface ProductStockLocations {
+  product: Pick<Product, "id" | "sku" | "name">;
+  quantity_total: number;
+  locations: ProductStockLocation[];
+}
+
 export interface CompartmentInventory {
   id: string;
   clinic_id: string;

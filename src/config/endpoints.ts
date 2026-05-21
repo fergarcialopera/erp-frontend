@@ -35,7 +35,10 @@ export const ENDPOINTS = {
   COMPARTMENTS: {
     DETAIL: (id: string) => `/compartments/${id}`,
   },
-  PRODUCTS: resource("/products"),
+  PRODUCTS: {
+    ...resource("/products"),
+    STOCK_LOCATIONS: (id: string) => `/products/${id}/stock-locations`,
+  },
   INVENTORY: {
     LIST: "/inventory",
   },
