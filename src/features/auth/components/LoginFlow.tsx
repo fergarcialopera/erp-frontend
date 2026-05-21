@@ -233,10 +233,11 @@ export function LoginFlow() {
           {clinicsError && (
             <p className="text-sm text-destructive text-center">No se pudieron cargar las clínicas</p>
           )}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[360px] overflow-y-auto">
+          <div className="flex flex-col gap-2 max-h-[360px] overflow-y-auto">
             {clinics.map((clinic) => (
               <SelectableEntityCard
                 key={clinic.id}
+                layout="row"
                 name={clinic.name}
                 imageUrl={clinic.image_url}
                 displayInitial={clinic.display_initial}
