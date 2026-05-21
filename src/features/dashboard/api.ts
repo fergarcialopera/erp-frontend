@@ -2,11 +2,24 @@ import { apiClient } from "@/lib/apiClient";
 import { unwrapList } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
 import { fetchExitLogs, fetchRecentExitSummaries } from "@/features/exitLogs/api";
-import type { DashboardData } from "@/types/models";
+import type { DashboardData, Role } from "@/types/models";
 
 const RECENT_EXITS_LIMIT = 5;
 
-export const fetchDashboard = async (): Promise<DashboardData> => {
+export const fetchDashboard = async (role: Role = "STAFF"): Promise<DashboardData> => {
+  if (role === "STAFF") {
+    const exitLogHeaders = await fetchExitLogs();
+    const latestExits = await fetchRecentExitSummaries(RECENT_EXITS_LIMIT);
+
+    return {
+      active_products_count: 0,
+      available_lockers_count: 0,
+      pending_exits_count: exitLogHeaders.filter((row) => row.status === "DRAFT").length,
+      has_low_stock: false,
+      latest_exits: latestExits,
+    };
+  }
+
   const [productsRes, lockersRes, inventoryRes, exitLogHeaders] = await Promise.all([
     apiClient.get(ENDPOINTS.PRODUCTS.LIST, { params: { active: true } }),
     apiClient.get(ENDPOINTS.LOCKERS.LIST),

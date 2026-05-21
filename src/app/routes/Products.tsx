@@ -71,7 +71,7 @@ const baseColumns: Column<Product>[] = [
 export default function ProductsPage() {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { clinicId, can } = useAuth();
+  const { clinicId, canAccessManagement, canAccessConfig } = useAuth();
   const {
     data: records,
     isLoading: productsLoading,
@@ -80,7 +80,8 @@ export default function ProductsPage() {
     refetch,
   } = useProducts(clinicId, { activeOnly: false });
   const isLoading = productsLoading || productsFetching;
-  const canEdit = can("TECHNICIAN");
+  const canEdit = canAccessManagement();
+  const canDelete = canAccessConfig();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
@@ -389,16 +390,20 @@ export default function ProductsPage() {
               />
             </div>
             <DialogFooter className="flex-row justify-between sm:justify-between">
-              <Button
-                type="button"
-                variant="destructive"
-                className="mr-auto gap-1.5"
-                onClick={handleDeleteProduct}
-                disabled={updateMutation.isPending || deleteMutation.isPending}
-              >
-                <Trash2 className="h-4 w-4" />
-                {deleteMutation.isPending ? "Desactivando…" : "Eliminar"}
-              </Button>
+              {canDelete ? (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="mr-auto gap-1.5"
+                  onClick={handleDeleteProduct}
+                  disabled={updateMutation.isPending || deleteMutation.isPending}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deleteMutation.isPending ? "Desactivando…" : "Eliminar"}
+                </Button>
+              ) : (
+                <span className="mr-auto" />
+              )}
               <div className="flex gap-2">
                 <Button type="button" variant="outline" onClick={closeEditModal}>
                   Cancelar

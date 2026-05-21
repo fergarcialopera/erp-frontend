@@ -27,8 +27,9 @@ function exitRequestedByDisplay(o: ExitLog): string {
 type ExitLogRow = ExitLog;
 
 export default function ExitLogsPage() {
-  const { user, clinicId } = useAuth();
-  const canExecute = user?.role === "ADMIN" || user?.role === "TECHNICIAN" || user?.role === "STAFF";
+  const { clinicId, isRole, canAccessOperations } = useAuth();
+  const isStaff = isRole("STAFF");
+  const canExecute = canAccessOperations();
   const draftEditor = useDraftExitEditor(clinicId, canExecute);
   const {
     data: exitLogs = [],
@@ -65,8 +66,8 @@ export default function ExitLogsPage() {
     return ids;
   }, [records]);
 
-  const columns: Column<ExitLogRow>[] = useMemo(
-    () => [
+  const columns: Column<ExitLogRow>[] = useMemo(() => {
+    const base: Column<ExitLogRow>[] = [
       {
         key: "sku",
         header: "ID PRODUCTO",
@@ -105,12 +106,18 @@ export default function ExitLogsPage() {
         sortable: true,
         render: (o) => <ExitStatusBadge status={o.status} />,
       },
-      {
+    ];
+
+    if (!isStaff) {
+      base.push({
         key: "requested_by_user_name",
         header: "USUARIO",
         sortable: true,
         render: (o) => <span className="text-sm">{exitRequestedByDisplay(o)}</span>,
-      },
+      });
+    }
+
+    base.push(
       {
         key: "created_at",
         header: "REGISTRADO",
@@ -144,17 +151,22 @@ export default function ExitLogsPage() {
             <span className="text-xs text-muted-foreground">—</span>
           ),
       },
-    ],
-    [canExecute, draftEditor.openById, draftEditor.openingId, primaryRowExitIds],
-  );
+    );
+
+    return base;
+  }, [canExecute, draftEditor.openById, draftEditor.openingId, isStaff, primaryRowExitIds]);
 
   const isLoading = exitLogsLoading || exitLogsFetching;
 
   return (
     <div className="space-y-6">
       <div className="page-header">
-        <h2 className="page-title">Salidas de stock</h2>
-        <p className="page-description">Registro de movimientos de salida de productos</p>
+        <h2 className="page-title">{isStaff ? "Mis salidas de stock" : "Salidas de stock"}</h2>
+        <p className="page-description">
+          {isStaff
+            ? "Historial de salidas que has registrado"
+            : "Registro de movimientos de salida de productos"}
+        </p>
       </div>
 
       <DataTable

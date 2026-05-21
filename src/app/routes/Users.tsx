@@ -84,7 +84,7 @@ const ROLES: Role[] = ["ADMIN", "TECHNICIAN", "STAFF"];
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
-  const { clinicId, can } = useAuth();
+  const { clinicId, canAccessConfig } = useAuth();
   const {
     data: records = [],
     isLoading: usersLoading,
@@ -95,7 +95,7 @@ export default function UsersPage() {
   const isLoading = usersLoading || usersFetching;
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const canEdit = can("ADMIN");
+  const canEdit = canAccessConfig();
 
   const {
     register,

@@ -19,6 +19,7 @@ import NewIncidentPage from "@/app/routes/NewIncident";
 import UsersPage from "@/app/routes/Users";
 import AuditLogsPage from "@/app/routes/AuditLogs";
 import NotFound from "@/app/routes/NotFound";
+import { ROUTE_MIN_ROLE } from "@/config/navigation";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,7 +53,7 @@ const App = () => (
               <Route
                 path="/products"
                 element={
-                  <ProtectedRoute requiredRole="ADMIN">
+                  <ProtectedRoute requiredRole={ROUTE_MIN_ROLE.products}>
                     <ProductsPage />
                   </ProtectedRoute>
                 }
@@ -60,7 +61,7 @@ const App = () => (
               <Route
                 path="/inventory"
                 element={
-                  <ProtectedRoute requiredRole="TECHNICIAN">
+                  <ProtectedRoute requiredRole={ROUTE_MIN_ROLE.inventory}>
                     <InventoryPage />
                   </ProtectedRoute>
                 }
@@ -68,7 +69,7 @@ const App = () => (
               <Route
                 path="/lockers"
                 element={
-                  <ProtectedRoute requiredRole="ADMIN">
+                  <ProtectedRoute requiredRole={ROUTE_MIN_ROLE.lockers}>
                     <LockersPage />
                   </ProtectedRoute>
                 }
@@ -76,7 +77,7 @@ const App = () => (
               <Route
                 path="/lockers/:id"
                 element={
-                  <ProtectedRoute requiredRole="ADMIN">
+                  <ProtectedRoute requiredRole={ROUTE_MIN_ROLE.lockerDetail}>
                     <LockerDetailPage />
                   </ProtectedRoute>
                 }
@@ -85,7 +86,7 @@ const App = () => (
               <Route
                 path="/incidents"
                 element={
-                  <ProtectedRoute requiredRole="TECHNICIAN">
+                  <ProtectedRoute requiredRole={ROUTE_MIN_ROLE.incidents}>
                     <IncidentsPage />
                   </ProtectedRoute>
                 }
@@ -93,23 +94,16 @@ const App = () => (
               <Route
                 path="/incidents/new"
                 element={
-                  <ProtectedRoute requiredRole="TECHNICIAN">
+                  <ProtectedRoute requiredRole={ROUTE_MIN_ROLE.incidentsNew}>
                     <NewIncidentPage />
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/exit-logs/new"
-                element={
-                  <ProtectedRoute requiredRole="TECHNICIAN">
-                    <NewExitLogPage />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/exit-logs/new" element={<NewExitLogPage />} />
               <Route
                 path="/users"
                 element={
-                  <ProtectedRoute requiredRole="ADMIN">
+                  <ProtectedRoute requiredRole={ROUTE_MIN_ROLE.users}>
                     <UsersPage />
                   </ProtectedRoute>
                 }
@@ -117,7 +111,7 @@ const App = () => (
               <Route
                 path="/audit-logs"
                 element={
-                  <ProtectedRoute requiredRole="ADMIN">
+                  <ProtectedRoute requiredRole={ROUTE_MIN_ROLE.auditLogs}>
                     <AuditLogsPage />
                   </ProtectedRoute>
                 }

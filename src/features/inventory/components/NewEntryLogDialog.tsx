@@ -49,8 +49,8 @@ interface NewEntryLogDialogProps {
 export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { clinicId, can } = useAuth();
-  const canManageProducts = can("ADMIN");
+  const { clinicId, canAccessManagement } = useAuth();
+  const canManageProducts = canAccessManagement();
   const { data: products = [] } = useProducts(clinicId);
   const { data: lockerTree = [], isLoading: lockerTreeLoading } = useLockersTree(clinicId, {
     enabled: open,

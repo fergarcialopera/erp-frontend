@@ -52,10 +52,11 @@ function draftReducer(state: ExitDraftItem[], action: DraftAction): ExitDraftIte
 }
 
 export default function DashboardPage() {
-  const { user, clinicId } = useAuth();
+  const { user, clinicId, canAccessManagement, canAccessOperations } = useAuth();
   const [search, setSearch] = useState("");
   const [draft, dispatch] = useReducer(draftReducer, []);
-  const canExecute = user?.role === "ADMIN" || user?.role === "TECHNICIAN" || user?.role === "STAFF";
+  const canExecute = canAccessOperations();
+  const showKpis = canAccessManagement();
   const draftEditor = useDraftExitEditor(clinicId, canExecute);
   const { results, isLoading: isSearchLoading } = useProductSearch(clinicId, search);
   const createExitMutation = useCreateExitLog();
@@ -64,11 +65,11 @@ export default function DashboardPage() {
     isLoading: dashboardLoading,
     isFetching: dashboardFetching,
     isError,
-  } = useDashboard(clinicId);
+  } = useDashboard(clinicId, user?.role ?? "STAFF");
 
   const isLoading = dashboardLoading || dashboardFetching;
   const exits = dashboard?.latest_exits ?? [];
-  const isOperationalRole = user?.role === "STAFF" || user?.role === "TECHNICIAN";
+  const isStaff = user?.role === "STAFF";
   const formatRequestedAt = (dateStr: string) => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -199,14 +200,18 @@ export default function DashboardPage() {
         isExecuting={createExitMutation.isPending}
       />
 
-      {!isOperationalRole ? kpiCards : null}
+      {showKpis ? kpiCards : null}
 
       {/* Salidas de stock recientes */}
       <div className="table-container">
         <div className="p-4 border-b flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold">Salidas de stock recientes</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Últimas 5 salidas registradas</p>
+            <h3 className="text-sm font-semibold">
+              {isStaff ? "Mis salidas recientes" : "Salidas de stock recientes"}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {isStaff ? "Últimas 5 salidas que has registrado" : "Últimas 5 salidas registradas"}
+            </p>
           </div>
           <Button variant="outline" size="sm" className="shrink-0" asChild>
             <Link to="/exit-logs">
@@ -248,9 +253,11 @@ export default function DashboardPage() {
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">
                   ESTADO
                 </th>
-                <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden md:table-cell">
-                  USUARIO
-                </th>
+                {!isStaff ? (
+                  <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden md:table-cell">
+                    USUARIO
+                  </th>
+                ) : null}
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden md:table-cell">
                   FECHA
                 </th>
@@ -274,7 +281,9 @@ export default function DashboardPage() {
                   <td className="p-3">
                     <ExitStatusBadge status={exit.status} />
                   </td>
-                  <td className="p-3 text-sm hidden md:table-cell">{exit.created_by_name}</td>
+                  {!isStaff ? (
+                    <td className="p-3 text-sm hidden md:table-cell">{exit.created_by_name}</td>
+                  ) : null}
                   <td className="p-3 text-xs text-muted-foreground hidden md:table-cell">
                     {formatRequestedAt(exit.created_at)}
                   </td>
@@ -295,8 +304,6 @@ export default function DashboardPage() {
           </table>
         )}
       </div>
-
-      {isOperationalRole ? kpiCards : null}
 
       <ConfirmExitDialog
         open={draftEditor.open}

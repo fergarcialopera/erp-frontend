@@ -28,3 +28,18 @@ export const ROLE_HIERARCHY: Record<Role, number> = {
 export function hasPermission(userRole: Role, requiredRole: Role): boolean {
   return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[requiredRole];
 }
+
+/** Operaciones diarias (salidas, dashboard). */
+export function canAccessOperations(userRole: Role): boolean {
+  return hasPermission(userRole, "STAFF");
+}
+
+/** Gestión de catálogo, lockers e inventario (no configuración del sistema). */
+export function canAccessManagement(userRole: Role): boolean {
+  return hasPermission(userRole, "TECHNICIAN");
+}
+
+/** Usuarios, auditoría y ajustes de clínica. */
+export function canAccessConfig(userRole: Role): boolean {
+  return hasPermission(userRole, "ADMIN");
+}

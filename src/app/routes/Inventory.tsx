@@ -67,8 +67,9 @@ export default function InventoryPage() {
   const navigate = useNavigate();
   const [entryModalOpen, setEntryModalOpen] = useState(false);
   const [editingRow, setEditingRow] = useState<InventoryRow | null>(null);
-  const { clinicId, can } = useAuth();
-  const canCorrectInventory = can("ADMIN");
+  const { clinicId, canAccessConfig, canAccessManagement } = useAuth();
+  const canCorrectInventory = canAccessConfig();
+  const canRegisterEntry = canAccessManagement();
   const {
     data: inventory = [],
     isLoading,
@@ -125,7 +126,9 @@ export default function InventoryPage() {
         <p className="page-description">
           {canCorrectInventory
             ? "Consulta el stock por ubicación. Los administradores pueden corregir cantidades ante incidencias."
-            : "Vista de solo lectura del inventario por compartimiento"}
+            : canRegisterEntry
+              ? "Consulta y registra entradas de stock por ubicación."
+              : "Vista de solo lectura del inventario por compartimiento"}
         </p>
       </div>
 
@@ -161,15 +164,17 @@ export default function InventoryPage() {
               <PackagePlus className="h-4 w-4" />
               Registrar salida
             </Button>
-            <Button
-              size="sm"
-              className="h-9 gap-1.5"
-              onClick={() => setEntryModalOpen(true)}
-              aria-label="Registrar entrada de stock"
-            >
-              <Plus className="h-4 w-4" />
-              Registrar entrada
-            </Button>
+            {canRegisterEntry ? (
+              <Button
+                size="sm"
+                className="h-9 gap-1.5"
+                onClick={() => setEntryModalOpen(true)}
+                aria-label="Registrar entrada de stock"
+              >
+                <Plus className="h-4 w-4" />
+                Registrar entrada
+              </Button>
+            ) : null}
           </div>
         }
       />

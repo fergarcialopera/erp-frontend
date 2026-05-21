@@ -28,7 +28,7 @@ const columns: Column<Locker>[] = [
 ];
 
 export default function LockersPage() {
-  const { clinicId, can } = useAuth();
+  const { clinicId, canAccessManagement } = useAuth();
   const {
     data: records,
     isLoading: lockersLoading,
@@ -58,7 +58,7 @@ export default function LockersPage() {
         emptyTitle="Sin lockers"
         emptyDescription="No hay lockers registrados."
         headerAction={
-          can("ADMIN") ? (
+          canAccessManagement() ? (
             <Button size="sm" className="h-9 gap-1.5">
               <Plus className="h-4 w-4" />
               Nuevo locker

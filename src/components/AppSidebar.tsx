@@ -1,18 +1,7 @@
-import {
-  LayoutDashboard,
-  Package,
-  Warehouse,
-  Lock,
-  ClipboardList,
-  AlertTriangle,
-  Users,
-  ScrollText,
-  LogOut,
-  ChevronLeft,
-} from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/app/providers/useAuth";
+import { configNav, mainNav, managementNav } from "@/config/navigation";
 import {
   Sidebar,
   SidebarContent,
@@ -26,29 +15,68 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
-const mainNav = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Inventario", url: "/inventory", icon: Warehouse },
-  { title: "Salidas de stock", url: "/exit-logs", icon: ClipboardList },
-  { title: "Incidencias", url: "/incidents", icon: AlertTriangle },
-];
+function filterNav<T extends { requiredRole: import("@/types/models").Role }>(
+  items: T[],
+  can: (role: import("@/types/models").Role) => boolean,
+): T[] {
+  return items.filter((item) => can(item.requiredRole));
+}
 
-const adminNav = [
-  { title: "Productos", url: "/products", icon: Package },
-  { title: "Lockers", url: "/lockers", icon: Lock },
-  { title: "Usuarios", url: "/users", icon: Users },
-  { title: "Auditoría", url: "/audit-logs", icon: ScrollText },
-];
+function NavGroup({
+  label,
+  items,
+  collapsed,
+  isActive,
+}: {
+  label: string;
+  items: typeof mainNav;
+  collapsed: boolean;
+  isActive: (path: string) => boolean;
+}) {
+  if (items.length === 0) {
+    return null;
+  }
+
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest">
+        {label}
+      </SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+                <NavLink
+                  to={item.url}
+                  end={item.url === "/dashboard"}
+                  className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                  activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                >
+                  <item.icon className="h-4 w-4" />
+                  {!collapsed && <span>{item.title}</span>}
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { user, logout } = useAuth();
-  const isAdmin = user?.role === "ADMIN";
+  const { user, logout, can } = useAuth();
+
+  const visibleMainNav = filterNav(mainNav, can);
+  const visibleManagementNav = filterNav(managementNav, can);
+  const visibleConfigNav = filterNav(configNav, can);
 
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + "/");
@@ -70,56 +98,9 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest">
-            Operaciones
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainNav.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                    <NavLink
-                      to={item.url}
-                      end={item.url === "/dashboard"}
-                      className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {isAdmin && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest">
-              Administración
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {adminNav.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                      <NavLink
-                        to={item.url}
-                        className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {!collapsed && <span>{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
+        <NavGroup label="Operaciones" items={visibleMainNav} collapsed={collapsed} isActive={isActive} />
+        <NavGroup label="Gestión" items={visibleManagementNav} collapsed={collapsed} isActive={isActive} />
+        <NavGroup label="Configuración" items={visibleConfigNav} collapsed={collapsed} isActive={isActive} />
       </SidebarContent>
 
       <SidebarFooter className="p-3">

@@ -1,6 +1,12 @@
 import React, { createContext, useState, useCallback } from "react";
 import { User, Role, mapUserFromApiResponse } from "@/types/models";
-import { AuthState, hasPermission } from "@/types/auth";
+import {
+  AuthState,
+  canAccessConfig,
+  canAccessManagement,
+  canAccessOperations,
+  hasPermission,
+} from "@/types/auth";
 import { apiClient } from "@/lib/apiClient";
 import { unwrapData } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
@@ -41,6 +47,9 @@ interface AuthContextType extends AuthState {
   logout: () => void | Promise<void>;
   can: (requiredRole: Role) => boolean;
   isRole: (role: Role) => boolean;
+  canAccessOperations: () => boolean;
+  canAccessManagement: () => boolean;
+  canAccessConfig: () => boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -149,8 +158,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isRole = useCallback((role: Role) => state.user?.role === role, [state.user]);
 
+  const role = state.user?.role;
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout, can, isRole }}>
+    <AuthContext.Provider
+      value={{
+        ...state,
+        login,
+        logout,
+        can,
+        isRole,
+        canAccessOperations: () => (role ? canAccessOperations(role) : false),
+        canAccessManagement: () => (role ? canAccessManagement(role) : false),
+        canAccessConfig: () => (role ? canAccessConfig(role) : false),
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
