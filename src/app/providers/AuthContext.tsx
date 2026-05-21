@@ -1,4 +1,5 @@
 import React, { createContext, useState, useCallback, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { User } from "@/types/models";
 import {
   AuthState,
@@ -21,6 +22,7 @@ import {
   setAuthUserJson,
   clearUserSession,
   clearClinicSession,
+  clearClinicMeta,
   clearAllSessions,
 } from "@/lib/authStorage";
 import {
@@ -32,6 +34,7 @@ import {
   fetchMe,
 } from "@/features/auth/api";
 import type { ClinicLoginResult, UserLoginResult } from "@/types/auth";
+import { AUTH_STAFF_QUERY_ROOT } from "@/features/auth/queryKeys";
 
 function loadUserFromStorage(): User | null {
   const raw = getAuthUserJson();
@@ -64,8 +67,12 @@ function applyUserLoginResult(result: UserLoginResult): Pick<
 > {
   setAccessToken(result.access_token);
   setAuthUserJson(JSON.stringify(result.user));
-  const clinicId = result.user.clinic_id || getClinicId();
-  if (clinicId) setClinicId(clinicId);
+  const clinicId = result.user.clinic_id || getClinicId() || null;
+  if (clinicId) {
+    setClinicId(clinicId);
+  } else {
+    clearClinicMeta();
+  }
   return {
     accessToken: result.access_token,
     user: result.user,
@@ -95,6 +102,7 @@ interface AuthContextType extends AuthState {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
   const [state, setState] = useState<AuthState>(readInitialState);
   const [bootstrapped, setBootstrapped] = useState(false);
 
@@ -136,6 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const applyClinicSession = useCallback((result: ClinicLoginResult) => {
+    clearClinicMeta();
     setClinicAccessToken(result.clinic_access_token);
     setClinicId(result.clinic.id);
     setClinicName(result.clinic.name);
@@ -202,6 +211,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       /* ignore */
     } finally {
       clearClinicSession();
+      queryClient.removeQueries({ queryKey: AUTH_STAFF_QUERY_ROOT });
       setState((prev) => ({
         ...prev,
         clinicAccessToken: null,
@@ -210,7 +220,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         hasClinicSession: false,
       }));
     }
-  }, []);
+  }, [queryClient]);
 
   const logoutAll = useCallback(async () => {
     try {

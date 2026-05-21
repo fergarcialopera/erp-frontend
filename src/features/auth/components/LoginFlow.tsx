@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,6 +20,7 @@ import {
 } from "@/lib/apiError";
 import type { AuthClinicSummary, AuthStaffMember, LoginWizardStep } from "@/types/auth";
 import { requestClinicRecovery, requestUserRecovery } from "@/features/auth/api";
+import { authStaffQueryKey, AUTH_STAFF_QUERY_ROOT } from "@/features/auth/queryKeys";
 import { toast } from "sonner";
 
 const clinicPasswordSchema = z.object({
@@ -49,9 +50,11 @@ function resolveInitialStep(
 
 export function LoginFlow() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const {
     isAuthenticated,
     hasClinicSession,
+    clinicId,
     clinicName,
     loginClinic,
     loginPin,
@@ -92,9 +95,11 @@ export function LoginFlow() {
     isLoading: staffLoading,
     isError: staffError,
   } = useQuery({
-    queryKey: ["auth", "staff"],
+    queryKey: authStaffQueryKey(clinicId),
     queryFn: fetchStaff,
-    enabled: step === "staff" && hasClinicSession,
+    enabled: step === "staff" && hasClinicSession && !!clinicId,
+    staleTime: 0,
+    gcTime: 0,
   });
 
   const clinicPasswordForm = useForm<ClinicPasswordForm>({
@@ -114,6 +119,7 @@ export function LoginFlow() {
     setSelectedClinic(null);
     setSelectedStaff(null);
     setPin("");
+    queryClient.removeQueries({ queryKey: AUTH_STAFF_QUERY_ROOT });
     if (hasClinicSession) await logoutClinic();
     setStep("clinics");
   };
@@ -122,7 +128,13 @@ export function LoginFlow() {
     if (!selectedClinic) return;
     setError(null);
     try {
-      await loginClinic(selectedClinic.id, data.password);
+      const clinicIdForLogin = selectedClinic.id;
+      queryClient.removeQueries({ queryKey: AUTH_STAFF_QUERY_ROOT });
+      await loginClinic(clinicIdForLogin, data.password);
+      await queryClient.fetchQuery({
+        queryKey: authStaffQueryKey(clinicIdForLogin),
+        queryFn: fetchStaff,
+      });
       setStep("staff");
     } catch (err: unknown) {
       const { status, detail } = parseApiError(err);
@@ -241,11 +253,15 @@ export function LoginFlow() {
                 name={clinic.name}
                 imageUrl={clinic.image_url}
                 displayInitial={clinic.display_initial}
-                onClick={() => {
+                onClick={async () => {
+                  setError(null);
+                  setSelectedStaff(null);
+                  setPin("");
+                  queryClient.removeQueries({ queryKey: AUTH_STAFF_QUERY_ROOT });
+                  if (hasClinicSession) await logoutClinic();
                   setSelectedClinic(clinic);
                   setStep("clinic-password");
                   clinicPasswordForm.reset();
-                  setError(null);
                 }}
               />
             ))}
