@@ -23,14 +23,30 @@ const resource = (base: string) =>
 /** Paths relativos al baseURL del apiClient. Alineados con el backend Laravel (prefix v1). */
 export const ENDPOINTS = {
   AUTH: {
+    CLINICS: "/auth/clinics",
+    CLINIC_LOGIN: "/auth/clinic/login",
+    CLINIC_LOGOUT: "/auth/clinic/logout",
+    STAFF: "/auth/staff",
     LOGIN: "/auth/login",
+    LOGIN_PIN: "/auth/login/pin",
     LOGOUT: "/auth/logout",
+    ME: "/me",
+    RECOVERY_CLINIC: "/auth/recovery/clinic",
+    RECOVERY_USER: "/auth/recovery/user",
+    RECOVERY_CONFIRM: "/auth/recovery/confirm",
   },
   CLINIC: {
     GET: "/clinic",
+    UPDATE: "/clinic",
     UPDATE_SETTINGS: "/clinic/settings",
+    IMAGE: "/clinic/image",
+    RECOVERY: "/clinic/recovery",
   },
-  USERS: resource("/users"),
+  USERS: {
+    ...resource("/users"),
+    IMAGE: (id: string) => `/users/${id}/image`,
+    RECOVERY: (id: string) => `/users/${id}/recovery`,
+  },
   LOCKERS: {
     ...resource("/lockers"),
     TREE: "/lockers/tree",

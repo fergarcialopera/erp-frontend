@@ -1,5 +1,5 @@
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/useAuth";
 import { configNav, mainNav, managementNav } from "@/config/navigation";
 import {
@@ -72,7 +72,13 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { user, logout, can } = useAuth();
+  const navigate = useNavigate();
+  const { user, logoutUser, can } = useAuth();
+
+  const handleLogout = async () => {
+    await logoutUser();
+    navigate("/login", { replace: true });
+  };
 
   const visibleMainNav = filterNav(mainNav, can);
   const visibleManagementNav = filterNav(managementNav, can);
@@ -120,7 +126,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Cerrar sesión"
-              onClick={logout}
+              onClick={handleLogout}
               className="text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
             >
               <LogOut className="h-4 w-4" />

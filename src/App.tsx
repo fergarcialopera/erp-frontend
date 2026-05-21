@@ -7,6 +7,7 @@ import { AuthProvider } from "@/app/providers/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layouts/AppLayout";
 import LoginPage from "@/app/routes/Login";
+import RecoverPage from "@/app/routes/Recover";
 import DashboardPage from "@/app/routes/Dashboard";
 import ProductsPage from "@/app/routes/Products";
 import InventoryPage from "@/app/routes/Inventory";
@@ -40,6 +41,7 @@ const App = () => (
         <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/recover" element={<RecoverPage />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
             <Route

@@ -1,5 +1,5 @@
-import React, { createContext, useState, useCallback } from "react";
-import { User, Role, mapUserFromApiResponse } from "@/types/models";
+import React, { createContext, useState, useCallback, useEffect } from "react";
+import { User } from "@/types/models";
 import {
   AuthState,
   canAccessConfig,
@@ -7,44 +7,84 @@ import {
   canAccessOperations,
   hasPermission,
 } from "@/types/auth";
-import { apiClient } from "@/lib/apiClient";
-import { unwrapData } from "@/lib/apiResponse";
-import { ENDPOINTS } from "@/config/endpoints";
-import { LOGIN_FORMAT, LOGIN_USER_FIELD } from "@/config/env";
+import { Role } from "@/types/models";
+import {
+  getAccessToken,
+  getClinicAccessToken,
+  getClinicId,
+  getClinicName,
+  getAuthUserJson,
+  setAccessToken,
+  setClinicAccessToken,
+  setClinicId,
+  setClinicName,
+  setAuthUserJson,
+  clearUserSession,
+  clearClinicSession,
+  clearAllSessions,
+} from "@/lib/authStorage";
+import {
+  loginClinic as apiLoginClinic,
+  loginWithPin as apiLoginPin,
+  loginWithPasswordAutoClinic,
+  logoutUserApi,
+  logoutClinicApi,
+  fetchMe,
+} from "@/features/auth/api";
+import type { ClinicLoginResult, UserLoginResult } from "@/types/auth";
 
-/** Decodifica el payload de un JWT (parte central, base64url). */
-function decodeJwtPayload(token: string): Record<string, unknown> {
+function loadUserFromStorage(): User | null {
+  const raw = getAuthUserJson();
+  if (!raw) return null;
   try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return {};
-    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const json = atob(base64);
-    return JSON.parse(json) as Record<string, unknown>;
+    return JSON.parse(raw) as User;
   } catch {
-    return {};
+    return null;
   }
 }
 
-/** Obtiene el nombre para mostrar desde el JWT; evita usar sub (id) como nombre. */
-function getNameFromJwtPayload(payload: Record<string, unknown>): string {
-  const name =
-    payload.name ??
-    payload.nombre ??
-    payload.full_name ??
-    payload.preferred_username ??
-    payload.email;
-  if (name != null && String(name).trim() !== "") return String(name).trim();
-  return "";
+function readInitialState(): AuthState {
+  const accessToken = getAccessToken();
+  const clinicAccessToken = getClinicAccessToken();
+  const user = loadUserFromStorage();
+  return {
+    accessToken,
+    clinicAccessToken,
+    clinicId: getClinicId(),
+    clinicName: getClinicName(),
+    user,
+    isAuthenticated: !!accessToken && !!user,
+    hasClinicSession: !!clinicAccessToken,
+  };
 }
 
-function normalizeRole(role: unknown): Role {
-  if (role === "ADMIN" || role === "TECHNICIAN" || role === "STAFF") return role;
-  return "STAFF";
+function applyUserLoginResult(result: UserLoginResult): Pick<
+  AuthState,
+  "accessToken" | "user" | "isAuthenticated" | "clinicId"
+> {
+  setAccessToken(result.access_token);
+  setAuthUserJson(JSON.stringify(result.user));
+  const clinicId = result.user.clinic_id || getClinicId();
+  if (clinicId) setClinicId(clinicId);
+  return {
+    accessToken: result.access_token,
+    user: result.user,
+    isAuthenticated: true,
+    clinicId: clinicId ?? null,
+  };
 }
 
 interface AuthContextType extends AuthState {
+  /** Alias de accessToken (compatibilidad). */
+  token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void | Promise<void>;
+  loginClinic: (clinicId: string, password: string) => Promise<ClinicLoginResult>;
+  loginPin: (userId: string, pin: string) => Promise<void>;
+  applyClinicSession: (result: ClinicLoginResult) => void;
+  logout: () => Promise<void>;
+  logoutUser: () => Promise<void>;
+  logoutClinic: () => Promise<void>;
+  logoutAll: () => Promise<void>;
   can: (requiredRole: Role) => boolean;
   isRole: (role: Role) => boolean;
   canAccessOperations: () => boolean;
@@ -55,98 +95,150 @@ interface AuthContextType extends AuthState {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AuthState>(() => {
-    const token = localStorage.getItem("auth_token");
-    const clinicId = localStorage.getItem("clinic_id");
-    const userStr = localStorage.getItem("auth_user");
-    const user = userStr ? (JSON.parse(userStr) as User) : null;
+  const [state, setState] = useState<AuthState>(readInitialState);
+  const [bootstrapped, setBootstrapped] = useState(false);
 
-    return {
-      token,
-      clinicId,
-      user,
-      isAuthenticated: !!token && !!user,
-    };
-  });
-
-  const login = useCallback(async (email: string, password: string) => {
-    const isForm = LOGIN_FORMAT === "form";
-    const body = isForm
-      ? new URLSearchParams({
-          [LOGIN_USER_FIELD]: email,
-          password,
-        })
-      : { [LOGIN_USER_FIELD]: email, password };
-    const config = isForm
-      ? { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-      : undefined;
-    const { data } = await apiClient.post(ENDPOINTS.AUTH.LOGIN, body, config);
-    // Respuesta según api-docs: puede ser { data: { access_token, user?, ... } } o directo { access_token, user?, ... }
-    const raw = (data ?? {}) as Record<string, unknown>;
-    const res = (unwrapData(raw) as Record<string, unknown>) ?? raw;
-    const token = (res.access_token ?? res.token) as string | undefined;
-
+  useEffect(() => {
+    let cancelled = false;
+    const token = getAccessToken();
     if (!token) {
-      throw new Error("La respuesta no incluye token");
+      setBootstrapped(true);
+      return;
     }
-
-    const jwtPayload = decodeJwtPayload(token);
-
-    // Si el endpoint devuelve el objeto user (id, clinic_id, name, email, role, is_active, ...), normalizarlo
-    const resUser = res.user as Record<string, unknown> | undefined;
-    let user: User;
-    if (resUser && typeof resUser === "object" && resUser.id != null) {
-      user = mapUserFromApiResponse({
-        id: resUser.id as string,
-        clinic_id: (resUser.clinic_id as string) ?? (jwtPayload.clinic_id as string),
-        name: (resUser.name as string) ?? getNameFromJwtPayload(jwtPayload),
-        email: resUser.email as string,
-        role: normalizeRole(resUser.role ?? jwtPayload.role),
-        is_active: resUser.is_active as boolean,
+    fetchMe()
+      .then((user) => {
+        if (cancelled) return;
+        setAuthUserJson(JSON.stringify(user));
+        setState((prev) => ({
+          ...prev,
+          user,
+          accessToken: token,
+          isAuthenticated: true,
+          clinicId: user.clinic_id || prev.clinicId,
+        }));
+      })
+      .catch(() => {
+        if (cancelled) return;
+        clearUserSession();
+        setState((prev) => ({
+          ...prev,
+          accessToken: null,
+          user: null,
+          isAuthenticated: false,
+        }));
+      })
+      .finally(() => {
+        if (!cancelled) setBootstrapped(true);
       });
-    } else {
-      // Construir user solo desde JWT; el nombre no debe ser sub (id)
-      const displayName = getNameFromJwtPayload(jwtPayload);
-      user = {
-        id: String(jwtPayload.sub ?? ""),
-        clinic_id: String(jwtPayload.clinic_id ?? ""),
-        name: displayName || String(jwtPayload.email ?? ""),
-        email: String(jwtPayload.email ?? ""),
-        role: normalizeRole(jwtPayload.role),
-        is_active: true,
-      };
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const applyClinicSession = useCallback((result: ClinicLoginResult) => {
+    setClinicAccessToken(result.clinic_access_token);
+    setClinicId(result.clinic.id);
+    setClinicName(result.clinic.name);
+    setState((prev) => ({
+      ...prev,
+      clinicAccessToken: result.clinic_access_token,
+      clinicId: result.clinic.id,
+      clinicName: result.clinic.name,
+      hasClinicSession: true,
+    }));
+  }, []);
+
+  const loginClinic = useCallback(async (clinicId: string, password: string) => {
+    const result = await apiLoginClinic(clinicId, password);
+    applyClinicSession(result);
+    return result;
+  }, [applyClinicSession]);
+
+  const completeUserLogin = useCallback((result: UserLoginResult) => {
+    const patch = applyUserLoginResult(result);
+    setState((prev) => ({
+      ...prev,
+      ...patch,
+    }));
+  }, []);
+
+  const loginPin = useCallback(
+    async (userId: string, pin: string) => {
+      const result = await apiLoginPin(userId, pin);
+      completeUserLogin(result);
+    },
+    [completeUserLogin],
+  );
+
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const result = await loginWithPasswordAutoClinic(email, password);
+      completeUserLogin(result);
+    },
+    [completeUserLogin],
+  );
+
+  const logoutUser = useCallback(async () => {
+    try {
+      if (getAccessToken()) await logoutUserApi();
+    } catch {
+      /* cerrar en cliente aunque falle el backend */
+    } finally {
+      clearUserSession();
+      setState((prev) => ({
+        ...prev,
+        accessToken: null,
+        user: null,
+        isAuthenticated: false,
+        clinicId: prev.hasClinicSession ? prev.clinicId : null,
+      }));
     }
-    const clinicId = user.clinic_id || undefined;
+  }, []);
 
-    localStorage.setItem("auth_token", token);
-    if (clinicId) localStorage.setItem("clinic_id", clinicId);
-    localStorage.setItem("auth_user", JSON.stringify(user));
+  const logoutClinic = useCallback(async () => {
+    try {
+      if (getClinicAccessToken()) await logoutClinicApi();
+    } catch {
+      /* ignore */
+    } finally {
+      clearClinicSession();
+      setState((prev) => ({
+        ...prev,
+        clinicAccessToken: null,
+        clinicId: null,
+        clinicName: null,
+        hasClinicSession: false,
+      }));
+    }
+  }, []);
 
+  const logoutAll = useCallback(async () => {
+    try {
+      if (getAccessToken()) await logoutUserApi();
+    } catch {
+      /* ignore */
+    }
+    try {
+      if (getClinicAccessToken()) await logoutClinicApi();
+    } catch {
+      /* ignore */
+    }
+    clearAllSessions();
     setState({
-      token,
-      clinicId: clinicId ?? null,
-      user,
-      isAuthenticated: true,
+      accessToken: null,
+      clinicAccessToken: null,
+      clinicId: null,
+      clinicName: null,
+      user: null,
+      isAuthenticated: false,
+      hasClinicSession: false,
     });
   }, []);
 
   const logout = useCallback(async () => {
-    try {
-      // Llamar al backend para invalidar el token (blacklist/revocación de sesión).
-      // El token actual se envía en el header; el backend debe marcarlo como inválido.
-      await apiClient.post(ENDPOINTS.AUTH.LOGOUT);
-    } catch {
-      // Si el backend falla (red, 401, etc.), igual cerramos sesión en el cliente.
-    } finally {
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("clinic_id");
-      localStorage.removeItem("auth_user");
-      setState({ token: null, clinicId: null, user: null, isAuthenticated: false });
-      // Recarga completa: evita tokens en memoria, cache de React Query y estado residual.
-      // El token queda invalidado en el cliente; el backend debe haberlo revocado.
-      window.location.href = "/login";
-    }
-  }, []);
+    await logoutAll();
+    window.location.href = "/login";
+  }, [logoutAll]);
 
   const can = useCallback(
     (requiredRole: Role) => {
@@ -159,13 +251,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isRole = useCallback((role: Role) => state.user?.role === role, [state.user]);
 
   const role = state.user?.role;
+  const clinicId = state.user?.clinic_id ?? state.clinicId;
+
+  if (!bootstrapped) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground">Cargando...</p>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider
       value={{
         ...state,
+        clinicId,
+        token: state.accessToken,
         login,
+        loginClinic,
+        loginPin,
+        applyClinicSession,
         logout,
+        logoutUser,
+        logoutClinic,
+        logoutAll,
         can,
         isRole,
         canAccessOperations: () => (role ? canAccessOperations(role) : false),
