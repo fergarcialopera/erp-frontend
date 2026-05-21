@@ -31,7 +31,10 @@ export const ENDPOINTS = {
     UPDATE_SETTINGS: "/clinic/settings",
   },
   USERS: resource("/users"),
-  LOCKERS: resource("/lockers"),
+  LOCKERS: {
+    ...resource("/lockers"),
+    TREE: "/lockers/tree",
+  },
   COMPARTMENTS: {
     DETAIL: (id: string) => `/compartments/${id}`,
   },

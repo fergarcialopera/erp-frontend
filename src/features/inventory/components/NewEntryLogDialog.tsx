@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -27,8 +26,7 @@ import { useAuth } from "@/app/providers/useAuth";
 import { productsNewUrl } from "@/features/products/constants";
 import { useProducts } from "@/features/products/queries";
 import { ProductStockLocationsPanel } from "@/features/products/components/ProductStockLocationsPanel";
-import { useLockers } from "@/features/lockers/queries";
-import { useCompartments } from "@/features/compartments/queries";
+import { useLockersTree } from "@/features/lockers/queries";
 import { createEntryLog } from "@/features/entryLogs/api";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -54,9 +52,11 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
   const { clinicId, can } = useAuth();
   const canManageProducts = can("ADMIN");
   const { data: products = [] } = useProducts(clinicId);
-  const { data: lockers = [] } = useLockers(clinicId);
+  const { data: lockerTree = [], isLoading: lockerTreeLoading } = useLockersTree(clinicId, {
+    enabled: open,
+  });
   const activeProducts = products.filter((p) => p.is_active);
-  const activeLockers = lockers.filter((l) => l.is_active);
+  const activeLockers = lockerTree.filter((l) => l.is_active);
   const [filterLockerId, setFilterLockerId] = useState<string | undefined>();
 
   const {
@@ -71,10 +71,8 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
     defaultValues: { quantity: 1 },
   });
 
-  const { data: compartments = [], isLoading: compartmentsLoading } = useCompartments(
-    filterLockerId || null,
-  );
-  const activeCompartments = compartments.filter((c) => c.is_active);
+  const selectedLocker = activeLockers.find((l) => l.id === filterLockerId);
+  const activeCompartments = (selectedLocker?.compartments ?? []).filter((c) => c.is_active);
   const selectedProductId = watch("product_id");
 
   useEffect(() => {
@@ -122,6 +120,7 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
       });
       queryClient.invalidateQueries({ queryKey: ["inventory", clinicId] });
       queryClient.invalidateQueries({ queryKey: ["products", "stock-locations"] });
+      queryClient.invalidateQueries({ queryKey: ["lockers", "tree", clinicId] });
       close();
     } catch {
       // Error mostrado por interceptor
@@ -133,10 +132,6 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Nueva entrada de stock</DialogTitle>
-          <DialogDescription>
-            Registra stock por SKU. El compartimento es opcional; si lo indicas, el stock se
-            ubicará ahí (el locker solo ayuda a elegir compartimento).
-          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
@@ -185,7 +180,7 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="entry-filter-locker" className="text-xs font-medium">
-                Locker <span className="text-muted-foreground font-normal">(filtro)</span>
+                Locker <span className="text-muted-foreground font-normal">(opcional)</span>
               </Label>
               <Select
                 value={filterLockerId ?? LOCATION_NONE}
@@ -193,7 +188,7 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
                   setFilterLockerId(v === LOCATION_NONE ? undefined : v);
                   setValue("compartment_id", undefined);
                 }}
-                disabled={activeLockers.length === 0}
+                disabled={lockerTreeLoading || activeLockers.length === 0}
               >
                 <SelectTrigger id="entry-filter-locker" className="h-10">
                   <SelectValue placeholder="Todos los lockers" />
@@ -220,8 +215,8 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
                   setValue("compartment_id", v === LOCATION_NONE ? undefined : v)
                 }
                 disabled={
+                  lockerTreeLoading ||
                   !filterLockerId ||
-                  compartmentsLoading ||
                   activeCompartments.length === 0
                 }
               >
@@ -232,13 +227,13 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
                 >
                   <SelectValue
                     placeholder={
-                      !filterLockerId
-                        ? "Elige un locker para ubicar"
-                        : compartmentsLoading
-                          ? "Cargando…"
+                      lockerTreeLoading
+                        ? "Cargando lockers…"
+                        : !filterLockerId
+                          ? "Elige un locker para ubicar"
                           : activeCompartments.length === 0
                             ? "Sin compartimentos en este locker"
-                            : "Sin ubicar (stock general)"
+                            : "Sin compartimento"
                     }
                   />
                 </SelectTrigger>
@@ -262,7 +257,7 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
 
           <div className="space-y-2">
             <Label htmlFor="entry-quantity" className="text-xs font-medium">
-              Cantidad (&gt; 0)
+              Cantidad
             </Label>
             <Input
               id="entry-quantity"
@@ -283,7 +278,7 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
 
           <div className="space-y-2">
             <Label htmlFor="entry-note" className="text-xs font-medium">
-              Nota (opcional)
+              Nota  <span className="text-muted-foreground font-normal">(opcional)</span>
             </Label>
             <Input
               id="entry-note"
