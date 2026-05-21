@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -24,6 +25,10 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Product } from "@/types/models";
 import { AxiosError } from "axios";
+import {
+  PRODUCTS_NEW_QUERY_PARAM,
+  PRODUCTS_NEW_QUERY_VALUE,
+} from "@/features/products/constants";
 
 const newProductSchema = z.object({
   sku: z.string().trim().min(1, "El SKU es obligatorio").max(255),
@@ -65,6 +70,7 @@ const baseColumns: Column<Product>[] = [
 
 export default function ProductsPage() {
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { clinicId, can } = useAuth();
   const {
     data: records,
@@ -217,6 +223,17 @@ export default function ProductsPage() {
     reset({ sku: "", name: "", barcode: "" });
     setModalOpen(true);
   };
+
+  useEffect(() => {
+    if (searchParams.get(PRODUCTS_NEW_QUERY_PARAM) !== PRODUCTS_NEW_QUERY_VALUE) return;
+    if (canEdit) {
+      reset({ sku: "", name: "", barcode: "" });
+      setModalOpen(true);
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete(PRODUCTS_NEW_QUERY_PARAM);
+    setSearchParams(next, { replace: true });
+  }, [searchParams, canEdit, reset, setSearchParams]);
 
   return (
     <div className="space-y-6">

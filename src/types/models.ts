@@ -103,12 +103,15 @@ export interface CompartmentInventory {
 
 export interface EntryLog {
   id: string;
-  clinic_id: string;
+  clinic_id?: string;
   sku: string;
   name?: string;
   quantity: number;
-  note?: string;
+  note?: string | null;
+  created_by?: string;
   created_at?: string;
+  locker?: { id: string; name?: string; device_id?: string | null } | null;
+  compartment?: { id: string; code?: string } | null;
 }
 
 export interface ExitLog {

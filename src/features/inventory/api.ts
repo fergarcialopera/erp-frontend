@@ -105,20 +105,3 @@ export const fetchInventory = async (): Promise<CompartmentInventory[]> => {
   return raw as CompartmentInventory[];
 };
 
-export interface AddInventoryBody {
-  sku: string;
-  name?: string;
-  quantity: number;
-  note?: string;
-}
-
-export const addInventory = async (data: AddInventoryBody) => {
-  const payload = {
-    sku: data.sku,
-    name: data.name,
-    quantity: data.quantity,
-    note: data.note,
-  };
-  const res = await apiClient.post(ENDPOINTS.ENTRY_LOGS.CREATE, payload);
-  return unwrapData<unknown>(res.data);
-};

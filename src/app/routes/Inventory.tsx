@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { NewEntryLogDialog } from "@/features/inventory/components/NewEntryLogDialog";
 import { DataTable, Column } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/app/providers/useAuth";
@@ -63,6 +64,7 @@ const columns: Column<InventoryRow>[] = [
 
 export default function InventoryPage() {
   const navigate = useNavigate();
+  const [entryModalOpen, setEntryModalOpen] = useState(false);
   const { clinicId } = useAuth();
   const {
     data: inventory = [],
@@ -126,7 +128,7 @@ export default function InventoryPage() {
             <Button
               size="sm"
               className="h-9 gap-1.5"
-              onClick={() => navigate("/entry-logs/new")}
+              onClick={() => setEntryModalOpen(true)}
               aria-label="Registrar entrada de stock"
             >
               <Plus className="h-4 w-4" />
@@ -135,6 +137,8 @@ export default function InventoryPage() {
           </div>
         }
       />
+
+      <NewEntryLogDialog open={entryModalOpen} onOpenChange={setEntryModalOpen} />
     </div>
   );
 }

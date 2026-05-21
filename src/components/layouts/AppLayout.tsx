@@ -11,7 +11,6 @@ const PAGE_TITLES: Record<string, string> = {
   "/lockers": "Lockers",
   "/exit-logs": "Salidas de stock",
   "/exit-logs/new": "Nueva salida",
-  "/entry-logs/new": "Nueva entrada",
   "/users": "Usuarios",
   "/audit-logs": "Registro de Auditoría",
 };

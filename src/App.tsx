@@ -14,7 +14,6 @@ import LockersPage from "@/app/routes/Lockers";
 import LockerDetailPage from "@/app/routes/LockerDetail";
 import ExitLogsPage from "@/app/routes/ExitLogs";
 import NewExitLogPage from "@/app/routes/NewExitLog";
-import NewEntryLogPage from "@/app/routes/NewEntryLog";
 import IncidentsPage from "@/app/routes/Incidents";
 import NewIncidentPage from "@/app/routes/NewIncident";
 import UsersPage from "@/app/routes/Users";
@@ -104,14 +103,6 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRole="TECHNICIAN">
                     <NewExitLogPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/entry-logs/new"
-                element={
-                  <ProtectedRoute requiredRole="TECHNICIAN">
-                    <NewEntryLogPage />
                   </ProtectedRoute>
                 }
               />
