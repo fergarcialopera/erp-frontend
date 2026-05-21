@@ -44,6 +44,8 @@ export const ENDPOINTS = {
   },
   INVENTORY: {
     LIST: "/inventory",
+    /** Corrección de stock por ubicación (solo ADMIN, incidencias). */
+    ADJUST_PRODUCT: (productId: string) => `/inventory/products/${productId}`,
   },
   /** Registro de entradas de stock (backend v2). */
   ENTRY_LOGS: {

@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { NewEntryLogDialog } from "@/features/inventory/components/NewEntryLogDialog";
+import { EditInventoryDialog } from "@/features/inventory/components/EditInventoryDialog";
 import { DataTable, Column } from "@/components/DataTable";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/app/providers/useAuth";
 import { useInventory } from "@/features/inventory/queries";
 import { useNavigate } from "react-router-dom";
-import { ClipboardList, PackagePlus, Plus } from "lucide-react";
+import { ClipboardList, PackagePlus, Pencil, Plus } from "lucide-react";
 import type { CompartmentInventory } from "@/types/models";
 
 function rowLockerDisplay(r: CompartmentInventory): string {
@@ -23,7 +24,19 @@ function rowProductName(r: CompartmentInventory): string {
 
 type InventoryRow = CompartmentInventory;
 
-const columns: Column<InventoryRow>[] = [
+const baseColumns: Column<InventoryRow>[] = [
+  {
+    key: "product_name",
+    header: "PRODUCTO",
+    sortable: true,
+    render: (r) => <span className="text-sm">{rowProductName(r)}</span>,
+  },
+  {
+    key: "product_sku",
+    header: "SKU",
+    sortable: true,
+    render: (r) => <span className="font-mono text-xs text-muted-foreground">{rowProductSku(r)}</span>,
+  },
   {
     key: "locker_code",
     header: "LOCKER",
@@ -35,18 +48,6 @@ const columns: Column<InventoryRow>[] = [
     header: "COMPARTIMENTO",
     sortable: true,
     render: (r) => <span className="text-sm">{rowCompartmentDisplay(r)}</span>,
-  },
-  {
-    key: "product_sku",
-    header: "SKU",
-    sortable: true,
-    render: (r) => <span className="font-mono text-xs text-muted-foreground">{rowProductSku(r)}</span>,
-  },
-  {
-    key: "product_name",
-    header: "PRODUCTO",
-    sortable: true,
-    render: (r) => <span className="text-sm">{rowProductName(r)}</span>,
   },
   {
     key: "qty_available",
@@ -65,7 +66,9 @@ const columns: Column<InventoryRow>[] = [
 export default function InventoryPage() {
   const navigate = useNavigate();
   const [entryModalOpen, setEntryModalOpen] = useState(false);
-  const { clinicId } = useAuth();
+  const [editingRow, setEditingRow] = useState<InventoryRow | null>(null);
+  const { clinicId, can } = useAuth();
+  const canCorrectInventory = can("ADMIN");
   const {
     data: inventory = [],
     isLoading,
@@ -86,11 +89,44 @@ export default function InventoryPage() {
     [inventory],
   );
 
+  const columns: Column<InventoryRow>[] = useMemo(
+    () => [
+      ...baseColumns,
+      ...(canCorrectInventory
+        ? [
+            {
+              key: "actions",
+              header: "ACCIONES",
+              sortable: false,
+              render: (r) => (
+                <div className="flex items-center justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => setEditingRow(r)}
+                    aria-label={`Corregir inventario de ${rowProductName(r)} en ${rowCompartmentDisplay(r)}`}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ),
+            } as Column<InventoryRow>,
+          ]
+        : []),
+    ],
+    [canCorrectInventory],
+  );
+
   return (
     <div className="space-y-6">
       <div className="page-header">
         <h2 className="page-title">Inventario</h2>
-        <p className="page-description">Vista de solo lectura del inventario por compartimiento</p>
+        <p className="page-description">
+          {canCorrectInventory
+            ? "Consulta el stock por ubicación. Los administradores pueden corregir cantidades ante incidencias."
+            : "Vista de solo lectura del inventario por compartimiento"}
+        </p>
       </div>
 
       <DataTable
@@ -139,6 +175,12 @@ export default function InventoryPage() {
       />
 
       <NewEntryLogDialog open={entryModalOpen} onOpenChange={setEntryModalOpen} />
+      <EditInventoryDialog
+        row={editingRow}
+        onOpenChange={(open) => {
+          if (!open) setEditingRow(null);
+        }}
+      />
     </div>
   );
 }

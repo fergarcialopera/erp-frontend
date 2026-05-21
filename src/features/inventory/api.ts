@@ -1,7 +1,16 @@
 import { apiClient } from "@/lib/apiClient";
 import { unwrapData, unwrapList } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
-import type { CompartmentInventory } from "@/types/models";
+import type { CompartmentInventory, ProductStockLocations } from "@/types/models";
+
+export interface AdjustProductInventoryLocation {
+  quantity: number;
+  compartment_id?: string | null;
+}
+
+export interface AdjustProductInventoryBody {
+  locations: AdjustProductInventoryLocation[];
+}
 
 type InventoryLocationApi = {
   quantity?: number;
@@ -103,6 +112,15 @@ function mapByProductRows(item: InventoryByProductApi): CompartmentInventory[] {
     };
   });
 }
+
+/** PATCH /inventory/products/{product_id} — ajuste de cantidades por ubicación (ADMIN). */
+export const adjustProductInventory = async (
+  productId: string,
+  data: AdjustProductInventoryBody,
+): Promise<ProductStockLocations> => {
+  const res = await apiClient.patch(ENDPOINTS.INVENTORY.ADJUST_PRODUCT(productId), data);
+  return unwrapData<ProductStockLocations>(res.data);
+};
 
 export const fetchInventory = async (): Promise<CompartmentInventory[]> => {
   const res = await apiClient.get(ENDPOINTS.INVENTORY.LIST);
