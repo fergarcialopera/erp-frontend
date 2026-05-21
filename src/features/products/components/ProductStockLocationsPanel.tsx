@@ -1,6 +1,7 @@
 import { MapPin } from "lucide-react";
 import { useProductStockLocations } from "@/features/products/queries";
-import { formatStockLocationLabel } from "@/features/products/formatStockLocationLabel";
+import { StockLocationDisplay } from "@/components/StockLocationDisplay";
+import { resolveStockLocationLabels } from "@/lib/stockLocation";
 
 interface ProductStockLocationsPanelProps {
   productId: string | undefined;
@@ -54,7 +55,11 @@ export function ProductStockLocationsPanel({ productId }: ProductStockLocationsP
                 key={key}
                 className="flex items-center justify-between gap-3 text-xs"
               >
-                <span className="min-w-0 truncate">{formatStockLocationLabel(location)}</span>
+                <StockLocationDisplay
+                  {...resolveStockLocationLabels(location.locker, location.compartment)}
+                  emptyLabel="Stock general"
+                  className="min-w-0"
+                />
                 <span className="shrink-0 tabular-nums font-medium">{location.quantity}</span>
               </li>
             );

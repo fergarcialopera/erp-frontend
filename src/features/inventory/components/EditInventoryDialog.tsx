@@ -17,6 +17,8 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/app/providers/useAuth";
 import { adjustProductInventory } from "@/features/inventory/api";
+import { StockLocationDisplay } from "@/components/StockLocationDisplay";
+import { resolveStockLocationLabels } from "@/lib/stockLocation";
 import type { CompartmentInventory } from "@/types/models";
 
 const editSchema = z.object({
@@ -27,14 +29,6 @@ const editSchema = z.object({
 });
 
 type EditForm = z.infer<typeof editSchema>;
-
-function rowLockerDisplay(r: CompartmentInventory): string {
-  return r.locker?.code ?? r.locker?.name ?? r.locker_code ?? r.locker_name ?? r.locker_id ?? "—";
-}
-
-function rowCompartmentDisplay(r: CompartmentInventory): string {
-  return r.compartment?.code ?? r.compartment_name ?? r.compartment_code ?? r.compartment_id ?? "—";
-}
 
 function rowProductName(r: CompartmentInventory): string {
   return r.product?.name ?? r.product_name ?? r.product_id ?? "—";
@@ -117,12 +111,10 @@ export function EditInventoryDialog({ row, onOpenChange }: EditInventoryDialogPr
                   {" · "}
                   <span className="font-mono text-xs">{rowProductSku(row)}</span>
                 </p>
-                <p>
-                  Locker: <strong className="text-foreground">{rowLockerDisplay(row)}</strong>
-                  {" · "}
-                  Compartimento:{" "}
-                  <strong className="text-foreground">{rowCompartmentDisplay(row)}</strong>
-                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Ubicación:</span>
+                  <StockLocationDisplay {...resolveStockLocationLabels(row.locker, row.compartment, row)} />
+                </div>
                 <p>
                   Reservado actual:{" "}
                   <strong className="text-foreground tabular-nums">{row.qty_reserved}</strong>

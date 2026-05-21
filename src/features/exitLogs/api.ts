@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/apiClient";
 import { unwrapData, unwrapList } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
+import { resolveStockLocationLabels, uniqueStockLocations } from "@/lib/stockLocation";
 import type { DashboardRecentExit, ExitLog } from "@/types/models";
 
 /** Línea para crear borrador POST /exit-logs (OpenAPI erp). */
@@ -96,7 +97,11 @@ export function mapExitLogDetailToRecentSummary(detail: ExitLogDetail): Dashboar
   const items = detail.items;
   const productNames = items.map((line) => line.product?.name);
   const productSkus = items.map((line) => line.product?.sku);
-  const lockerNames = items.map((line) => line.locker?.name ?? line.locker?.device_id);
+  const locations = uniqueStockLocations(
+    items.map((line) =>
+      resolveStockLocationLabels(line.locker, line.compartment),
+    ),
+  );
 
   return {
     id: header.id,
@@ -109,7 +114,7 @@ export function mapExitLogDetailToRecentSummary(detail: ExitLogDetail): Dashboar
     product_summary: summarizeLabels(productNames),
     product_sku: summarizeLabels(productSkus),
     total_quantity: items.reduce((sum, line) => sum + line.requested_quantity, 0),
-    locker_summary: summarizeLabels(lockerNames),
+    locations,
   };
 }
 
@@ -188,8 +193,24 @@ export function flattenExitLogDetail(detail: ExitLogDetail): ExitLog[] {
     product_name: line.product?.name,
     product_sku: line.product?.sku ?? undefined,
     requested_by_user_name: header.created_by?.name ?? undefined,
-    locker_name: line.locker?.name,
-    compartment_code: line.compartment?.code,
+    locker: line.locker
+      ? {
+          id: String(line.locker.id ?? ""),
+          clinic_id: "",
+          code: String(line.locker.name ?? line.locker.device_id ?? line.locker.id ?? ""),
+          name: String(line.locker.name ?? line.locker.device_id ?? ""),
+          is_active: true,
+        }
+      : undefined,
+    compartment: line.compartment
+      ? {
+          id: String(line.compartment.id ?? ""),
+          locker_id: String(line.locker?.id ?? ""),
+          code: String(line.compartment.code ?? line.compartment.id ?? ""),
+          status: "AVAILABLE",
+          is_active: true,
+        }
+      : undefined,
     status: header.status,
   }));
 }

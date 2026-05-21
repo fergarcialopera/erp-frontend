@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useMemo, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { ExitStatusBadge } from "@/features/exitLogs/components/ExitStatusBadge";
+import { StockLocationsList } from "@/components/StockLocationDisplay";
 
 type DraftAction =
   | { type: "addItem"; item: ProductSearchItem }
@@ -248,7 +249,7 @@ export default function DashboardPage() {
                   CANTIDAD
                 </th>
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden sm:table-cell">
-                  LOCKER
+                  UBICACIÓN
                 </th>
                 <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">
                   ESTADO
@@ -277,7 +278,9 @@ export default function DashboardPage() {
                     <p className="text-xs text-muted-foreground font-mono mt-0.5">{exit.product_sku}</p>
                   </td>
                   <td className="p-3 text-sm tabular-nums">{exit.total_quantity}</td>
-                  <td className="p-3 text-sm hidden sm:table-cell">{exit.locker_summary}</td>
+                  <td className="p-3 hidden sm:table-cell">
+                    <StockLocationsList locations={exit.locations} />
+                  </td>
                   <td className="p-3">
                     <ExitStatusBadge status={exit.status} />
                   </td>

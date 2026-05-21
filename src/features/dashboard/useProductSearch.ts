@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useProducts } from "@/features/products/queries";
 import { useInventory } from "@/features/inventory/queries";
+import { resolveStockLocationLabels } from "@/lib/stockLocation";
 import type { ProductSearchItem } from "./types";
 
 function normalizeText(value: string) {
@@ -12,19 +13,17 @@ export function useProductSearch(clinicId: string | null, search: string) {
   const { data: inventory = [], isLoading: loadingInventory } = useInventory(clinicId);
 
   const inventoryByProductId = useMemo(() => {
-    const map = new Map<string, { available: number; location?: string }>();
+    const map = new Map<string, { available: number; location?: ProductSearchItem["location"] }>();
     inventory.forEach((row) => {
       const productId = row.product_id ?? row.product?.id;
       if (!productId) return;
       const available = Number(row.qty_available ?? 0);
-      const locationParts = [
-        row.locker_name ?? row.locker?.name ?? row.locker_code ?? row.locker?.code,
-        row.compartment_name ?? row.compartment?.code ?? row.compartment_code,
-      ].filter(Boolean);
+      const labels = resolveStockLocationLabels(row.locker, row.compartment, row);
+      const hasLocation = !!(labels.locker || labels.compartment);
       const current = map.get(productId);
       map.set(productId, {
         available: (current?.available ?? 0) + available,
-        location: current?.location ?? (locationParts.length > 0 ? locationParts.join(" / ") : undefined),
+        location: current?.location ?? (hasLocation ? labels : undefined),
       });
     });
     return map;

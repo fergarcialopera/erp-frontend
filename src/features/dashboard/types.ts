@@ -1,10 +1,12 @@
+import type { StockLocationLabels } from "@/lib/stockLocation";
+
 export interface ProductSearchItem {
   productId: string;
   sku: string;
   name: string;
   barcode?: string;
   availableStock: number;
-  location?: string;
+  location?: StockLocationLabels;
 }
 
 export interface ExitDraftItem extends ProductSearchItem {

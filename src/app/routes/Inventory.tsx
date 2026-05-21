@@ -7,13 +7,12 @@ import { useAuth } from "@/app/providers/useAuth";
 import { useInventory } from "@/features/inventory/queries";
 import { useNavigate } from "react-router-dom";
 import { ClipboardList, PackagePlus, Pencil, Plus } from "lucide-react";
+import { StockLocationDisplay } from "@/components/StockLocationDisplay";
+import { formatStockLocationPlain, resolveStockLocationLabels } from "@/lib/stockLocation";
 import type { CompartmentInventory } from "@/types/models";
 
-function rowLockerDisplay(r: CompartmentInventory): string {
-  return r.locker?.code ?? r.locker?.name ?? r.locker_code ?? r.locker_name ?? r.locker_id ?? "—";
-}
-function rowCompartmentDisplay(r: CompartmentInventory): string {
-  return r.compartment?.code ?? r.compartment_name ?? r.compartment_code ?? r.compartment_id ?? "—";
+function rowLocationLabels(r: CompartmentInventory) {
+  return resolveStockLocationLabels(r.locker, r.compartment, r);
 }
 function rowProductSku(r: CompartmentInventory): string {
   return r.product?.sku ?? r.product_sku ?? r.product_id ?? "—";
@@ -38,16 +37,13 @@ const baseColumns: Column<InventoryRow>[] = [
     render: (r) => <span className="font-mono text-xs text-muted-foreground">{rowProductSku(r)}</span>,
   },
   {
-    key: "locker_code",
-    header: "LOCKER",
+    key: "location_label",
+    header: "UBICACIÓN",
     sortable: true,
-    render: (r) => <span className="text-sm font-mono">{rowLockerDisplay(r)}</span>,
-  },
-  {
-    key: "compartment_name",
-    header: "COMPARTIMENTO",
-    sortable: true,
-    render: (r) => <span className="text-sm">{rowCompartmentDisplay(r)}</span>,
+    render: (r) => {
+      const labels = rowLocationLabels(r);
+      return <StockLocationDisplay locker={labels.locker} compartment={labels.compartment} />;
+    },
   },
   {
     key: "qty_available",
@@ -84,8 +80,7 @@ export default function InventoryPage() {
         ...r,
         product_name: rowProductName(r),
         product_sku: rowProductSku(r),
-        locker_code: rowLockerDisplay(r),
-        compartment_name: rowCompartmentDisplay(r),
+        location_label: formatStockLocationPlain(rowLocationLabels(r)),
       })),
     [inventory],
   );
@@ -106,7 +101,7 @@ export default function InventoryPage() {
                     size="sm"
                     className="h-8 w-8 p-0"
                     onClick={() => setEditingRow(r)}
-                    aria-label={`Corregir inventario de ${rowProductName(r)} en ${rowCompartmentDisplay(r)}`}
+                    aria-label={`Corregir inventario de ${rowProductName(r)} en ${formatStockLocationPlain(rowLocationLabels(r))}`}
                   >
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>

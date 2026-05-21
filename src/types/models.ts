@@ -1,3 +1,5 @@
+import type { StockLocationLabels } from "@/lib/stockLocation";
+
 export type Role = "ADMIN" | "TECHNICIAN" | "STAFF";
 
 export type CompartmentStatus = "AVAILABLE" | "MAINTENANCE";
@@ -178,7 +180,7 @@ export interface DashboardRecentExit {
   product_summary: string;
   product_sku: string;
   total_quantity: number;
-  locker_summary: string;
+  locations: StockLocationLabels[];
 }
 
 /** Datos agregados para la vista de dashboard. */

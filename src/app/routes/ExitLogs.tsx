@@ -6,6 +6,8 @@ import { useDraftExitEditor } from "@/features/exitLogs/useDraftExitEditor";
 import { OpenDraftExitButton } from "@/features/exitLogs/components/OpenDraftExitButton";
 import { ExitStatusBadge } from "@/features/exitLogs/components/ExitStatusBadge";
 import { ConfirmExitDialog } from "@/features/dashboard/components/ConfirmExitDialog";
+import { StockLocationDisplay } from "@/components/StockLocationDisplay";
+import { formatStockLocationPlain, resolveStockLocationLabels } from "@/lib/stockLocation";
 import type { ExitLog } from "@/types/models";
 
 function exitProductSku(o: ExitLog): string {
@@ -14,11 +16,8 @@ function exitProductSku(o: ExitLog): string {
 function exitProductName(o: ExitLog): string {
   return o.product?.name ?? o.product_name ?? o.sku ?? o.product_id ?? "—";
 }
-function exitLockerDisplay(o: ExitLog): string {
-  return o.locker?.code ?? o.locker_code ?? o.locker?.name ?? o.locker_name ?? o.locker_id ?? "—";
-}
-function exitCompartmentDisplay(o: ExitLog): string {
-  return o.compartment?.code ?? o.compartment_code ?? o.compartment_name ?? o.compartment_id ?? "—";
+function exitLocationLabels(o: ExitLog) {
+  return resolveStockLocationLabels(o.locker, o.compartment, o);
 }
 function exitRequestedByDisplay(o: ExitLog): string {
   return o.requested_by?.name ?? o.requested_by_user_name ?? o.requested_by_user_id ?? "—";
@@ -47,8 +46,7 @@ export default function ExitLogsPage() {
       ...o,
       product_name: exitProductName(o),
       product_sku: exitProductSku(o),
-      locker_code: exitLockerDisplay(o),
-      compartment_code: exitCompartmentDisplay(o),
+      location_label: formatStockLocationPlain(exitLocationLabels(o)),
       requested_by_user_name: exitRequestedByDisplay(o),
     }));
   }, [exitLogs]);
@@ -89,16 +87,13 @@ export default function ExitLogsPage() {
         render: (o) => <span className="tabular-nums">{o.quantity}</span>,
       },
       {
-        key: "locker_name",
-        header: "LOCKER",
+        key: "location_label",
+        header: "UBICACIÓN",
         sortable: true,
-        render: (o) => <span className="text-sm font-mono">{exitLockerDisplay(o)}</span>,
-      },
-      {
-        key: "compartment_name",
-        header: "COMPARTIMENTO",
-        sortable: true,
-        render: (o) => <span className="text-sm font-mono">{exitCompartmentDisplay(o)}</span>,
+        render: (o) => {
+          const labels = exitLocationLabels(o);
+          return <StockLocationDisplay locker={labels.locker} compartment={labels.compartment} />;
+        },
       },
       {
         key: "status",

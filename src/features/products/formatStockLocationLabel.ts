@@ -1,9 +1,8 @@
+import { formatStockLocationPlain, resolveStockLocationLabels } from "@/lib/stockLocation";
 import type { ProductStockLocation } from "@/types/models";
 
 export function formatStockLocationLabel(location: ProductStockLocation): string {
-  const parts = [
-    location.locker?.name,
-    location.compartment?.code,
-  ].filter(Boolean);
-  return parts.length > 0 ? parts.join(" / ") : "Stock general";
+  const labels = resolveStockLocationLabels(location.locker, location.compartment);
+  const plain = formatStockLocationPlain(labels, " / ");
+  return plain || "Stock general";
 }
