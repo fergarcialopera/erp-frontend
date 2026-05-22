@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useProducts } from "@/features/products/queries";
 import { useInventory } from "@/features/inventory/queries";
-import { resolveStockLocationLabels } from "@/lib/stockLocation";
+import { resolveStockLocationLabels, uniqueStockLocations } from "@/lib/stockLocation";
 import type { ProductSearchItem } from "./types";
 
 function normalizeText(value: string) {
@@ -13,17 +13,19 @@ export function useProductSearch(clinicId: string | null, search: string) {
   const { data: inventory = [], isLoading: loadingInventory } = useInventory(clinicId);
 
   const inventoryByProductId = useMemo(() => {
-    const map = new Map<string, { available: number; location?: ProductSearchItem["location"] }>();
+    const map = new Map<string, { available: number; locations: ProductSearchItem["locations"] }>();
     inventory.forEach((row) => {
       const productId = row.product_id ?? row.product?.id;
       if (!productId) return;
       const available = Number(row.qty_available ?? 0);
       const labels = resolveStockLocationLabels(row.locker, row.compartment, row);
       const hasLocation = !!(labels.locker || labels.compartment);
-      const current = map.get(productId);
+      const current = map.get(productId) ?? { available: 0, locations: [] };
+      const nextLocations =
+        available > 0 && hasLocation ? [...current.locations, labels] : current.locations;
       map.set(productId, {
-        available: (current?.available ?? 0) + available,
-        location: current?.location ?? (hasLocation ? labels : undefined),
+        available: current.available + available,
+        locations: uniqueStockLocations(nextLocations),
       });
     });
     return map;
@@ -39,7 +41,7 @@ export function useProductSearch(clinicId: string | null, search: string) {
         name: p.name,
         barcode: p.barcode,
         availableStock: inventoryData?.available ?? 0,
-        location: inventoryData?.location,
+        locations: inventoryData?.locations ?? [],
       };
     });
 

@@ -147,7 +147,7 @@ export function LoginFlow() {
   };
 
   const onPinSubmit = async (value: string) => {
-    if (!selectedStaff || value.length < 4) return;
+    if (!selectedStaff || value.length !== 4) return;
     setError(null);
     setPinSubmitting(true);
     try {
@@ -398,7 +398,7 @@ export function LoginFlow() {
             />
             <span className="text-[10px] text-muted-foreground">Toca para cambiar usuario</span>
           </div>
-          <InputOTP maxLength={6} value={pin} onChange={setPin} disabled={pinSubmitting}>
+          <InputOTP maxLength={4} value={pin} onChange={setPin} disabled={pinSubmitting}>
             <InputOTPGroup>
               <InputOTPSlot index={0} />
               <InputOTPSlot index={1} />
@@ -406,11 +406,11 @@ export function LoginFlow() {
               <InputOTPSlot index={3} />
             </InputOTPGroup>
           </InputOTP>
-          <p className="text-[11px] text-muted-foreground">PIN de 4 a 6 dígitos</p>
+          <p className="text-[11px] text-muted-foreground">PIN de 4 dígitos</p>
           <Button
             type="button"
             className="w-full h-10"
-            disabled={pin.length < 4 || pin.length > 6 || pinSubmitting}
+            disabled={pin.length !== 4 || pinSubmitting}
             onClick={() => void onPinSubmit(pin)}
           >
             {pinSubmitting ? "Validando..." : "Acceder"}

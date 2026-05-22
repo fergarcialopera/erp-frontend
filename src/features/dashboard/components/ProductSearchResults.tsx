@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { StockLocationDisplay } from "@/components/StockLocationDisplay";
+import { StockLocationsList } from "@/components/StockLocationDisplay";
 import type { ProductSearchItem } from "../types";
 
 interface ProductSearchResultsProps {
@@ -54,12 +54,12 @@ export function ProductSearchResults({
               <span>
                 Stock: <span className="font-medium tabular-nums">{item.availableStock}</span>
               </span>
-              {item.location ? (
+              {item.locations.length > 0 ? (
                 <>
                   <span className="hidden sm:inline" aria-hidden>
                     ·
                   </span>
-                  <StockLocationDisplay {...item.location} />
+                  <StockLocationsList locations={item.locations} />
                 </>
               ) : null}
               {item.availableStock <= 0 ? <span>Sin stock</span> : null}

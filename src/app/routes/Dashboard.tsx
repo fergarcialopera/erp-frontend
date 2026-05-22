@@ -102,7 +102,7 @@ export default function DashboardPage() {
         .map((row) => {
           const source = draft.find((d) => d.productId === row.productId);
           return source
-            ? { ...row, availableStock: source.availableStock, location: source.location }
+            ? { ...row, availableStock: source.availableStock, locations: source.locations }
             : row;
         });
 

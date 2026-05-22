@@ -22,7 +22,7 @@ const passwordSchema = z
   });
 
 const pinSchema = z.object({
-  pin: z.string().regex(/^\d{4,6}$/, "PIN de 4 a 6 dígitos"),
+  pin: z.string().regex(/^\d{4}$/, "PIN de 4 dígitos"),
 });
 
 type PasswordForm = z.infer<typeof passwordSchema>;
@@ -117,7 +117,7 @@ export default function RecoverPage() {
 
       {type === "user_pin" ? (
         <div className="space-y-4 flex flex-col items-center">
-          <InputOTP maxLength={6} value={pin} onChange={setPin}>
+          <InputOTP maxLength={4} value={pin} onChange={setPin}>
             <InputOTPGroup>
               <InputOTPSlot index={0} />
               <InputOTPSlot index={1} />
@@ -125,7 +125,7 @@ export default function RecoverPage() {
               <InputOTPSlot index={3} />
             </InputOTPGroup>
           </InputOTP>
-          <Button type="button" className="w-full" onClick={onPinSubmit} disabled={pin.length < 4}>
+          <Button type="button" className="w-full" onClick={onPinSubmit} disabled={pin.length !== 4}>
             Guardar PIN
           </Button>
         </div>
