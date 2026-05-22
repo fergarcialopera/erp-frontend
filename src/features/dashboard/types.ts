@@ -6,7 +6,6 @@ export interface ProductSearchItem {
   name: string;
   barcode?: string;
   availableStock: number;
-  locations: StockLocationLabels[];
 }
 
 export interface ExitDraftItem extends ProductSearchItem {

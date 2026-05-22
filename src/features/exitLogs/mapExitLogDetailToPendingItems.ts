@@ -25,7 +25,6 @@ export function mapExitLogDetailToPendingItems(detail: ExitLogDetail): PendingEx
         confirmedQuantity: line.requested_quantity,
         compartmentId: line.compartment?.id,
         pickLocation,
-        locations: pickLocation.locker || pickLocation.compartment ? [pickLocation] : [],
       };
     })
     .filter((row): row is PendingExitItem => row !== null);

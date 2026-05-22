@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { StockLocationsList } from "@/components/StockLocationDisplay";
 import type { ProductSearchItem } from "../types";
 
 interface ProductSearchResultsProps {
@@ -50,20 +49,11 @@ export function ProductSearchResults({
               SKU: {item.sku}
               {item.barcode ? ` | Barcode: ${item.barcode}` : ""}
             </p>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-              <span>
-                Stock: <span className="font-medium tabular-nums">{item.availableStock}</span>
-              </span>
-              {item.locations.length > 0 ? (
-                <>
-                  <span className="hidden sm:inline" aria-hidden>
-                    ·
-                  </span>
-                  <StockLocationsList locations={item.locations} />
-                </>
-              ) : null}
-              {item.availableStock <= 0 ? <span>Sin stock</span> : null}
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Stock:{" "}
+              <span className="font-medium tabular-nums">{item.availableStock}</span>
+              {item.availableStock <= 0 ? " · Sin stock" : ""}
+            </p>
           </div>
           <Button
             size="sm"

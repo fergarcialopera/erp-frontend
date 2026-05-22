@@ -50,7 +50,6 @@ export function replanPendingProductLines(
     name: head.name,
     barcode: head.barcode,
     availableStock: head.availableStock,
-    locations: head.locations,
     exitLogId: head.exitLogId,
     exitLogItemId: pendingLineId(
       productId,

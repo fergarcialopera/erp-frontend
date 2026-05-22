@@ -102,9 +102,7 @@ export default function DashboardPage() {
 
       const created = mapExitLogDetailToPendingItems(detail).map((row) => {
         const source = draft.find((d) => d.productId === row.productId);
-        return source
-          ? { ...row, availableStock: source.availableStock, locations: source.locations }
-          : row;
+        return source ? { ...row, availableStock: source.availableStock } : row;
       });
 
       if (created.length > 0) {

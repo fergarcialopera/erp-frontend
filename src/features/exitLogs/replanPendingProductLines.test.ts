@@ -8,7 +8,6 @@ const baseItem: PendingExitItem = {
   sku: "SKU1",
   name: "Producto 1",
   availableStock: 8,
-  locations: [],
   quantity: 4,
   confirmedQuantity: 4,
   exitLogId: "exit-1",
