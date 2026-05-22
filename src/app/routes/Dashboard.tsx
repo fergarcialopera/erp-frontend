@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { useMemo, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { ExitStatusBadge } from "@/features/exitLogs/components/ExitStatusBadge";
-import { StockLocationsList } from "@/components/StockLocationDisplay";
+import { StockLocationPicksList } from "@/components/StockLocationDisplay";
 
 type DraftAction =
   | { type: "addItem"; item: ProductSearchItem }
@@ -74,6 +74,17 @@ export default function DashboardPage() {
 
   const isLoading = dashboardLoading || dashboardFetching;
   const exits = dashboard?.latest_exits ?? [];
+  const primaryRowExitIds = useMemo(() => {
+    const seen = new Set<string>();
+    const ids = new Set<string>();
+    for (const row of exits) {
+      if (!seen.has(row.exitLogId)) {
+        seen.add(row.exitLogId);
+        ids.add(row.exitLogId);
+      }
+    }
+    return ids;
+  }, [exits]);
   const isStaff = user?.role === "STAFF";
   const formatRequestedAt = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -279,12 +290,12 @@ export default function DashboardPage() {
                   className="border-b last:border-0 hover:bg-muted/30 transition-colors"
                 >
                   <td className="p-3">
-                    <p className="text-sm font-medium leading-snug">{exit.product_summary}</p>
-                    <p className="text-xs text-muted-foreground font-mono mt-0.5">{exit.product_sku}</p>
+                    <p className="text-sm font-medium leading-snug">{exit.productName}</p>
+                    <p className="text-xs text-muted-foreground font-mono mt-0.5">{exit.productSku}</p>
                   </td>
-                  <td className="p-3 text-sm tabular-nums">{exit.total_quantity}</td>
+                  <td className="p-3 text-sm tabular-nums">{exit.totalQuantity}</td>
                   <td className="p-3 hidden sm:table-cell">
-                    <StockLocationsList locations={exit.locations} />
+                    <StockLocationPicksList picks={exit.locationPicks} />
                   </td>
                   <td className="p-3">
                     <ExitStatusBadge status={exit.status} />
@@ -296,10 +307,12 @@ export default function DashboardPage() {
                     {formatRequestedAt(exit.created_at)}
                   </td>
                   <td className="p-3 text-right">
-                    {exit.status.toUpperCase() === "DRAFT" && canExecute ? (
+                    {exit.status.toUpperCase() === "DRAFT" &&
+                    canExecute &&
+                    primaryRowExitIds.has(exit.exitLogId) ? (
                       <OpenDraftExitButton
-                        exitLogId={exit.id}
-                        loading={draftEditor.openingId === exit.id}
+                        exitLogId={exit.exitLogId}
+                        loading={draftEditor.openingId === exit.exitLogId}
                         onOpen={draftEditor.openById}
                       />
                     ) : (

@@ -1,6 +1,7 @@
 import { fetchProductStockLocations } from "@/features/products/api";
 import type { ExitDraftItem } from "@/features/dashboard/types";
 import type { CreateExitLogItem } from "./api";
+import { planLinesToCreateItem } from "./buildExitLogCreatePayload";
 import type { ProductStockCache } from "./productStockCache";
 import {
   planExitPick,
@@ -29,7 +30,7 @@ export interface BuildExitLogCreateItemsResult {
   cache: ProductStockCache;
 }
 
-/** Convierte el borrador del dashboard en líneas POST /exit-logs con compartimentos optimizados. */
+/** Convierte el borrador del dashboard en ítems POST /exit-logs (un producto → locations[]). */
 export async function buildExitLogCreateItemsFromDraft(
   draft: ExitDraftItem[],
 ): Promise<BuildExitLogCreateItemsResult> {
@@ -47,12 +48,9 @@ export async function buildExitLogCreateItemsFromDraft(
       throw new ExitPickInsufficientStockError(item.name, item.quantity, planned);
     }
 
-    for (const line of plan) {
-      items.push({
-        product_id: item.productId,
-        quantity: line.quantity,
-        ...(line.compartmentId ? { compartment_id: line.compartmentId } : {}),
-      });
+    const createItem = planLinesToCreateItem(item.productId, plan);
+    if (createItem) {
+      items.push(createItem);
     }
   }
 

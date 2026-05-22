@@ -1,14 +1,38 @@
 import { apiClient } from "@/lib/apiClient";
 import { unwrapData, unwrapList } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
-import { resolveStockLocationLabels, uniqueStockLocations } from "@/lib/stockLocation";
-import type { DashboardRecentExit, ExitLog } from "@/types/models";
+import type { ExitLog } from "@/types/models";
+import type { ExitLogProductDisplayRow } from "@/types/models";
+import { groupExitLogDetailByProduct } from "./groupExitLogDetailByProduct";
+import { normalizeExitLogDetail } from "./exitLogDetailNormalize";
 
-/** Línea para crear borrador POST /exit-logs (OpenAPI erp). */
-export interface CreateExitLogItem {
+/** Asignación explícita por compartimento (OpenAPI ExitLogCreateLocationAllocation). */
+export interface CreateExitLogLocationAllocation {
+  compartment_id: string;
+  quantity: number;
+  locker_id?: string;
+}
+
+/** Un producto con varias ubicaciones (recomendado para multi-compartimento). */
+export interface CreateExitLogItemWithLocations {
+  product_id: string;
+  locations: CreateExitLogLocationAllocation[];
+}
+
+/** Un producto con cantidad total y opcionalmente un compartimento (legacy). */
+export interface CreateExitLogItemLegacy {
   product_id: string;
   quantity: number;
   compartment_id?: string;
+  locker_id?: string;
+}
+
+export type CreateExitLogItem = CreateExitLogItemWithLocations | CreateExitLogItemLegacy;
+
+export function isCreateItemWithLocations(
+  item: CreateExitLogItem,
+): item is CreateExitLogItemWithLocations {
+  return "locations" in item && Array.isArray(item.locations);
 }
 
 export interface CreateExitLogBody {
@@ -26,19 +50,26 @@ export interface UpdateExitLogBody {
   items: UpdateExitLogItem[];
 }
 
-export interface ExitLogLine {
-  id: string;
+export interface ExitLogLocationLine {
+  item_id: string;
+  requested_quantity: number;
+  confirmed_quantity?: number | null;
+  stock_available?: number | null;
+  locker?: { id: string; name?: string; device_id?: string | null } | null;
+  compartment?: { id: string; code?: string } | null;
+}
+
+/** Producto dentro del detalle de salida (un ítem por product_id). */
+export interface ExitLogProductItem {
   product?: {
     id: string;
     name?: string;
     sku?: string | null;
     barcode?: string | null;
   };
-  locker?: { id: string; name?: string; device_id?: string | null } | null;
-  compartment?: { id: string; code?: string } | null;
-  requested_quantity: number;
-  confirmed_quantity?: number | null;
-  stock_available?: number | null;
+  requested_quantity_total?: number;
+  confirmed_quantity_total?: number | null;
+  locations: ExitLogLocationLine[];
 }
 
 export interface ExitLogHeader {
@@ -53,12 +84,16 @@ export interface ExitLogHeader {
     name?: string | null;
     email?: string | null;
   };
+  location?: {
+    locker?: { id: string; name?: string; device_id?: string | null } | null;
+    compartment?: { id: string; code?: string } | null;
+  } | null;
 }
 
-/** Respuesta enriquecida de create/get/patch/confirm/cancel. */
+/** Respuesta enriquecida de create/get/patch/confirm/cancel (OpenAPI v2). */
 export interface ExitLogDetail {
   exit_log: ExitLogHeader;
-  items: ExitLogLine[];
+  items: ExitLogProductItem[];
 }
 
 function mapRawExitLogListRow(d: Record<string, unknown>): ExitLog {
@@ -74,8 +109,23 @@ function mapRawExitLogListRow(d: Record<string, unknown>): ExitLog {
   };
 }
 
-function mapRawExitLogDetail(data: ExitLogDetail): ExitLogDetail {
-  return data;
+function serializeCreateItem(item: CreateExitLogItem): Record<string, unknown> {
+  if (isCreateItemWithLocations(item)) {
+    return {
+      product_id: item.product_id,
+      locations: item.locations.map((loc) => ({
+        compartment_id: loc.compartment_id,
+        quantity: loc.quantity,
+        ...(loc.locker_id ? { locker_id: loc.locker_id } : {}),
+      })),
+    };
+  }
+  return {
+    product_id: item.product_id,
+    quantity: item.quantity,
+    ...(item.compartment_id ? { compartment_id: item.compartment_id } : {}),
+    ...(item.locker_id ? { locker_id: item.locker_id } : {}),
+  };
 }
 
 export const fetchExitLogs = async (): Promise<ExitLog[]> => {
@@ -84,79 +134,53 @@ export const fetchExitLogs = async (): Promise<ExitLog[]> => {
   return rows.map(mapRawExitLogListRow);
 };
 
-function summarizeLabels(values: (string | null | undefined)[]): string {
-  const unique = [...new Set(values.map((v) => v?.trim()).filter((v): v is string => !!v))];
-  if (unique.length === 0) return "—";
-  if (unique.length === 1) return unique[0];
-  return `${unique[0]} (+${unique.length - 1})`;
-}
-
-/** Resumen legible de un borrador/salida para tablas. */
-export function mapExitLogDetailToRecentSummary(detail: ExitLogDetail): DashboardRecentExit {
-  const header = detail.exit_log;
-  const items = detail.items;
-  const productNames = items.map((line) => line.product?.name);
-  const productSkus = items.map((line) => line.product?.sku);
-  const locations = uniqueStockLocations(
-    items.map((line) =>
-      resolveStockLocationLabels(line.locker, line.compartment),
-    ),
-  );
-
-  return {
-    id: header.id,
-    status: header.status ?? "DRAFT",
-    created_at: header.created_at ?? new Date().toISOString(),
-    created_by_name:
-      header.created_by?.name?.trim() ||
-      header.created_by?.email?.trim() ||
-      "—",
-    product_summary: summarizeLabels(productNames),
-    product_sku: summarizeLabels(productSkus),
-    total_quantity: items.reduce((sum, line) => sum + line.requested_quantity, 0),
-    locations,
-  };
-}
-
-/** Últimas N salidas con datos enriquecidos (GET detalle por id). */
-export async function fetchRecentExitSummaries(limit: number): Promise<DashboardRecentExit[]> {
+/** Últimas N salidas: filas visuales agrupadas por producto. */
+export async function fetchRecentExitProductRows(
+  limitExits: number,
+): Promise<ExitLogProductDisplayRow[]> {
   const headers = [...(await fetchExitLogs())].sort(
     (a, b) => new Date(String(b.created_at ?? "")).getTime() - new Date(String(a.created_at ?? "")).getTime(),
   );
-  const top = headers.slice(0, limit);
+  const top = headers.slice(0, limitExits);
   const details = await Promise.all(top.map((row) => getExitLog(row.id).catch(() => null)));
-  return details.filter((row): row is ExitLogDetail => row !== null).map(mapExitLogDetailToRecentSummary);
+  return details
+    .filter((row): row is ExitLogDetail => row !== null)
+    .flatMap((detail) => groupExitLogDetailByProduct(detail))
+    .sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
 }
 
-/** Lista completa de salidas: una fila por línea de producto, con datos enriquecidos. */
-export async function fetchExitLogsEnriched(): Promise<ExitLog[]> {
+/** Lista de salidas: una fila visual por producto y salida. */
+export async function fetchExitLogsEnriched(): Promise<ExitLogProductDisplayRow[]> {
   const headers = await fetchExitLogs();
   const details = await Promise.all(headers.map((row) => getExitLog(row.id).catch(() => null)));
-  return details.flatMap((detail) => (detail ? flattenExitLogDetail(detail) : []));
+  return details
+    .filter((row): row is ExitLogDetail => row !== null)
+    .flatMap((detail) => groupExitLogDetailByProduct(detail))
+    .sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
 }
 
 /**
  * Crea un borrador de salida (POST /exit-logs).
- * Body: { items: [{ product_id, quantity }], note? }
+ * Body: { items: [{ product_id, locations[] }] | legacy, note? }
  */
 export const createExitLog = async (data: CreateExitLogBody): Promise<ExitLogDetail> => {
   const requestBody: Record<string, unknown> = {
-    items: data.items.map((item) => ({
-      product_id: item.product_id,
-      quantity: item.quantity,
-      ...(item.compartment_id ? { compartment_id: item.compartment_id } : {}),
-    })),
+    items: data.items.map(serializeCreateItem),
   };
   if (data.note?.trim()) {
     requestBody.note = data.note.trim();
   }
   const res = await apiClient.post(ENDPOINTS.EXIT_LOGS.CREATE, requestBody);
-  return mapRawExitLogDetail(unwrapData<ExitLogDetail>(res.data));
+  return normalizeExitLogDetail(unwrapData<ExitLogDetail>(res.data));
 };
 
 export const getExitLog = async (id: string): Promise<ExitLogDetail> => {
   const res = await apiClient.get(ENDPOINTS.EXIT_LOGS.DETAIL(id));
-  return mapRawExitLogDetail(unwrapData<ExitLogDetail>(res.data));
+  return normalizeExitLogDetail(unwrapData<ExitLogDetail>(res.data));
 };
 
 export const updateExitLog = async (id: string, data: UpdateExitLogBody): Promise<ExitLogDetail> => {
@@ -166,51 +190,15 @@ export const updateExitLog = async (id: string, data: UpdateExitLogBody): Promis
       quantity: item.quantity,
     })),
   });
-  return mapRawExitLogDetail(unwrapData<ExitLogDetail>(res.data));
+  return normalizeExitLogDetail(unwrapData<ExitLogDetail>(res.data));
 };
 
 export const confirmExitLog = async (id: string): Promise<ExitLogDetail> => {
   const res = await apiClient.post(ENDPOINTS.EXIT_LOGS.CONFIRM(id));
-  return mapRawExitLogDetail(unwrapData<ExitLogDetail>(res.data));
+  return normalizeExitLogDetail(unwrapData<ExitLogDetail>(res.data));
 };
 
 export const cancelExitLog = async (id: string): Promise<ExitLogDetail> => {
   const res = await apiClient.post(ENDPOINTS.EXIT_LOGS.CANCEL(id));
-  return mapRawExitLogDetail(unwrapData<ExitLogDetail>(res.data));
+  return normalizeExitLogDetail(unwrapData<ExitLogDetail>(res.data));
 };
-
-/** Convierte líneas del detalle en filas para tablas legacy (una fila por línea). */
-export function flattenExitLogDetail(detail: ExitLogDetail): ExitLog[] {
-  const header = detail.exit_log;
-  return detail.items.map((line) => ({
-    id: header.id,
-    clinic_id: "",
-    sku: line.product?.sku ?? "",
-    quantity: line.requested_quantity,
-    note: header.note ?? undefined,
-    created_at: header.created_at,
-    product_id: line.product?.id,
-    product_name: line.product?.name,
-    product_sku: line.product?.sku ?? undefined,
-    requested_by_user_name: header.created_by?.name ?? undefined,
-    locker: line.locker
-      ? {
-          id: String(line.locker.id ?? ""),
-          clinic_id: "",
-          code: String(line.locker.name ?? line.locker.device_id ?? line.locker.id ?? ""),
-          name: String(line.locker.name ?? line.locker.device_id ?? ""),
-          is_active: true,
-        }
-      : undefined,
-    compartment: line.compartment
-      ? {
-          id: String(line.compartment.id ?? ""),
-          locker_id: String(line.locker?.id ?? ""),
-          code: String(line.compartment.code ?? line.compartment.id ?? ""),
-          status: "AVAILABLE",
-          is_active: true,
-        }
-      : undefined,
-    status: header.status,
-  }));
-}

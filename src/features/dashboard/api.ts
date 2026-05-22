@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/apiClient";
 import { unwrapList } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
-import { fetchExitLogs, fetchRecentExitSummaries } from "@/features/exitLogs/api";
+import { fetchExitLogs, fetchRecentExitProductRows } from "@/features/exitLogs/api";
 import type { DashboardData, Role } from "@/types/models";
 
 const RECENT_EXITS_LIMIT = 5;
@@ -9,7 +9,7 @@ const RECENT_EXITS_LIMIT = 5;
 export const fetchDashboard = async (role: Role = "STAFF"): Promise<DashboardData> => {
   if (role === "STAFF") {
     const exitLogHeaders = await fetchExitLogs();
-    const latestExits = await fetchRecentExitSummaries(RECENT_EXITS_LIMIT);
+    const latestExits = await fetchRecentExitProductRows(RECENT_EXITS_LIMIT);
 
     return {
       active_products_count: 0,
@@ -35,7 +35,7 @@ export const fetchDashboard = async (role: Role = "STAFF"): Promise<DashboardDat
   const availableLockersCount = lockers.filter((l) => l.is_active !== false).length;
   const hasLowStock = inventory.some((row) => Number(row.qty_available ?? 0) <= 0);
   const pendingExitsCount = exitLogHeaders.filter((row) => row.status === "DRAFT").length;
-  const latestExits = await fetchRecentExitSummaries(RECENT_EXITS_LIMIT);
+  const latestExits = await fetchRecentExitProductRows(RECENT_EXITS_LIMIT);
 
   return {
     active_products_count: activeProductsCount,

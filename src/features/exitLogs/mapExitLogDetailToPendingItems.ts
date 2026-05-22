@@ -2,30 +2,39 @@ import type { PendingExitItem } from "@/features/dashboard/types";
 import { resolveStockLocationLabels } from "@/lib/stockLocation";
 import type { ExitLogDetail } from "./api";
 
-/** Convierte el detalle de un borrador en ítems editables para confirmación. */
+/** Convierte el detalle de un borrador en ítems editables para confirmación (una fila por ubicación). */
 export function mapExitLogDetailToPendingItems(detail: ExitLogDetail): PendingExitItem[] {
   const exitLogId = detail.exit_log.id;
+  const rows: PendingExitItem[] = [];
 
-  return detail.items
-    .map((line) => {
-      const productId = line.product?.id;
-      if (!productId) return null;
+  for (const productItem of detail.items) {
+    const productId = productItem.product?.id;
+    if (!productId) continue;
 
+    const productStockTotal = (productItem.locations ?? []).reduce(
+      (sum, line) => sum + Number(line.stock_available ?? 0),
+      0,
+    );
+
+    for (const line of productItem.locations ?? []) {
       const pickLocation = resolveStockLocationLabels(line.locker, line.compartment);
+      const qty = line.requested_quantity;
 
-      return {
+      rows.push({
         productId,
-        sku: line.product?.sku ?? "",
-        name: line.product?.name ?? "",
-        barcode: line.product?.barcode ?? undefined,
-        availableStock: line.stock_available ?? 0,
-        quantity: line.requested_quantity,
+        sku: productItem.product?.sku ?? "",
+        name: productItem.product?.name ?? "",
+        barcode: productItem.product?.barcode ?? undefined,
+        availableStock: productStockTotal,
+        quantity: qty,
         exitLogId,
-        exitLogItemId: line.id,
-        confirmedQuantity: line.requested_quantity,
+        exitLogItemId: line.item_id,
+        confirmedQuantity: qty,
         compartmentId: line.compartment?.id,
         pickLocation,
-      };
-    })
-    .filter((row): row is PendingExitItem => row !== null);
+      });
+    }
+  }
+
+  return rows;
 }

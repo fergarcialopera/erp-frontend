@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { stockLocationKey, type StockLocationLabels } from "@/lib/stockLocation";
+import type { ExitLogLocationPick } from "@/types/models";
 
 interface StockLocationDisplayProps extends StockLocationLabels {
   className?: string;
@@ -65,5 +66,40 @@ export function StockLocationsList({
         />
       ))}
     </div>
+  );
+}
+
+interface StockLocationPicksListProps {
+  picks: ExitLogLocationPick[];
+  className?: string;
+  emptyLabel?: string;
+}
+
+/** Varias ubicaciones con cantidad retirada en cada una (salida de stock). */
+export function StockLocationPicksList({
+  picks,
+  className,
+  emptyLabel = "—",
+}: StockLocationPicksListProps) {
+  if (picks.length === 0) {
+    return <span className={cn("text-sm text-muted-foreground", className)}>{emptyLabel}</span>;
+  }
+
+  return (
+    <ul className={cn("space-y-1", className)}>
+      {picks.map((pick) => (
+        <li
+          key={stockLocationKey(pick.labels)}
+          className="flex items-center justify-between gap-3 text-xs"
+        >
+          <StockLocationDisplay
+            {...pick.labels}
+            emptyLabel="Stock general"
+            className="min-w-0"
+          />
+          <span className="shrink-0 tabular-nums font-medium">{pick.quantity}</span>
+        </li>
+      ))}
+    </ul>
   );
 }

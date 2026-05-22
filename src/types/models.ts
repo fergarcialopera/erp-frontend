@@ -171,16 +171,29 @@ export interface Incident {
   updated_at?: string;
 }
 
-/** Resumen de una salida para el widget del dashboard (detalle enriquecido). */
-export interface DashboardRecentExit {
+/** Ubicación con cantidad retirada en una salida. */
+export interface ExitLogLocationPick {
+  labels: StockLocationLabels;
+  quantity: number;
+}
+
+/**
+ * Fila visual de salida: un producto dentro de una salida con todas sus ubicaciones.
+ * (Varias líneas internas en exit_log_items → una fila por producto.)
+ */
+export interface ExitLogProductDisplayRow {
+  /** Clave única para listas: salida + producto */
   id: string;
+  exitLogId: string;
+  productId: string;
+  productName: string;
+  productSku: string;
+  totalQuantity: number;
+  locationPicks: ExitLogLocationPick[];
   status: string;
   created_at: string;
   created_by_name: string;
-  product_summary: string;
-  product_sku: string;
-  total_quantity: number;
-  locations: StockLocationLabels[];
+  note?: string;
 }
 
 /** Datos agregados para la vista de dashboard. */
@@ -189,7 +202,7 @@ export interface DashboardData {
   available_lockers_count: number;
   pending_exits_count: number;
   has_low_stock: boolean;
-  latest_exits: DashboardRecentExit[];
+  latest_exits: ExitLogProductDisplayRow[];
 }
 
 export interface AuditLog {

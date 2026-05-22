@@ -6,24 +6,8 @@ import { useDraftExitEditor } from "@/features/exitLogs/useDraftExitEditor";
 import { OpenDraftExitButton } from "@/features/exitLogs/components/OpenDraftExitButton";
 import { ExitStatusBadge } from "@/features/exitLogs/components/ExitStatusBadge";
 import { ConfirmExitDialog } from "@/features/dashboard/components/ConfirmExitDialog";
-import { StockLocationDisplay } from "@/components/StockLocationDisplay";
-import { formatStockLocationPlain, resolveStockLocationLabels } from "@/lib/stockLocation";
-import type { ExitLog } from "@/types/models";
-
-function exitProductSku(o: ExitLog): string {
-  return o.product?.sku ?? o.product_sku ?? o.sku ?? o.product_id ?? "—";
-}
-function exitProductName(o: ExitLog): string {
-  return o.product?.name ?? o.product_name ?? o.sku ?? o.product_id ?? "—";
-}
-function exitLocationLabels(o: ExitLog) {
-  return resolveStockLocationLabels(o.locker, o.compartment, o);
-}
-function exitRequestedByDisplay(o: ExitLog): string {
-  return o.requested_by?.name ?? o.requested_by_user_name ?? o.requested_by_user_id ?? "—";
-}
-
-type ExitLogRow = ExitLog;
+import { StockLocationPicksList } from "@/components/StockLocationDisplay";
+import type { ExitLogProductDisplayRow } from "@/types/models";
 
 export default function ExitLogsPage() {
   const { clinicId, isRole, canAccessOperations } = useAuth();
@@ -31,69 +15,53 @@ export default function ExitLogsPage() {
   const canExecute = canAccessOperations();
   const draftEditor = useDraftExitEditor(clinicId, canExecute);
   const {
-    data: exitLogs = [],
+    data: records = [],
     isLoading: exitLogsLoading,
     isFetching: exitLogsFetching,
     isError,
     refetch,
   } = useExitLogs(clinicId);
 
-  const records: ExitLogRow[] = useMemo(() => {
-    const sorted = [...exitLogs].sort(
-      (a, b) => new Date(b.created_at ?? "").getTime() - new Date(a.created_at ?? "").getTime(),
-    );
-    return sorted.map((o) => ({
-      ...o,
-      product_name: exitProductName(o),
-      product_sku: exitProductSku(o),
-      location_label: formatStockLocationPlain(exitLocationLabels(o)),
-      requested_by_user_name: exitRequestedByDisplay(o),
-    }));
-  }, [exitLogs]);
-
-  /** Primera fila visible de cada salida (varias filas comparten el mismo id de borrador). */
+  /** Primera fila visible de cada salida (varios productos comparten exitLogId). */
   const primaryRowExitIds = useMemo(() => {
     const seen = new Set<string>();
     const ids = new Set<string>();
     for (const row of records) {
-      if (!seen.has(row.id)) {
-        seen.add(row.id);
-        ids.add(row.id);
+      if (!seen.has(row.exitLogId)) {
+        seen.add(row.exitLogId);
+        ids.add(row.exitLogId);
       }
     }
     return ids;
   }, [records]);
 
-  const columns: Column<ExitLogRow>[] = useMemo(() => {
-    const base: Column<ExitLogRow>[] = [
+  const columns: Column<ExitLogProductDisplayRow>[] = useMemo(() => {
+    const base: Column<ExitLogProductDisplayRow>[] = [
       {
-        key: "sku",
+        key: "productSku",
         header: "ID PRODUCTO",
         sortable: true,
         render: (o) => (
-          <span className="font-mono text-xs text-muted-foreground">{exitProductSku(o)}</span>
+          <span className="font-mono text-xs text-muted-foreground">{o.productSku}</span>
         ),
       },
       {
-        key: "product_name",
+        key: "productName",
         header: "PRODUCTO",
         sortable: true,
-        render: (o) => <span className="text-sm">{exitProductName(o)}</span>,
+        render: (o) => <span className="text-sm">{o.productName}</span>,
       },
       {
-        key: "quantity",
+        key: "totalQuantity",
         header: "CANTIDAD",
         sortable: true,
-        render: (o) => <span className="tabular-nums">{o.quantity}</span>,
+        render: (o) => <span className="tabular-nums">{o.totalQuantity}</span>,
       },
       {
-        key: "location_label",
+        key: "locationPicks",
         header: "UBICACIÓN",
-        sortable: true,
-        render: (o) => {
-          const labels = exitLocationLabels(o);
-          return <StockLocationDisplay locker={labels.locker} compartment={labels.compartment} />;
-        },
+        sortable: false,
+        render: (o) => <StockLocationPicksList picks={o.locationPicks} />,
       },
       {
         key: "status",
@@ -105,10 +73,10 @@ export default function ExitLogsPage() {
 
     if (!isStaff) {
       base.push({
-        key: "requested_by_user_name",
+        key: "created_by_name",
         header: "USUARIO",
         sortable: true,
-        render: (o) => <span className="text-sm">{exitRequestedByDisplay(o)}</span>,
+        render: (o) => <span className="text-sm">{o.created_by_name}</span>,
       });
     }
 
@@ -119,7 +87,7 @@ export default function ExitLogsPage() {
         sortable: true,
         render: (o) => (
           <span className="text-xs text-muted-foreground">
-            {new Date(o.created_at ?? "").toLocaleString("es-ES", {
+            {new Date(o.created_at).toLocaleString("es-ES", {
               day: "2-digit",
               month: "short",
               year: "numeric",
@@ -134,11 +102,11 @@ export default function ExitLogsPage() {
         header: "ACCIONES",
         className: "text-right w-[110px]",
         render: (o) =>
-          o.status?.toUpperCase() === "DRAFT" && canExecute && primaryRowExitIds.has(o.id) ? (
+          o.status?.toUpperCase() === "DRAFT" && canExecute && primaryRowExitIds.has(o.exitLogId) ? (
             <div className="flex justify-end">
               <OpenDraftExitButton
-                exitLogId={o.id}
-                loading={draftEditor.openingId === o.id}
+                exitLogId={o.exitLogId}
+                loading={draftEditor.openingId === o.exitLogId}
                 onOpen={draftEditor.openById}
               />
             </div>
@@ -170,7 +138,7 @@ export default function ExitLogsPage() {
         isError={isError}
         onRetry={() => refetch()}
         columns={columns}
-        searchKey="product_name"
+        searchKey="productName"
         searchPlaceholder="Buscar por producto..."
         emptyTitle="Sin salidas"
         emptyDescription="No hay movimientos de salida registrados."
