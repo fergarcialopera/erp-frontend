@@ -5,6 +5,10 @@ import { ProductExitSearch } from "@/features/dashboard/components/ProductExitSe
 import { ConfirmExitDialog } from "@/features/dashboard/components/ConfirmExitDialog";
 import type { ExitDraftItem, ProductSearchItem } from "@/features/dashboard/types";
 import { useCreateExitLog } from "@/features/exitLogs/queries";
+import {
+  buildExitLogCreateItemsFromDraft,
+  ExitPickInsufficientStockError,
+} from "@/features/exitLogs/buildExitLogCreateItems";
 import { mapExitLogDetailToPendingItems } from "@/features/exitLogs/mapExitLogDetailToPendingItems";
 import { useDraftExitEditor } from "@/features/exitLogs/useDraftExitEditor";
 import { OpenDraftExitButton } from "@/features/exitLogs/components/OpenDraftExitButton";
@@ -90,34 +94,37 @@ export default function DashboardPage() {
   const executeDraft = async () => {
     if (!canExecute || draft.length === 0) return;
     try {
+      const { items: createItems, cache } = await buildExitLogCreateItemsFromDraft(draft);
       const detail = await createExitMutation.mutateAsync({
         note: "Salida desde dashboard",
-        items: draft.map((item) => ({
-          product_id: item.productId,
-          quantity: item.quantity,
-        })),
+        items: createItems,
       });
 
-      const created = mapExitLogDetailToPendingItems(detail)
-        .map((row) => {
-          const source = draft.find((d) => d.productId === row.productId);
-          return source
-            ? { ...row, availableStock: source.availableStock, locations: source.locations }
-            : row;
-        });
+      const created = mapExitLogDetailToPendingItems(detail).map((row) => {
+        const source = draft.find((d) => d.productId === row.productId);
+        return source
+          ? { ...row, availableStock: source.availableStock, locations: source.locations }
+          : row;
+      });
 
       if (created.length > 0) {
-        draftEditor.openWithItems(created);
+        await draftEditor.openWithItems(created, cache);
         dispatch({ type: "clear" });
         toast.success("Salida en borrador creada", {
-          description: "Revisa cantidades reales y confirma la salida.",
+          description: "Revisa el plan de retirada por compartimento y confirma la salida.",
         });
       } else {
         toast.error("No se pudo preparar la salida", {
           description: "Revisa los productos del borrador e inténtalo de nuevo.",
         });
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof ExitPickInsufficientStockError) {
+        toast.error("Stock insuficiente", {
+          description: `No hay stock suficiente en lockers para ${error.productName}.`,
+        });
+        return;
+      }
       toast.error("No se pudo crear el borrador de salida", {
         description: "Los productos se mantienen en el panel para reintentar.",
       });
@@ -312,8 +319,11 @@ export default function DashboardPage() {
         open={draftEditor.open}
         onOpenChange={draftEditor.setOpen}
         items={draftEditor.items}
+        productQuantities={draftEditor.productQuantities}
+        quantityErrors={draftEditor.quantityErrors}
+        hasQuantityErrors={draftEditor.hasQuantityErrors}
         loading={draftEditor.isConfirming}
-        onSetQty={draftEditor.setItemQty}
+        onSetProductQty={draftEditor.setProductQuantity}
         onCancelDrafts={draftEditor.cancelPendingDrafts}
         onConfirm={draftEditor.confirmDrafts}
       />

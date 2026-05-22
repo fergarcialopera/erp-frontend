@@ -18,4 +18,8 @@ export interface PendingExitItem extends ExitDraftItem {
   /** Id de línea en exit_log_items (PATCH /exit-logs/{id}). */
   exitLogItemId: string;
   confirmedQuantity: number;
+  /** Compartimento asignado por el plan de retirada (si aplica). */
+  compartmentId?: string;
+  /** Ubicación de esta línea concreta del borrador. */
+  pickLocation?: StockLocationLabels;
 }

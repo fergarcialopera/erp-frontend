@@ -180,8 +180,11 @@ export default function ExitLogsPage() {
         open={draftEditor.open}
         onOpenChange={draftEditor.setOpen}
         items={draftEditor.items}
+        productQuantities={draftEditor.productQuantities}
+        quantityErrors={draftEditor.quantityErrors}
+        hasQuantityErrors={draftEditor.hasQuantityErrors}
         loading={draftEditor.isConfirming}
-        onSetQty={draftEditor.setItemQty}
+        onSetProductQty={draftEditor.setProductQuantity}
         onCancelDrafts={draftEditor.cancelPendingDrafts}
         onConfirm={draftEditor.confirmDrafts}
       />
