@@ -128,10 +128,19 @@ function serializeCreateItem(item: CreateExitLogItem): Record<string, unknown> {
   };
 }
 
+function dedupeExitLogHeaders(headers: ExitLog[]): ExitLog[] {
+  const seen = new Set<string>();
+  return headers.filter((row) => {
+    if (seen.has(row.id)) return false;
+    seen.add(row.id);
+    return true;
+  });
+}
+
 export const fetchExitLogs = async (): Promise<ExitLog[]> => {
   const res = await apiClient.get(ENDPOINTS.EXIT_LOGS.LIST);
   const rows = unwrapList<Record<string, unknown>>(res.data);
-  return rows.map(mapRawExitLogListRow);
+  return dedupeExitLogHeaders(rows.map(mapRawExitLogListRow));
 };
 
 /** Últimas N salidas: filas visuales agrupadas por producto. */
@@ -143,24 +152,33 @@ export async function fetchRecentExitProductRows(
   );
   const top = headers.slice(0, limitExits);
   const details = await Promise.all(top.map((row) => getExitLog(row.id).catch(() => null)));
-  return details
+  const rows = details
     .filter((row): row is ExitLogDetail => row !== null)
-    .flatMap((detail) => groupExitLogDetailByProduct(detail))
-    .sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    );
+    .flatMap((detail) => groupExitLogDetailByProduct(detail));
+  return dedupeExitLogDisplayRows(rows).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
+}
+
+function dedupeExitLogDisplayRows(rows: ExitLogProductDisplayRow[]): ExitLogProductDisplayRow[] {
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    if (seen.has(row.id)) return false;
+    seen.add(row.id);
+    return true;
+  });
 }
 
 /** Lista de salidas: una fila visual por producto y salida. */
 export async function fetchExitLogsEnriched(): Promise<ExitLogProductDisplayRow[]> {
   const headers = await fetchExitLogs();
   const details = await Promise.all(headers.map((row) => getExitLog(row.id).catch(() => null)));
-  return details
+  const rows = details
     .filter((row): row is ExitLogDetail => row !== null)
-    .flatMap((detail) => groupExitLogDetailByProduct(detail))
-    .sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    );
+    .flatMap((detail) => groupExitLogDetailByProduct(detail));
+  return dedupeExitLogDisplayRows(rows).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
 }
 
 /**

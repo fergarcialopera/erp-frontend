@@ -58,9 +58,9 @@ export function StockLocationsList({
 
   return (
     <div className={cn("flex flex-col gap-1", className)}>
-      {locations.map((loc) => (
+      {locations.map((loc, index) => (
         <StockLocationDisplay
-          key={stockLocationKey(loc)}
+          key={`${stockLocationKey(loc)}:${index}`}
           locker={loc.locker}
           compartment={loc.compartment}
         />
@@ -87,9 +87,9 @@ export function StockLocationPicksList({
 
   return (
     <ul className={cn("space-y-1", className)}>
-      {picks.map((pick) => (
+      {picks.map((pick, index) => (
         <li
-          key={stockLocationKey(pick.labels)}
+          key={`${stockLocationKey(pick.labels)}:${index}`}
           className="flex items-center justify-between gap-3 text-xs"
         >
           <StockLocationDisplay

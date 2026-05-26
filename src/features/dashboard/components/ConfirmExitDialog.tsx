@@ -12,6 +12,7 @@ import { StockLocationDisplay } from "@/components/StockLocationDisplay";
 import { QuantityInput } from "./QuantityInput";
 import type { PendingExitItem } from "../types";
 import { cn } from "@/lib/utils";
+import { stockLocationKey } from "@/lib/stockLocation";
 
 interface ConfirmExitDialogProps {
   open: boolean;
@@ -100,9 +101,9 @@ export function ConfirmExitDialog({
                       Retirar de {lines.length === 1 ? "1 ubicación" : `${lines.length} ubicaciones`}:
                     </p>
                     <ul className="space-y-1">
-                      {lines.map((item) => (
+                      {lines.map((item, index) => (
                         <li
-                          key={item.exitLogItemId}
+                          key={`${item.exitLogItemId}:${stockLocationKey(item.pickLocation ?? {})}:${index}`}
                           className="flex items-center justify-between gap-3 text-xs"
                         >
                           <StockLocationDisplay
