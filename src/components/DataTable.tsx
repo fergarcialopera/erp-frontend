@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { TABLE_HEAD_CLASS } from "@/components/tableTypography";
 
 export interface Column<T> {
   key: string;
@@ -26,6 +27,16 @@ export interface Column<T> {
   render?: (item: T) => React.ReactNode;
   sortable?: boolean;
   className?: string;
+  /** Oculta la columna en viewports &lt; sm (640px). */
+  hideBelowSm?: boolean;
+  /** Oculta la columna en viewports &lt; md (768px). */
+  hideBelowMd?: boolean;
+}
+
+function columnVisibilityClass(col: Pick<Column<object>, "hideBelowSm" | "hideBelowMd">): string {
+  if (col.hideBelowMd) return "hidden md:table-cell";
+  if (col.hideBelowSm) return "hidden sm:table-cell";
+  return "";
 }
 
 interface DataTableProps<T> {
@@ -137,9 +148,9 @@ export function DataTable<T extends object>({
   return (
     <div className="table-container">
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 border-b">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 sm:p-4 border-b">
         {searchKey && (
-          <div className="relative w-full sm:w-72">
+          <div className="relative w-full min-w-0 sm:w-72 sm:shrink-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={search}
@@ -153,7 +164,9 @@ export function DataTable<T extends object>({
           </div>
         )}
         {filters}
-        <div className="ml-auto flex items-center gap-2">{headerAction}</div>
+        <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto sm:ml-auto shrink-0">
+          {headerAction}
+        </div>
       </div>
 
       {/* Table */}
@@ -166,12 +179,12 @@ export function DataTable<T extends object>({
               {columns.map((col) => (
                 <TableHead
                   key={col.key}
-                  className={`text-[11px] uppercase tracking-wider font-semibold text-muted-foreground ${col.className || ""}`}
+                  className={`${TABLE_HEAD_CLASS} ${columnVisibilityClass(col)} ${col.className || ""}`}
                 >
                   {col.sortable ? (
                     <button
                       onClick={() => handleSort(col.key)}
-                      className="flex items-center gap-1 hover:text-foreground transition-colors"
+                      className="flex items-center gap-0.5 sm:gap-1 hover:text-foreground transition-colors max-w-full text-left"
                     >
                       {col.header}
                       {sortKey === col.key ? (
@@ -202,7 +215,10 @@ export function DataTable<T extends object>({
                 onClick={() => onRowClick?.(item)}
               >
                 {columns.map((col) => (
-                  <TableCell key={col.key} className={`text-sm ${col.className || ""}`}>
+                  <TableCell
+                    key={col.key}
+                    className={`${columnVisibilityClass(col)} ${col.className || ""}`}
+                  >
                     {col.render ? col.render(item) : item[col.key]}
                   </TableCell>
                 ))}
@@ -215,11 +231,11 @@ export function DataTable<T extends object>({
 
       {/* Pagination */}
       {filtered.length > 0 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t">
-          <div className="text-xs text-muted-foreground">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-3 sm:px-4 py-3 border-t">
+          <div className="text-xs text-muted-foreground shrink-0">
             {filtered.length} registro{filtered.length !== 1 ? "s" : ""}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <Select
               value={String(pageSize)}
               onValueChange={(v) => {

@@ -30,11 +30,13 @@ function NavGroup({
   items,
   collapsed,
   isActive,
+  onNavigate,
 }: {
   label: string;
   items: typeof mainNav;
   collapsed: boolean;
   isActive: (path: string) => boolean;
+  onNavigate?: () => void;
 }) {
   if (items.length === 0) {
     return null;
@@ -53,6 +55,7 @@ function NavGroup({
                 <NavLink
                   to={item.url}
                   end={item.url === "/dashboard"}
+                  onClick={onNavigate}
                   className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                   activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                 >
@@ -69,8 +72,11 @@ function NavGroup({
 }
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const collapsed = state === "collapsed";
+  const closeMobileMenu = () => {
+    if (isMobile) setOpenMobile(false);
+  };
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logoutUser, can } = useAuth();
@@ -104,9 +110,27 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavGroup label="Operaciones" items={visibleMainNav} collapsed={collapsed} isActive={isActive} />
-        <NavGroup label="Gestión" items={visibleManagementNav} collapsed={collapsed} isActive={isActive} />
-        <NavGroup label="Configuración" items={visibleConfigNav} collapsed={collapsed} isActive={isActive} />
+        <NavGroup
+          label="Operaciones"
+          items={visibleMainNav}
+          collapsed={collapsed}
+          isActive={isActive}
+          onNavigate={closeMobileMenu}
+        />
+        <NavGroup
+          label="Gestión"
+          items={visibleManagementNav}
+          collapsed={collapsed}
+          isActive={isActive}
+          onNavigate={closeMobileMenu}
+        />
+        <NavGroup
+          label="Configuración"
+          items={visibleConfigNav}
+          collapsed={collapsed}
+          isActive={isActive}
+          onNavigate={closeMobileMenu}
+        />
       </SidebarContent>
 
       <SidebarFooter className="p-3">

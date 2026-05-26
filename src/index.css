@@ -108,11 +108,11 @@
 
 @layer components {
   .page-header {
-    @apply mb-6;
+    @apply mb-4 sm:mb-6;
   }
 
   .page-title {
-    @apply text-2xl font-semibold tracking-tight;
+    @apply text-xl sm:text-2xl font-semibold tracking-tight;
   }
 
   .page-description {
@@ -124,6 +124,10 @@
   }
 
   .table-container {
-    @apply rounded-md border bg-card overflow-hidden;
+    @apply rounded-md border bg-card overflow-x-auto;
+  }
+
+  .table-container table {
+    @apply text-xs leading-snug sm:text-sm sm:leading-normal;
   }
 }

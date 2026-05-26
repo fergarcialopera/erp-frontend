@@ -4,6 +4,7 @@ import { useAuth } from "@/app/providers/useAuth";
 import { useAuditLogs } from "@/features/auditLogs/queries";
 import { useUsers } from "@/features/users/queries";
 import type { AuditLog } from "@/types/models";
+import { TABLE_CHIP_CLASS, tableCell } from "@/components/tableTypography";
 
 type AuditLogRow = AuditLog & { actor_user_name?: string };
 
@@ -22,7 +23,7 @@ const columns: Column<AuditLogRow>[] = [
     sortable: true,
     render: (l) => (
       <span
-        className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium ${actionStyles[l.action] || "bg-muted text-muted-foreground"}`}
+        className={`${TABLE_CHIP_CLASS} ${actionStyles[l.action] || "bg-muted text-muted-foreground"}`}
       >
         {l.action}
       </span>
@@ -33,7 +34,7 @@ const columns: Column<AuditLogRow>[] = [
     header: "ACTOR",
     sortable: true,
     render: (l) => (
-      <span className="text-sm">
+      <span className={tableCell.primary}>
         {l.actor_type === "SYSTEM" ? (
           <span className="text-muted-foreground italic">Sistema</span>
         ) : (
@@ -46,14 +47,14 @@ const columns: Column<AuditLogRow>[] = [
     key: "entity_type",
     header: "CONCEPTO",
     sortable: true,
-    render: (l) => <span className="text-sm">{l.entity_type}</span>,
+    render: (l) => <span className={tableCell.primary}>{l.entity_type}</span>,
   },
   {
     key: "occurred_at",
     header: "FECHA",
     sortable: true,
     render: (l) => (
-      <span className="text-xs text-muted-foreground tabular-nums">
+      <span className={`${tableCell.muted} tabular-nums`}>
         {new Date(l.occurred_at).toLocaleString("es-ES", {
           day: "2-digit",
           month: "short",

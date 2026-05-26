@@ -8,6 +8,7 @@ import { ExitStatusBadge } from "@/features/exitLogs/components/ExitStatusBadge"
 import { ConfirmExitDialog } from "@/features/dashboard/components/ConfirmExitDialog";
 import { StockLocationPicksList } from "@/components/StockLocationDisplay";
 import type { ExitLogProductDisplayRow } from "@/types/models";
+import { tableCell } from "@/components/tableTypography";
 
 export default function ExitLogsPage() {
   const { clinicId, isRole, canAccessOperations } = useAuth();
@@ -41,26 +42,35 @@ export default function ExitLogsPage() {
         key: "productSku",
         header: "ID PRODUCTO",
         sortable: true,
+        hideBelowSm: true,
         render: (o) => (
-          <span className="font-mono text-xs text-muted-foreground">{o.productSku}</span>
+          <span className={`${tableCell.mono} text-muted-foreground`}>{o.productSku}</span>
         ),
       },
       {
         key: "productName",
         header: "PRODUCTO",
         sortable: true,
-        render: (o) => <span className="text-sm">{o.productName}</span>,
+        render: (o) => (
+          <div className="min-w-0">
+            <span className={tableCell.primary}>{o.productName}</span>
+            <span className={`sm:hidden block ${tableCell.mono} text-muted-foreground mt-0.5 truncate`}>
+              {o.productSku}
+            </span>
+          </div>
+        ),
       },
       {
         key: "totalQuantity",
         header: "CANTIDAD",
         sortable: true,
-        render: (o) => <span className="tabular-nums">{o.totalQuantity}</span>,
+        render: (o) => <span className={tableCell.numeric}>{o.totalQuantity}</span>,
       },
       {
         key: "locationPicks",
         header: "UBICACIÓN",
         sortable: false,
+        hideBelowSm: true,
         render: (o) => <StockLocationPicksList picks={o.locationPicks} />,
       },
       {
@@ -76,7 +86,8 @@ export default function ExitLogsPage() {
         key: "created_by_name",
         header: "USUARIO",
         sortable: true,
-        render: (o) => <span className="text-sm">{o.created_by_name}</span>,
+        hideBelowMd: true,
+        render: (o) => <span className={tableCell.primary}>{o.created_by_name}</span>,
       });
     }
 
@@ -85,8 +96,9 @@ export default function ExitLogsPage() {
         key: "created_at",
         header: "REGISTRADO",
         sortable: true,
+        hideBelowMd: true,
         render: (o) => (
-          <span className="text-xs text-muted-foreground">
+          <span className={tableCell.muted}>
             {new Date(o.created_at).toLocaleString("es-ES", {
               day: "2-digit",
               month: "short",
@@ -111,7 +123,7 @@ export default function ExitLogsPage() {
               />
             </div>
           ) : (
-            <span className="text-xs text-muted-foreground">—</span>
+            <span className={tableCell.muted}>—</span>
           ),
       },
     );

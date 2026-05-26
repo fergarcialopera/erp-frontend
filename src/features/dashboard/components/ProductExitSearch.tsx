@@ -42,12 +42,12 @@ export function ProductExitSearch(props: ProductExitSearchProps) {
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
       <div
         className={cn(
-          "bg-card border rounded-lg p-5 h-[420px] flex flex-col gap-4 min-w-0",
+          "bg-card border rounded-lg p-4 sm:p-5 min-h-[280px] max-h-[min(420px,70dvh)] lg:h-[420px] lg:max-h-[420px] flex flex-col gap-4 min-w-0",
           hasDraft ? "lg:col-span-3" : "lg:col-span-5",
         )}
       >
         <div>
-          <h3 className="text-lg font-semibold">Registrar salida de stock</h3>
+          <h3 className="text-base sm:text-lg font-semibold">Registrar salida de stock</h3>
           <p className="text-sm text-muted-foreground">
             Busca productos y prepara una retirada en pocos pasos.
           </p>

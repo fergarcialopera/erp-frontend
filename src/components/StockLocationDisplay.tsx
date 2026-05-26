@@ -19,20 +19,22 @@ export function StockLocationDisplay({
   const compartmentLabel = compartment?.trim() || null;
 
   if (!lockerLabel && !compartmentLabel) {
-    return <span className={cn("text-sm text-muted-foreground", className)}>{emptyLabel}</span>;
+    return (
+      <span className={cn("text-xs sm:text-sm text-muted-foreground", className)}>{emptyLabel}</span>
+    );
   }
 
   return (
     <div className={cn("inline-flex flex-wrap items-center gap-1", className)}>
       <Badge
         variant="secondary"
-        className="rounded-full px-2 py-0 font-mono text-[11px] font-normal leading-5"
+        className="rounded-full px-1.5 sm:px-2 py-0 font-mono text-[10px] sm:text-[11px] font-normal leading-4 sm:leading-5"
       >
         {lockerLabel ?? "—"}
       </Badge>
       <Badge
         variant="outline"
-        className="rounded-full px-2 py-0 font-mono text-[11px] font-normal leading-5"
+        className="rounded-full px-1.5 sm:px-2 py-0 font-mono text-[10px] sm:text-[11px] font-normal leading-4 sm:leading-5"
       >
         {compartmentLabel ?? "—"}
       </Badge>
@@ -53,7 +55,9 @@ export function StockLocationsList({
   emptyLabel = "—",
 }: StockLocationsListProps) {
   if (locations.length === 0) {
-    return <span className={cn("text-sm text-muted-foreground", className)}>{emptyLabel}</span>;
+    return (
+      <span className={cn("text-xs sm:text-sm text-muted-foreground", className)}>{emptyLabel}</span>
+    );
   }
 
   return (
@@ -82,7 +86,9 @@ export function StockLocationPicksList({
   emptyLabel = "—",
 }: StockLocationPicksListProps) {
   if (picks.length === 0) {
-    return <span className={cn("text-sm text-muted-foreground", className)}>{emptyLabel}</span>;
+    return (
+      <span className={cn("text-xs sm:text-sm text-muted-foreground", className)}>{emptyLabel}</span>
+    );
   }
 
   return (
@@ -90,7 +96,7 @@ export function StockLocationPicksList({
       {picks.map((pick, index) => (
         <li
           key={`${stockLocationKey(pick.labels)}:${index}`}
-          className="flex items-center justify-between gap-3 text-xs"
+          className="flex items-center justify-between gap-2 sm:gap-3 text-[11px] sm:text-xs"
         >
           <StockLocationDisplay
             {...pick.labels}

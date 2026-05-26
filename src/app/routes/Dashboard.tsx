@@ -15,6 +15,8 @@ import { OpenDraftExitButton } from "@/features/exitLogs/components/OpenDraftExi
 import { Link } from "react-router-dom";
 import { Package, Lock, ClipboardList, AlertTriangle, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TableHeaderButtonLabel, tableHeaderButtonClassName } from "@/components/TableHeaderButton";
+import { TABLE_HEAD_CLASS, tableCell } from "@/components/tableTypography";
 import { useMemo, useReducer, useState } from "react";
 import { toast } from "sonner";
 import { ExitStatusBadge } from "@/features/exitLogs/components/ExitStatusBadge";
@@ -230,10 +232,15 @@ export default function DashboardPage() {
               {isStaff ? "Últimas 5 salidas que has registrado" : "Últimas 5 salidas registradas"}
             </p>
           </div>
-          <Button variant="outline" size="sm" className="shrink-0" asChild>
-            <Link to="/exit-logs">
-              Ver todas
-              <ArrowRight className="h-3.5 w-3.5" />
+          <Button
+            variant="outline"
+            size="sm"
+            className={tableHeaderButtonClassName}
+            asChild
+          >
+            <Link to="/exit-logs" aria-label="Ver todas las salidas">
+              <TableHeaderButtonLabel label="Ver todas" />
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
         </div>
@@ -255,30 +262,31 @@ export default function DashboardPage() {
             </p>
           </div>
         ) : (
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[28rem] sm:min-w-[32rem]">
             <thead>
               <tr className="border-b">
-                <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">
+                <th className={`text-left ${TABLE_HEAD_CLASS} px-2 py-2 sm:px-3 sm:py-2.5`}>
                   PRODUCTO
                 </th>
-                <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">
+                <th className={`text-left ${TABLE_HEAD_CLASS} px-2 py-2 sm:px-3 sm:py-2.5`}>
                   CANTIDAD
                 </th>
-                <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden sm:table-cell">
+                <th className={`text-left ${TABLE_HEAD_CLASS} px-2 py-2 sm:px-3 sm:py-2.5 hidden sm:table-cell`}>
                   UBICACIÓN
                 </th>
-                <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3">
+                <th className={`text-left ${TABLE_HEAD_CLASS} px-2 py-2 sm:px-3 sm:py-2.5`}>
                   ESTADO
                 </th>
                 {!isStaff ? (
-                  <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden md:table-cell">
+                  <th className={`text-left ${TABLE_HEAD_CLASS} px-2 py-2 sm:px-3 sm:py-2.5 hidden md:table-cell`}>
                     USUARIO
                   </th>
                 ) : null}
-                <th className="text-left text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 hidden md:table-cell">
+                <th className={`text-left ${TABLE_HEAD_CLASS} px-2 py-2 sm:px-3 sm:py-2.5 hidden md:table-cell`}>
                   FECHA
                 </th>
-                <th className="text-right text-[11px] uppercase tracking-wider font-semibold text-muted-foreground p-3 w-[100px]">
+                <th className={`text-right ${TABLE_HEAD_CLASS} px-2 py-2 sm:px-3 sm:py-2.5 w-[72px] sm:w-[100px]`}>
                   ACCIONES
                 </th>
               </tr>
@@ -289,24 +297,28 @@ export default function DashboardPage() {
                   key={exit.id}
                   className="border-b last:border-0 hover:bg-muted/30 transition-colors"
                 >
-                  <td className="p-3">
-                    <p className="text-sm font-medium leading-snug">{exit.productName}</p>
-                    <p className="text-xs text-muted-foreground font-mono mt-0.5">{exit.productSku}</p>
+                  <td className="px-2 py-2 sm:px-3 sm:py-2.5">
+                    <p className={tableCell.primary}>{exit.productName}</p>
+                    <p className={`${tableCell.mono} text-muted-foreground mt-0.5`}>{exit.productSku}</p>
                   </td>
-                  <td className="p-3 text-sm tabular-nums">{exit.totalQuantity}</td>
-                  <td className="p-3 hidden sm:table-cell">
+                  <td className={`px-2 py-2 sm:px-3 sm:py-2.5 ${tableCell.numeric}`}>
+                    {exit.totalQuantity}
+                  </td>
+                  <td className="px-2 py-2 sm:px-3 sm:py-2.5 hidden sm:table-cell">
                     <StockLocationPicksList picks={exit.locationPicks} />
                   </td>
-                  <td className="p-3">
+                  <td className="px-2 py-2 sm:px-3 sm:py-2.5">
                     <ExitStatusBadge status={exit.status} />
                   </td>
                   {!isStaff ? (
-                    <td className="p-3 text-sm hidden md:table-cell">{exit.created_by_name}</td>
+                    <td className={`px-2 py-2 sm:px-3 sm:py-2.5 hidden md:table-cell ${tableCell.primary}`}>
+                      {exit.created_by_name}
+                    </td>
                   ) : null}
-                  <td className="p-3 text-xs text-muted-foreground hidden md:table-cell">
+                  <td className={`px-2 py-2 sm:px-3 sm:py-2.5 hidden md:table-cell ${tableCell.muted}`}>
                     {formatRequestedAt(exit.created_at)}
                   </td>
-                  <td className="p-3 text-right">
+                  <td className="px-2 py-2 sm:px-3 sm:py-2.5 text-right">
                     {exit.status.toUpperCase() === "DRAFT" &&
                     canExecute &&
                     primaryRowExitIds.has(exit.exitLogId) ? (
@@ -316,13 +328,14 @@ export default function DashboardPage() {
                         onOpen={draftEditor.openById}
                       />
                     ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
+                      <span className={tableCell.muted}>—</span>
                     )}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

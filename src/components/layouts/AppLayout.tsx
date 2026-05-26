@@ -30,10 +30,10 @@ export default function AppLayout() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="min-h-screen flex w-full min-w-0 overflow-x-hidden">
         <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center gap-3 border-b bg-card px-4 shrink-0">
+        <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
+          <header className="h-14 flex items-center gap-2 sm:gap-3 border-b bg-card px-3 sm:px-4 shrink-0 min-w-0">
             <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
             <Separator orientation="vertical" className="h-5" />
             <h1 className="text-sm font-semibold truncate">{title}</h1>
@@ -46,7 +46,7 @@ export default function AppLayout() {
               </div>
             </div>
           </header>
-          <main className="flex-1 p-4 md:p-6 overflow-auto">
+          <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto min-w-0">
             <div className="animate-fade-in">
               <Outlet />
             </div>

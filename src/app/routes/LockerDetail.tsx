@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { useLocker } from "@/features/lockers/queries";
 import { ArrowLeft } from "lucide-react";
 import type { Compartment } from "@/types/models";
+import { tableCell } from "@/components/tableTypography";
 
 const columns: Column<Compartment>[] = [
   {
     key: "code",
     header: "CÓDIGO",
-    render: (c) => <span className="font-mono text-xs font-medium">{c.code}</span>,
+    render: (c) => <span className={`${tableCell.mono} font-medium`}>{c.code}</span>,
   },
   {
     key: "status",

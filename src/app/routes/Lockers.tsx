@@ -1,10 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { DataTable, Column } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/app/providers/useAuth";
 import { useLockers } from "@/features/lockers/queries";
 import { Plus } from "lucide-react";
+import { TableHeaderButton } from "@/components/TableHeaderButton";
+import { tableCell } from "@/components/tableTypography";
 import type { Locker } from "@/types/models";
 
 const columns: Column<Locker>[] = [
@@ -12,13 +13,19 @@ const columns: Column<Locker>[] = [
     key: "code",
     header: "CÓDIGO",
     sortable: true,
-    render: (l) => <span className="font-mono text-xs font-medium">{l.code}</span>,
+    render: (l) => <span className={`${tableCell.mono} font-medium`}>{l.code}</span>,
   },
-  { key: "name", header: "NOMBRE", sortable: true },
+  {
+    key: "name",
+    header: "NOMBRE",
+    sortable: true,
+    render: (l) => <span className={tableCell.primary}>{l.name}</span>,
+  },
   {
     key: "location",
     header: "UBICACIÓN",
-    render: (l) => <span className="text-muted-foreground">{l.location || "—"}</span>,
+    hideBelowSm: true,
+    render: (l) => <span className={tableCell.muted}>{l.location || "—"}</span>,
   },
   {
     key: "is_active",
@@ -59,10 +66,7 @@ export default function LockersPage() {
         emptyDescription="No hay lockers registrados."
         headerAction={
           canAccessManagement() ? (
-            <Button size="sm" className="h-9 gap-1.5">
-              <Plus className="h-4 w-4" />
-              Nuevo locker
-            </Button>
+            <TableHeaderButton label="Nuevo locker" icon={<Plus />} aria-label="Nuevo locker" />
           ) : undefined
         }
       />

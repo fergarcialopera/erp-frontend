@@ -7,6 +7,8 @@ import { useAuth } from "@/app/providers/useAuth";
 import { useInventory } from "@/features/inventory/queries";
 import { useNavigate } from "react-router-dom";
 import { ClipboardList, PackagePlus, Pencil, Plus } from "lucide-react";
+import { TableHeaderButton } from "@/components/TableHeaderButton";
+import { tableCell } from "@/components/tableTypography";
 import { StockLocationDisplay } from "@/components/StockLocationDisplay";
 import { formatStockLocationPlain, resolveStockLocationLabels } from "@/lib/stockLocation";
 import type { CompartmentInventory } from "@/types/models";
@@ -28,13 +30,13 @@ const baseColumns: Column<InventoryRow>[] = [
     key: "product_name",
     header: "PRODUCTO",
     sortable: true,
-    render: (r) => <span className="text-sm">{rowProductName(r)}</span>,
+    render: (r) => <span className={tableCell.primary}>{rowProductName(r)}</span>,
   },
   {
     key: "product_sku",
     header: "SKU",
     sortable: true,
-    render: (r) => <span className="font-mono text-xs text-muted-foreground">{rowProductSku(r)}</span>,
+    render: (r) => <span className={`${tableCell.mono} text-muted-foreground`}>{rowProductSku(r)}</span>,
   },
   {
     key: "location_label",
@@ -49,13 +51,14 @@ const baseColumns: Column<InventoryRow>[] = [
     key: "qty_available",
     header: "DISPONIBLE",
     sortable: true,
-    render: (r) => <span className="text-sm font-medium tabular-nums">{r.qty_available}</span>,
+    render: (r) => <span className={`${tableCell.numeric} font-medium`}>{r.qty_available}</span>,
   },
   {
     key: "qty_reserved",
     header: "RESERVADO",
     sortable: true,
-    render: (r) => <span className="text-sm tabular-nums">{r.qty_reserved}</span>,
+    hideBelowSm: true,
+    render: (r) => <span className={tableCell.numeric}>{r.qty_reserved}</span>,
   },
 ];
 
@@ -138,39 +141,27 @@ export default function InventoryPage() {
         emptyTitle="Sin inventario"
         emptyDescription="No hay registros de inventario."
         headerAction={
-          <div className="flex items-center gap-2">
-            <Button
+          <>
+            <TableHeaderButton
               variant="outline"
-              size="sm"
-              className="h-9 gap-1.5"
+              label="Ver salidas"
+              icon={<ClipboardList />}
               onClick={() => navigate("/exit-logs")}
-              aria-label="Ver salidas de stock"
-            >
-              <ClipboardList className="h-4 w-4" />
-              Ver salidas
-            </Button>
-            <Button
+            />
+            <TableHeaderButton
               variant="outline"
-              size="sm"
-              className="h-9 gap-1.5"
+              label="Registrar salida"
+              icon={<PackagePlus />}
               onClick={() => navigate("/exit-logs/new")}
-              aria-label="Registrar salida de stock"
-            >
-              <PackagePlus className="h-4 w-4" />
-              Registrar salida
-            </Button>
+            />
             {canRegisterEntry ? (
-              <Button
-                size="sm"
-                className="h-9 gap-1.5"
+              <TableHeaderButton
+                label="Registrar entrada"
+                icon={<Plus />}
                 onClick={() => setEntryModalOpen(true)}
-                aria-label="Registrar entrada de stock"
-              >
-                <Plus className="h-4 w-4" />
-                Registrar entrada
-              </Button>
+              />
             ) : null}
-          </div>
+          </>
         }
       />
 

@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/app/providers/useAuth";
 import { Pencil, Plus, Trash2 } from "lucide-react";
+import { TableHeaderButton } from "@/components/TableHeaderButton";
+import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
 import { Product } from "@/types/models";
 import { AxiosError } from "axios";
@@ -51,14 +53,20 @@ const baseColumns: Column<Product>[] = [
     key: "sku",
     header: "SKU",
     sortable: true,
-    render: (p) => <span className="font-mono text-xs">{p.sku}</span>,
+    render: (p) => <span className={tableCell.mono}>{p.sku}</span>,
   },
-  { key: "name", header: "NOMBRE", sortable: true },
+  {
+    key: "name",
+    header: "NOMBRE",
+    sortable: true,
+    render: (p) => <span className={tableCell.primary}>{p.name}</span>,
+  },
   {
     key: "barcode",
     header: "CÓDIGO BARRAS",
+    hideBelowMd: true,
     render: (p) => (
-      <span className="font-mono text-xs text-muted-foreground">{p.barcode || "—"}</span>
+      <span className={`${tableCell.mono} text-muted-foreground`}>{p.barcode || "—"}</span>
     ),
   },
   {
@@ -255,15 +263,7 @@ export default function ProductsPage() {
         emptyDescription="No hay productos registrados aún."
         headerAction={
           canEdit ? (
-            <Button
-              size="sm"
-              className="h-9 gap-1.5"
-              onClick={openModal}
-              aria-label="Nuevo producto"
-            >
-              <Plus className="h-4 w-4" />
-              Nuevo producto
-            </Button>
+            <TableHeaderButton label="Nuevo producto" icon={<Plus />} onClick={openModal} />
           ) : undefined
         }
       />

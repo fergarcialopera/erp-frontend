@@ -28,10 +28,10 @@ export function ExitDraftPanel({
   const totalUnits = items.reduce((acc, it) => acc + (Number.isFinite(it.quantity) ? it.quantity : 0), 0);
 
   return (
-    <div className="bg-card border rounded-lg p-5 h-[420px] flex flex-col gap-4 min-w-0">
-      <div className="flex items-start justify-between gap-3">
+    <div className="bg-card border rounded-lg p-4 sm:p-5 min-h-[240px] max-h-[min(420px,70dvh)] lg:h-[420px] lg:max-h-[420px] flex flex-col gap-4 min-w-0">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h3 className="text-lg font-semibold">Salida en curso</h3>
+          <h3 className="text-base sm:text-lg font-semibold">Salida en curso</h3>
           <p className="text-sm text-muted-foreground">
             {items.length > 0
               ? `${items.length} productos · ${totalUnits} uds`
@@ -42,7 +42,7 @@ export function ExitDraftPanel({
           size="sm"
           onClick={onExecute}
           disabled={!canExecute || items.length === 0 || isExecuting}
-          className="shrink-0"
+          className="shrink-0 w-full sm:w-auto"
         >
           {isExecuting ? "Ejecutando..." : "Ejecutar salida"}
         </Button>

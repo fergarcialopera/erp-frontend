@@ -1,7 +1,8 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { TableHeaderButton } from "@/components/TableHeaderButton";
+import { tableCell } from "@/components/tableTypography";
 import { DataTable, type Column } from "@/components/DataTable";
 import { useAuth } from "@/app/providers/useAuth";
 import { useIncidents } from "@/features/incidents/queries";
@@ -38,8 +39,8 @@ const columns: Column<IncidentRow>[] = [
     sortable: true,
     render: (incident) => (
       <div className="space-y-1">
-        <p className="text-sm font-medium">{incident.title?.trim() || "Incidencia sin título"}</p>
-        <p className="text-xs text-muted-foreground line-clamp-2">{incident.description || "—"}</p>
+        <p className={tableCell.primary}>{incident.title?.trim() || "Incidencia sin título"}</p>
+        <p className={`${tableCell.secondary} line-clamp-2`}>{incident.description || "—"}</p>
       </div>
     ),
   },
@@ -47,25 +48,27 @@ const columns: Column<IncidentRow>[] = [
     key: "source",
     header: "ORIGEN",
     sortable: true,
-    render: (incident) => <span className="text-sm">{sourceLabel(incident)}</span>,
+    render: (incident) => <span className={tableCell.primary}>{sourceLabel(incident)}</span>,
   },
   {
     key: "status",
     header: "ESTADO",
     sortable: true,
-    render: (incident) => <span className="text-sm">{statusLabel(incident)}</span>,
+    render: (incident) => <span className={tableCell.primary}>{statusLabel(incident)}</span>,
   },
   {
     key: "reported_by_user_name",
     header: "REPORTADO POR",
     sortable: true,
-    render: (incident) => <span className="text-sm">{incident.reported_by_user_name ?? "—"}</span>,
+    render: (incident) => (
+      <span className={tableCell.primary}>{incident.reported_by_user_name ?? "—"}</span>
+    ),
   },
   {
     key: "created_at",
     header: "CREADA",
     sortable: true,
-    render: (incident) => <span className="text-xs text-muted-foreground">{dateLabel(incident)}</span>,
+    render: (incident) => <span className={tableCell.muted}>{dateLabel(incident)}</span>,
   },
 ];
 
@@ -108,26 +111,19 @@ export default function IncidentsPage() {
         emptyTitle="Sin incidencias"
         emptyDescription="Todavía no hay incidencias registradas."
         headerAction={
-          <Button
-            size="sm"
-            className="h-9 gap-1.5"
+          <TableHeaderButton
+            label="Nueva incidencia"
+            icon={<Plus />}
             onClick={() => navigate("/incidents/new")}
-            aria-label="Registrar nueva incidencia"
-          >
-            <Plus className="h-4 w-4" />
-            Nueva incidencia
-          </Button>
+          />
         }
         emptyAction={
-          <Button
+          <TableHeaderButton
             variant="outline"
-            size="sm"
-            className="h-9 gap-1.5"
+            label="Reportar incidencia"
+            icon={<AlertTriangle />}
             onClick={() => navigate("/incidents/new")}
-          >
-            <AlertTriangle className="h-4 w-4" />
-            Reportar incidencia
-          </Button>
+          />
         }
       />
     </div>

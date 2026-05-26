@@ -28,6 +28,8 @@ import { useAuth } from "@/app/providers/useAuth";
 import { useUsers } from "@/features/users/queries";
 import { createUser, updateUser } from "@/features/users/api";
 import { Pencil, Plus } from "lucide-react";
+import { TableHeaderButton } from "@/components/TableHeaderButton";
+import { TABLE_CHIP_CLASS, tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
 import { User, Role } from "@/types/models";
 
@@ -38,21 +40,28 @@ const roleStyles: Record<string, string> = {
 };
 
 const baseColumns: Column<User>[] = [
-  { key: "name", header: "NOMBRE", sortable: true },
+  {
+    key: "name",
+    header: "NOMBRE",
+    sortable: true,
+    render: (u) => (
+      <div className="min-w-0">
+        <span className={tableCell.primary}>{u.name}</span>
+        <span className={`sm:hidden block ${tableCell.muted} truncate`}>{u.email}</span>
+      </div>
+    ),
+  },
   {
     key: "email",
     header: "EMAIL",
-    render: (u) => <span className="text-muted-foreground">{u.email}</span>,
+    hideBelowSm: true,
+    render: (u) => <span className={tableCell.muted}>{u.email}</span>,
   },
   {
     key: "role",
     header: "ROL",
     render: (u) => (
-      <span
-        className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] font-medium border ${roleStyles[u.role]}`}
-      >
-        {u.role}
-      </span>
+      <span className={`${TABLE_CHIP_CLASS} ${roleStyles[u.role]}`}>{u.role}</span>
     ),
   },
   {
@@ -217,10 +226,7 @@ export default function UsersPage() {
         emptyTitle="Sin usuarios"
         emptyDescription="No hay usuarios registrados."
         headerAction={
-          <Button size="sm" className="h-9 gap-1.5" onClick={openModal} aria-label="Nuevo usuario">
-            <Plus className="h-4 w-4" />
-            Nuevo usuario
-          </Button>
+          <TableHeaderButton label="Nuevo usuario" icon={<Plus />} onClick={openModal} />
         }
       />
 
