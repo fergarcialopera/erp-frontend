@@ -104,12 +104,12 @@ export function ConfirmExitDialog({
                       {lines.map((item, index) => (
                         <li
                           key={`${item.exitLogItemId}:${stockLocationKey(item.pickLocation ?? {})}:${index}`}
-                          className="flex items-center justify-between gap-3 text-xs"
+                          className="flex items-start sm:items-center justify-between gap-2 sm:gap-3 text-xs"
                         >
                           <StockLocationDisplay
                             {...(item.pickLocation ?? {})}
                             emptyLabel="Stock general"
-                            className="min-w-0"
+                            className="min-w-0 flex-1"
                           />
                           <span className="shrink-0 tabular-nums font-medium">
                             {item.quantity} uds

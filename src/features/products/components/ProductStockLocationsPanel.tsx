@@ -21,13 +21,13 @@ export function ProductStockLocationsPanel({ productId }: ProductStockLocationsP
       aria-live="polite"
       aria-busy={loading}
     >
-      <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] sm:text-xs font-medium text-muted-foreground">
         <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-        Ubicaciones actuales
+        <span>Ubicaciones actuales</span>
         {data && !loading && (
-          <span className="font-normal">
+          <span className="font-normal tabular-nums">
             · stock total{" "}
-            <span className="tabular-nums text-foreground">{data.quantity_total}</span>
+            <span className="text-foreground">{data.quantity_total}</span>
           </span>
         )}
       </div>
@@ -53,14 +53,16 @@ export function ProductStockLocationsPanel({ productId }: ProductStockLocationsP
             return (
               <li
                 key={key}
-                className="flex items-center justify-between gap-3 text-xs"
+                className="flex items-start sm:items-center justify-between gap-2 sm:gap-3 text-[11px] sm:text-xs"
               >
                 <StockLocationDisplay
                   {...resolveStockLocationLabels(location.locker, location.compartment)}
                   emptyLabel="Stock general"
-                  className="min-w-0"
+                  className="min-w-0 flex-1"
                 />
-                <span className="shrink-0 tabular-nums font-medium">{location.quantity}</span>
+                <span className="shrink-0 tabular-nums font-medium pt-0.5 sm:pt-0">
+                  {location.quantity}
+                </span>
               </li>
             );
           })}

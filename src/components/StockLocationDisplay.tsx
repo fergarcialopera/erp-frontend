@@ -3,6 +3,13 @@ import { cn } from "@/lib/utils";
 import { stockLocationKey, type StockLocationLabels } from "@/lib/stockLocation";
 import type { ExitLogLocationPick } from "@/types/models";
 
+/** Ancho = contenido; tope = 50 % del contenedor (celda de tabla). */
+const locationPillBase =
+  "inline-flex w-fit min-w-min max-w-[50%] shrink truncate rounded-full px-1.5 sm:px-2 py-0 font-mono text-[10px] sm:text-[11px] font-normal leading-4 sm:leading-5";
+
+const locationPillsLayout =
+  "flex w-full min-w-0 max-w-full flex-col items-start gap-0.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-1";
+
 interface StockLocationDisplayProps extends StockLocationLabels {
   className?: string;
   /** Texto cuando no hay locker ni compartimento. */
@@ -25,19 +32,25 @@ export function StockLocationDisplay({
   }
 
   return (
-    <div className={cn("inline-flex flex-wrap items-center gap-1", className)}>
-      <Badge
-        variant="secondary"
-        className="rounded-full px-1.5 sm:px-2 py-0 font-mono text-[10px] sm:text-[11px] font-normal leading-4 sm:leading-5"
-      >
-        {lockerLabel ?? "—"}
-      </Badge>
-      <Badge
-        variant="outline"
-        className="rounded-full px-1.5 sm:px-2 py-0 font-mono text-[10px] sm:text-[11px] font-normal leading-4 sm:leading-5"
-      >
-        {compartmentLabel ?? "—"}
-      </Badge>
+    <div className={cn(locationPillsLayout, className)}>
+      {lockerLabel ? (
+        <Badge
+          variant="secondary"
+          title={lockerLabel}
+          className={locationPillBase}
+        >
+          {lockerLabel}
+        </Badge>
+      ) : null}
+      {compartmentLabel ? (
+        <Badge
+          variant="outline"
+          title={compartmentLabel}
+          className={locationPillBase}
+        >
+          {compartmentLabel}
+        </Badge>
+      ) : null}
     </div>
   );
 }
@@ -96,14 +109,14 @@ export function StockLocationPicksList({
       {picks.map((pick, index) => (
         <li
           key={`${stockLocationKey(pick.labels)}:${index}`}
-          className="flex items-center justify-between gap-2 sm:gap-3 text-[11px] sm:text-xs"
+          className="flex items-start sm:items-center justify-between gap-2 sm:gap-3 text-[11px] sm:text-xs"
         >
           <StockLocationDisplay
             {...pick.labels}
             emptyLabel="Stock general"
-            className="min-w-0"
+            className="min-w-0 flex-1"
           />
-          <span className="shrink-0 tabular-nums font-medium">{pick.quantity}</span>
+          <span className="shrink-0 tabular-nums font-medium pt-0.5 sm:pt-0">{pick.quantity}</span>
         </li>
       ))}
     </ul>

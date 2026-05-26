@@ -44,7 +44,13 @@ const baseColumns: Column<InventoryRow>[] = [
     sortable: true,
     render: (r) => {
       const labels = rowLocationLabels(r);
-      return <StockLocationDisplay locker={labels.locker} compartment={labels.compartment} />;
+      return (
+        <StockLocationDisplay
+          locker={labels.locker}
+          compartment={labels.compartment}
+          className="min-w-0"
+        />
+      );
     },
   },
   {
