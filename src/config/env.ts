@@ -1,11 +1,18 @@
 /**
  * Base URL de la API (sin basepath). Fuente: VITE_API_BASE_URL.
  * - Vacío ("") en dev sin .env: las peticiones van al mismo origen y el proxy de Vite las reenvía al backend.
- * - En prod o con .env: URL completa del backend (ej. http://localhost:8080).
+ * - Vacío ("") en prod con mismo dominio: nginx hace proxy de /api/ al backend.
+ * - URL completa si la API está en otro host (ej. http://localhost:8080).
  */
-export const API_BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() ||
-  (import.meta.env.DEV ? "" : "http://localhost:8080");
+function resolveApiBaseUrl(): string {
+  const raw = import.meta.env.VITE_API_BASE_URL;
+  if (raw !== undefined) {
+    return String(raw).trim();
+  }
+  return import.meta.env.DEV ? "" : "http://localhost:8080";
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 /**
  * Formato del body de login. Algunos backends (FastAPI OAuth2, etc.) esperan form-urlencoded.
