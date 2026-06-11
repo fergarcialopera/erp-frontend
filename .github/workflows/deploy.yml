@@ -12,6 +12,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: VPS_IONOS.env
 
     steps:
       - name: Checkout
@@ -41,7 +42,7 @@ jobs:
           [ -z "$VPS_SSH_KEY" ] && missing+=("VPS_SSH_KEY")
           if [ "${#missing[@]}" -gt 0 ]; then
             echo "::error::Faltan secrets en GitHub: ${missing[*]}"
-            echo "Añádelos en Settings → Secrets and variables → Actions → Repository secrets"
+            echo "Añádelos en Settings → Environments → VPS_IONOS.env → Environment secrets"
             exit 1
           fi
 
