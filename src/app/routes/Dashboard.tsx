@@ -1,4 +1,5 @@
 import { useAuth } from "@/app/providers/useAuth";
+import { getUserFirstName } from "@/lib/userDisplay";
 import { useDashboard } from "@/features/dashboard/queries";
 import { useProductSearch } from "@/features/dashboard/useProductSearch";
 import { ProductExitSearch } from "@/features/dashboard/components/ProductExitSearch";
@@ -201,7 +202,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="page-header">
-        <h2 className="page-title">Bienvenido, {user?.name?.split(" ")[0] || "Usuario"}</h2>
+        <h2 className="page-title">Bienvenido, {getUserFirstName(user)}</h2>
         <p className="page-description">Resumen operativo del sistema</p>
       </div>
 

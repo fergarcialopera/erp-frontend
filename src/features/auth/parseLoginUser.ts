@@ -1,4 +1,5 @@
 import { User, Role, mapUserFromApiResponse } from "@/types/models";
+import { resolveUserName } from "@/lib/userDisplay";
 
 function normalizeRole(role: unknown): Role {
   if (role === "ADMIN" || role === "TECHNICIAN" || role === "STAFF") return role;
@@ -18,41 +19,54 @@ function decodeJwtPayload(token: string): Record<string, unknown> {
   }
 }
 
-function getNameFromJwtPayload(payload: Record<string, unknown>): string {
-  const name =
-    payload.name ??
-    payload.nombre ??
-    payload.full_name ??
-    payload.preferred_username ??
-    payload.email;
-  if (name != null && String(name).trim() !== "") return String(name).trim();
-  return "";
+function extractAuthUserRecord(data: Record<string, unknown>): Record<string, unknown> | undefined {
+  const nested = data.user;
+  if (nested && typeof nested === "object" && nested !== null && "id" in nested) {
+    return nested as Record<string, unknown>;
+  }
+  if (data.id != null || data.user_id != null) {
+    return data;
+  }
+  return undefined;
 }
 
-/** Construye User desde respuesta de login (PIN o clásico). */
+function resolveAuthUserName(
+  resUser: Record<string, unknown> | undefined,
+  jwtPayload: Record<string, unknown>,
+): string {
+  const email = String(resUser?.email ?? jwtPayload.email ?? "");
+  const fromUser = resUser ? resolveUserName(resUser, email) : "";
+  if (fromUser) return fromUser;
+  return resolveUserName(jwtPayload, email);
+}
+
+/** Construye User desde respuesta de login (PIN o clásico) o GET /me. */
 export function parseUserFromLoginResponse(
   accessToken: string,
   resUser: Record<string, unknown> | undefined,
 ): User {
   const jwtPayload = decodeJwtPayload(accessToken);
+  const userRecord = resUser ? extractAuthUserRecord(resUser) ?? resUser : undefined;
+  const userId = userRecord?.id ?? userRecord?.user_id ?? jwtPayload.user_id ?? jwtPayload.sub;
 
-  if (resUser && typeof resUser === "object" && resUser.id != null) {
+  if (userRecord && userId != null) {
+    const email = String(userRecord.email ?? jwtPayload.email ?? "");
     return mapUserFromApiResponse({
-      id: resUser.id as string,
-      clinic_id: (resUser.clinic_id as string) ?? (jwtPayload.clinic_id as string),
-      name: (resUser.name as string) ?? getNameFromJwtPayload(jwtPayload),
-      email: resUser.email as string,
-      role: normalizeRole(resUser.role ?? jwtPayload.role),
-      is_active: resUser.is_active as boolean,
+      id: String(userId),
+      clinic_id: String(userRecord.clinic_id ?? jwtPayload.clinic_id ?? ""),
+      name: resolveAuthUserName(userRecord, jwtPayload),
+      email,
+      role: normalizeRole(userRecord.role ?? jwtPayload.role),
+      is_active: userRecord.is_active as boolean,
     });
   }
 
-  const displayName = getNameFromJwtPayload(jwtPayload);
+  const email = String(jwtPayload.email ?? "");
   return {
-    id: String(jwtPayload.sub ?? ""),
+    id: String(jwtPayload.user_id ?? jwtPayload.sub ?? ""),
     clinic_id: String(jwtPayload.clinic_id ?? ""),
-    name: displayName || String(jwtPayload.email ?? ""),
-    email: String(jwtPayload.email ?? ""),
+    name: resolveUserName(jwtPayload, email),
+    email,
     role: normalizeRole(jwtPayload.role),
     is_active: true,
   };

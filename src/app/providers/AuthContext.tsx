@@ -86,7 +86,11 @@ interface AuthContextType extends AuthState {
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   loginClinic: (clinicId: string, password: string) => Promise<ClinicLoginResult>;
-  loginPin: (userId: string, pin: string) => Promise<void>;
+  loginPin: (
+    userId: string,
+    pin: string,
+    profile?: Pick<User, "name" | "email">,
+  ) => Promise<void>;
   applyClinicSession: (result: ClinicLoginResult) => void;
   logout: () => Promise<void>;
   logoutUser: () => Promise<void>;
@@ -163,18 +167,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return result;
   }, [applyClinicSession]);
 
-  const completeUserLogin = useCallback((result: UserLoginResult) => {
-    const patch = applyUserLoginResult(result);
-    setState((prev) => ({
-      ...prev,
-      ...patch,
-    }));
-  }, []);
+  const completeUserLogin = useCallback(
+    (result: UserLoginResult, profile?: Pick<User, "name" | "email">) => {
+      const user =
+        profile?.name && !result.user.name.trim()
+          ? { ...result.user, name: profile.name, email: result.user.email || profile.email || "" }
+          : result.user;
+      const patch = applyUserLoginResult({ ...result, user });
+      setState((prev) => ({
+        ...prev,
+        ...patch,
+      }));
+    },
+    [],
+  );
 
   const loginPin = useCallback(
-    async (userId: string, pin: string) => {
+    async (userId: string, pin: string, profile?: Pick<User, "name" | "email">) => {
       const result = await apiLoginPin(userId, pin);
-      completeUserLogin(result);
+      completeUserLogin(result, profile);
     },
     [completeUserLogin],
   );

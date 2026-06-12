@@ -151,7 +151,7 @@ export function LoginFlow() {
     setError(null);
     setPinSubmitting(true);
     try {
-      await loginPin(selectedStaff.id, value);
+      await loginPin(selectedStaff.id, value, { name: selectedStaff.name, email: "" });
       navigate("/dashboard", { replace: true });
     } catch (err: unknown) {
       if (isPinLockedError(err)) {

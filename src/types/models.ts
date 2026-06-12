@@ -44,11 +44,15 @@ function normalizeRole(role: unknown): Role {
 }
 
 export function mapUserFromApiResponse(data: Partial<UserApiResponse>): User {
+  const email = String(data.email ?? "");
+  const name =
+    data.name != null && String(data.name).trim() !== "" ? String(data.name).trim() : "";
+
   return {
     id: String(data.id ?? ""),
     clinic_id: String(data.clinic_id ?? ""),
-    name: String(data.name ?? ""),
-    email: String(data.email ?? ""),
+    name,
+    email,
     role: normalizeRole(data.role),
     is_active: data.is_active !== false,
   };

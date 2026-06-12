@@ -16,6 +16,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { LogOut } from "lucide-react";
+import { getUserDisplayName } from "@/lib/userDisplay";
 import { Separator } from "@/components/ui/separator";
 
 function filterNav<T extends { requiredRole: import("@/types/models").Role }>(
@@ -137,7 +138,9 @@ export function AppSidebar() {
         <Separator className="mb-3 bg-sidebar-border" />
         {!collapsed && user && (
           <div className="px-2 mb-2 animate-fade-in">
-            <div className="text-xs font-medium text-sidebar-foreground truncate">{user.name}</div>
+            <div className="text-xs font-medium text-sidebar-foreground truncate">
+              {getUserDisplayName(user)}
+            </div>
             <div className="text-[10px] text-sidebar-foreground/50 truncate">{user.email}</div>
             <div className="mt-1">
               <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-sidebar-primary/20 text-sidebar-primary">
