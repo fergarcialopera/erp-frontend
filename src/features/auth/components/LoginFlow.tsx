@@ -400,10 +400,10 @@ export function LoginFlow() {
           </div>
           <InputOTP maxLength={4} value={pin} onChange={setPin} disabled={pinSubmitting}>
             <InputOTPGroup>
-              <InputOTPSlot index={0} />
-              <InputOTPSlot index={1} />
-              <InputOTPSlot index={2} />
-              <InputOTPSlot index={3} />
+              <InputOTPSlot index={0} masked />
+              <InputOTPSlot index={1} masked />
+              <InputOTPSlot index={2} masked />
+              <InputOTPSlot index={3} masked />
             </InputOTPGroup>
           </InputOTP>
           <p className="text-[11px] text-muted-foreground">PIN de 4 dígitos</p>
