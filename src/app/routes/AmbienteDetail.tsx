@@ -4,19 +4,19 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { useAmbiente } from "@/features/ambientes/queries";
 import { ArrowLeft } from "lucide-react";
-import type { Compartment } from "@/types/models";
+import type { Zona } from "@/types/models";
 import { tableCell } from "@/components/tableTypography";
 
-const columns: Column<Compartment>[] = [
+const columns: Column<Zona>[] = [
   {
     key: "code",
     header: "CÓDIGO",
-    render: (c) => <span className={`${tableCell.mono} font-medium`}>{c.code}</span>,
+    render: (z) => <span className={`${tableCell.mono} font-medium`}>{z.code}</span>,
   },
   {
     key: "is_active",
     header: "ACTIVO",
-    render: (c) => <StatusBadge status={c.is_active ? "Activo" : "Inactivo"} type="active" />,
+    render: (z) => <StatusBadge status={z.is_active ? "Activo" : "Inactivo"} type="active" />,
   },
 ];
 
@@ -30,10 +30,10 @@ export default function AmbienteDetailPage() {
     isError,
     refetch,
   } = useAmbiente(id ?? null);
-  const compartments = ambiente?.compartments ?? [];
+  const zones = ambiente?.zones ?? [];
   const isLoading = ambienteLoading || ambienteFetching;
 
-  const activeCount = compartments.filter((c) => c.is_active).length;
+  const activeCount = zones.filter((z) => z.is_active).length;
 
   return (
     <div className="space-y-6">
@@ -52,7 +52,7 @@ export default function AmbienteDetailPage() {
           <p className="page-description">
             {ambiente?.location
               ? `${ambiente.location}${ambiente.device_id ? ` · ${ambiente.device_id}` : ""}`
-              : "Compartimientos asignados"}
+              : "Zonas asignadas"}
           </p>
         </div>
       </div>
@@ -60,24 +60,24 @@ export default function AmbienteDetailPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="stat-card">
           <span className="text-xs text-muted-foreground uppercase tracking-wider">Total</span>
-          <div className="text-2xl font-bold mt-1">{compartments.length}</div>
+          <div className="text-2xl font-bold mt-1">{zones.length}</div>
         </div>
         <div className="stat-card">
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">Activos</span>
+          <span className="text-xs text-muted-foreground uppercase tracking-wider">Activas</span>
           <div className="text-2xl font-bold mt-1 text-success">{activeCount}</div>
         </div>
       </div>
 
       <DataTable
-        data={compartments}
+        data={zones}
         isLoading={isLoading}
         isError={isError}
         onRetry={() => refetch()}
         columns={columns}
         searchKey="code"
-        searchPlaceholder="Buscar compartimiento..."
-        emptyTitle="Sin compartimentos"
-        emptyDescription="No hay compartimentos en este ambiente."
+        searchPlaceholder="Buscar zona..."
+        emptyTitle="Sin zonas"
+        emptyDescription="No hay zonas en este ambiente."
       />
     </div>
   );

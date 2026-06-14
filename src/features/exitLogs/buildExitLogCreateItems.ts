@@ -5,7 +5,7 @@ import { planLinesToCreateItem } from "./buildExitLogCreatePayload";
 import type { ProductStockCache } from "./productStockCache";
 import {
   planExitPick,
-  productStockLocationsToCompartments,
+  productStockLocationsToZones,
   sumPickQuantity,
 } from "./planExitPick";
 
@@ -39,9 +39,9 @@ export async function buildExitLogCreateItemsFromDraft(
 
   for (const item of draft) {
     const stock = await fetchProductStockLocations(item.productId);
-    const compartments = productStockLocationsToCompartments(stock.locations);
-    cache.set(item.productId, compartments);
-    const plan = planExitPick(item.quantity, compartments);
+    const zones = productStockLocationsToZones(stock.locations);
+    cache.set(item.productId, zones);
+    const plan = planExitPick(item.quantity, zones);
     const planned = sumPickQuantity(plan);
 
     if (plan.length === 0 || planned < item.quantity) {

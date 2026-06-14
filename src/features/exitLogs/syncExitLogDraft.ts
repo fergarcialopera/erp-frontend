@@ -11,10 +11,10 @@ import { flattenExitLogLocationLines } from "./exitLogDetailNormalize";
 import type { ExitPickLine } from "./planExitPick";
 
 function structureKey(
-  lines: { productId: string; compartmentId?: string | null }[],
+  lines: { productId: string; zoneId?: string | null }[],
 ): string {
   return lines
-    .map((line) => `${line.productId}:${line.compartmentId ?? ""}`)
+    .map((line) => `${line.productId}:${line.zoneId ?? ""}`)
     .sort()
     .join("|");
 }
@@ -23,13 +23,13 @@ function createItemToStructureLines(item: CreateExitLogItem) {
   if ("locations" in item && item.locations) {
     return item.locations.map((loc) => ({
       productId: item.product_id,
-      compartmentId: loc.compartment_id,
+      zoneId: loc.zone_id,
     }));
   }
   return [
     {
       productId: item.product_id,
-      compartmentId: "compartment_id" in item ? item.compartment_id : undefined,
+      zoneId: "zone_id" in item ? item.zone_id : undefined,
     },
   ];
 }
@@ -42,7 +42,7 @@ export function pendingItemsToCreateItems(items: PendingExitItem[]): CreateExitL
     if (item.confirmedQuantity <= 0) continue;
     const lines = byProduct.get(item.productId) ?? [];
     lines.push({
-      compartmentId: item.compartmentId ?? null,
+      zoneId: item.zoneId ?? null,
       quantity: item.confirmedQuantity,
       location: item.pickLocation ?? {},
     });
@@ -71,7 +71,7 @@ export async function syncExitLogDraftBeforeConfirm(
   const serverStructure = structureKey(
     serverLines.map((line) => ({
       productId: line.productId,
-      compartmentId: line.compartmentId,
+      zoneId: line.zoneId,
     })),
   );
   const desiredStructure = structureKey(
@@ -91,7 +91,7 @@ export async function syncExitLogDraftBeforeConfirm(
     const match = desired.find(
       (item) =>
         item.productId === line.productId &&
-        (item.compartmentId ?? undefined) === (line.compartmentId ?? undefined),
+        (item.zoneId ?? undefined) === (line.zoneId ?? undefined),
     );
     return {
       item_id: line.itemId,

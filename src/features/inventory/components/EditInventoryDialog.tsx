@@ -19,7 +19,7 @@ import { useAuth } from "@/app/providers/useAuth";
 import { adjustProductInventory } from "@/features/inventory/api";
 import { StockLocationDisplay } from "@/components/StockLocationDisplay";
 import { resolveStockLocationLabels } from "@/lib/stockLocation";
-import type { CompartmentInventory } from "@/types/models";
+import type { ZonaInventory } from "@/types/models";
 
 const editSchema = z.object({
   quantity: z.coerce
@@ -30,16 +30,16 @@ const editSchema = z.object({
 
 type EditForm = z.infer<typeof editSchema>;
 
-function rowProductName(r: CompartmentInventory): string {
+function rowProductName(r: ZonaInventory): string {
   return r.product?.name ?? r.product_name ?? r.product_id ?? "—";
 }
 
-function rowProductSku(r: CompartmentInventory): string {
+function rowProductSku(r: ZonaInventory): string {
   return r.product?.sku ?? r.product_sku ?? r.product_id ?? "—";
 }
 
 interface EditInventoryDialogProps {
-  row: CompartmentInventory | null;
+  row: ZonaInventory | null;
   onOpenChange: (open: boolean) => void;
 }
 
@@ -70,12 +70,12 @@ export function EditInventoryDialog({ row, onOpenChange }: EditInventoryDialogPr
       if (!productId) {
         throw new Error("Producto no identificado");
       }
-      const compartmentId = row?.compartment_id || row?.compartment?.id;
+      const zoneId = row?.zone_id || row?.zone?.id;
       return adjustProductInventory(productId, {
         locations: [
           {
             quantity: data.quantity,
-            compartment_id: compartmentId ? compartmentId : null,
+            zone_id: zoneId ? zoneId : null,
           },
         ],
       });
@@ -113,7 +113,7 @@ export function EditInventoryDialog({ row, onOpenChange }: EditInventoryDialogPr
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs text-muted-foreground">Ubicación:</span>
-                  <StockLocationDisplay {...resolveStockLocationLabels(row.ambiente, row.compartment, row)} />
+                  <StockLocationDisplay {...resolveStockLocationLabels(row.ambiente, row.zone, row)} />
                 </div>
                 <p>
                   Reservado actual:{" "}

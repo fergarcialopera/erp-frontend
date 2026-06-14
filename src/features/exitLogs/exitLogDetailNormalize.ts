@@ -10,7 +10,7 @@ function isProductGroupedItem(item: ExitLogProductItem): boolean {
 
 /**
  * Normaliza la respuesta GET/POST/PATCH/confirm al formato OpenAPI v2:
- * items[] con un elemento por product_id y locations[] por compartimento.
+ * items[] con un elemento por product_id y locations[] por zona.
  */
 export function normalizeExitLogDetail(raw: ExitLogDetail): ExitLogDetail {
   const items = raw.items ?? [];
@@ -34,7 +34,7 @@ export function normalizeExitLogDetail(raw: ExitLogDetail): ExitLogDetail {
     item_id?: string;
     product?: ExitLogProductItem["product"];
     ambiente?: ExitLogLocationLine["ambiente"];
-    compartment?: ExitLogLocationLine["compartment"];
+    zone?: ExitLogLocationLine["zone"];
     requested_quantity?: number;
     confirmed_quantity?: number | null;
     stock_available?: number | null;
@@ -52,7 +52,7 @@ export function normalizeExitLogDetail(raw: ExitLogDetail): ExitLogDetail {
       confirmed_quantity: line.confirmed_quantity,
       stock_available: line.stock_available,
       ambiente: line.ambiente,
-      compartment: line.compartment,
+      zone: line.zone,
     };
 
     const existing = byProduct.get(productId);
@@ -78,13 +78,13 @@ export function flattenExitLogLocationLines(detail: ExitLogDetail) {
   return detail.items.flatMap((productItem) =>
     (productItem.locations ?? []).map((location) => ({
       productId: productItem.product?.id ?? "",
-      compartmentId: location.compartment?.id,
+      zoneId: location.zone?.id,
       itemId: location.item_id,
       requestedQuantity: location.requested_quantity,
       confirmedQuantity: location.confirmed_quantity,
       stockAvailable: location.stock_available,
       ambiente: location.ambiente,
-      compartment: location.compartment,
+      zone: location.zone,
     })),
   );
 }

@@ -18,7 +18,7 @@ export function groupExitLogDetailByProduct(detail: ExitLogDetail): ExitLogProdu
       if (!productId) return null;
 
       const locationPicks: ExitLogLocationPick[] = (productItem.locations ?? []).map((line) => ({
-        labels: resolveStockLocationLabels(line.ambiente, line.compartment),
+        labels: resolveStockLocationLabels(line.ambiente, line.zone),
         quantity: locationLineQuantity(line),
       }));
 

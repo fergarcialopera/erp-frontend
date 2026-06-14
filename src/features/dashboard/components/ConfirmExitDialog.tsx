@@ -57,7 +57,7 @@ export function ConfirmExitDialog({
         <DialogHeader>
           <DialogTitle>Confirmar salida</DialogTitle>
           <DialogDescription>
-            Ajusta la cantidad a retirar; el sistema recalcula al instante los compartimentos
+            Ajusta la cantidad a retirar; el sistema recalcula al instante las zonas
             para usar el mínimo número de ubicaciones.
           </DialogDescription>
         </DialogHeader>

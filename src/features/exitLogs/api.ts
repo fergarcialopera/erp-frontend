@@ -6,24 +6,24 @@ import type { ExitLogProductDisplayRow } from "@/types/models";
 import { groupExitLogDetailByProduct } from "./groupExitLogDetailByProduct";
 import { normalizeExitLogDetail } from "./exitLogDetailNormalize";
 
-/** Asignación explícita por compartimento (OpenAPI ExitLogCreateLocationAllocation). */
+/** Asignación explícita por zona (OpenAPI ExitLogCreateLocationAllocation). */
 export interface CreateExitLogLocationAllocation {
-  compartment_id: string;
+  zone_id: string;
   quantity: number;
   ambiente_id?: string;
 }
 
-/** Un producto con varias ubicaciones (recomendado para multi-compartimento). */
+/** Un producto con varias ubicaciones (recomendado para multi-zona). */
 export interface CreateExitLogItemWithLocations {
   product_id: string;
   locations: CreateExitLogLocationAllocation[];
 }
 
-/** Un producto con cantidad total y opcionalmente un compartimento (legacy). */
+/** Un producto con cantidad total y opcionalmente una zona (legacy). */
 export interface CreateExitLogItemLegacy {
   product_id: string;
   quantity: number;
-  compartment_id?: string;
+  zone_id?: string;
   ambiente_id?: string;
 }
 
@@ -56,7 +56,7 @@ export interface ExitLogLocationLine {
   confirmed_quantity?: number | null;
   stock_available?: number | null;
   ambiente?: { id: string; name?: string; device_id?: string | null } | null;
-  compartment?: { id: string; code?: string } | null;
+  zone?: { id: string; code?: string } | null;
 }
 
 /** Producto dentro del detalle de salida (un ítem por product_id). */
@@ -86,7 +86,7 @@ export interface ExitLogHeader {
   };
   location?: {
     ambiente?: { id: string; name?: string; device_id?: string | null } | null;
-    compartment?: { id: string; code?: string } | null;
+    zone?: { id: string; code?: string } | null;
   } | null;
 }
 
@@ -114,7 +114,7 @@ function serializeCreateItem(item: CreateExitLogItem): Record<string, unknown> {
     return {
       product_id: item.product_id,
       locations: item.locations.map((loc) => ({
-        compartment_id: loc.compartment_id,
+        zone_id: loc.zone_id,
         quantity: loc.quantity,
         ...(loc.ambiente_id ? { ambiente_id: loc.ambiente_id } : {}),
       })),
@@ -123,7 +123,7 @@ function serializeCreateItem(item: CreateExitLogItem): Record<string, unknown> {
   return {
     product_id: item.product_id,
     quantity: item.quantity,
-    ...(item.compartment_id ? { compartment_id: item.compartment_id } : {}),
+    ...(item.zone_id ? { zone_id: item.zone_id } : {}),
     ...(item.ambiente_id ? { ambiente_id: item.ambiente_id } : {}),
   };
 }

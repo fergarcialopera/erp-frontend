@@ -2,8 +2,6 @@ import type { StockLocationLabels } from "@/lib/stockLocation";
 
 export type Role = "ADMIN" | "TECHNICIAN" | "STAFF";
 
-export type CompartmentStatus = "AVAILABLE" | "MAINTENANCE";
-
 export type ActorType = "USER" | "SYSTEM";
 
 export interface Clinic {
@@ -66,14 +64,13 @@ export interface Ambiente {
   device_id?: string | null;
   is_active: boolean;
   /** Incluido en GET /ambientes/:id */
-  compartments?: Compartment[];
+  zones?: Zona[];
 }
 
-export interface Compartment {
+export interface Zona {
   id: string;
   ambiente_id: string;
   code: string;
-  status?: CompartmentStatus;
   is_active: boolean;
 }
 
@@ -90,7 +87,7 @@ export interface Product {
 export interface ProductStockLocation {
   quantity: number;
   ambiente?: { id: string; name?: string; device_id?: string | null } | null;
-  compartment?: { id: string; code?: string } | null;
+  zone?: { id: string; code?: string } | null;
 }
 
 export interface ProductStockLocations {
@@ -99,22 +96,22 @@ export interface ProductStockLocations {
   locations: ProductStockLocation[];
 }
 
-export interface CompartmentInventory {
+export interface ZonaInventory {
   id: string;
   clinic_id: string;
-  compartment_id: string;
+  zone_id: string;
   product_id: string;
   qty_available: number;
   qty_reserved: number;
   /** Objetos enriquecidos (GET /inventory) */
   product?: Product;
-  compartment?: Compartment;
+  zone?: Zona;
   ambiente?: Ambiente;
   /** Fallbacks planos (si el API los incluye) */
   ambiente_id?: string;
   ambiente_name?: string;
-  compartment_name?: string;
-  compartment_code?: string;
+  zone_name?: string;
+  zone_code?: string;
   product_name?: string;
   product_sku?: string;
 }
@@ -129,7 +126,7 @@ export interface EntryLog {
   created_by?: string;
   created_at?: string;
   ambiente?: { id: string; name?: string; device_id?: string | null } | null;
-  compartment?: { id: string; code?: string } | null;
+  zone?: { id: string; code?: string } | null;
 }
 
 export interface ExitLog {
@@ -142,18 +139,18 @@ export interface ExitLog {
   created_at?: string;
   requested_by_user_id?: string;
   ambiente_id?: string;
-  compartment_id?: string;
+  zone_id?: string;
   product_id?: string;
   product_name?: string;
   product_sku?: string;
   ambiente_name?: string;
-  compartment_name?: string;
-  compartment_code?: string;
+  zone_name?: string;
+  zone_code?: string;
   requested_by_user_name?: string;
   requested_by?: User;
   product?: Product;
   ambiente?: Ambiente;
-  compartment?: Compartment;
+  zone?: Zona;
 }
 
 export type IncidentSource = "ERP" | "AMBIENTE";
@@ -170,7 +167,7 @@ export interface Incident {
   reported_by_user_id?: string;
   reported_by_user_name?: string;
   ambiente_id?: string;
-  compartment_id?: string;
+  zone_id?: string;
   created_at?: string;
   updated_at?: string;
 }

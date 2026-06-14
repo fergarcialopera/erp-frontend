@@ -9,24 +9,24 @@ export function planLinesToCreateItem(
   const active = plan.filter((line) => line.quantity > 0);
   if (active.length === 0) return null;
 
-  const withCompartment = active.filter((line) => line.compartmentId);
-  if (withCompartment.length === 0) {
+  const withZone = active.filter((line) => line.zoneId);
+  if (withZone.length === 0) {
     const total = active.reduce((sum, line) => sum + line.quantity, 0);
     return { product_id: productId, quantity: total };
   }
 
-  if (withCompartment.length === 1 && withCompartment[0].quantity === active.reduce((s, l) => s + l.quantity, 0)) {
+  if (withZone.length === 1 && withZone[0].quantity === active.reduce((s, l) => s + l.quantity, 0)) {
     return {
       product_id: productId,
-      quantity: withCompartment[0].quantity,
-      compartment_id: withCompartment[0].compartmentId!,
+      quantity: withZone[0].quantity,
+      zone_id: withZone[0].zoneId!,
     };
   }
 
   return {
     product_id: productId,
-    locations: withCompartment.map((line) => ({
-      compartment_id: line.compartmentId!,
+    locations: withZone.map((line) => ({
+      zone_id: line.zoneId!,
       quantity: line.quantity,
     })),
   };

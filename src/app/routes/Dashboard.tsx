@@ -122,7 +122,7 @@ export default function DashboardPage() {
         await draftEditor.openWithItems(created, cache);
         dispatch({ type: "clear" });
         toast.success("Salida en borrador creada", {
-          description: "Revisa el plan de retirada por compartimento y confirma la salida.",
+          description: "Revisa el plan de retirada por zona y confirma la salida.",
         });
       } else {
         toast.error("No se pudo preparar la salida", {

@@ -36,7 +36,7 @@ function mapRawIncident(d: Record<string, unknown>): Incident {
     reported_by_user_id: d.reported_by_user_id != null ? String(d.reported_by_user_id) : undefined,
     reported_by_user_name: d.reported_by_user_name != null ? String(d.reported_by_user_name) : undefined,
     ambiente_id: d.ambiente_id != null ? String(d.ambiente_id) : undefined,
-    compartment_id: d.compartment_id != null ? String(d.compartment_id) : undefined,
+    zone_id: d.zone_id != null ? String(d.zone_id) : undefined,
     created_at: d.created_at != null ? String(d.created_at) : undefined,
     updated_at: d.updated_at != null ? String(d.updated_at) : undefined,
   };

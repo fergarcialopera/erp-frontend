@@ -6,7 +6,7 @@ import { getExitLog } from "./api";
 import { mapExitLogDetailToPendingItems } from "./mapExitLogDetailToPendingItems";
 import {
   prefetchProductStockCache,
-  totalCompartmentStock,
+  totalZoneStock,
   type ProductStockCache,
 } from "./productStockCache";
 import { replanPendingProductLines } from "./replanPendingProductLines";
@@ -26,7 +26,7 @@ function enrichPendingItems(
   cache: ProductStockCache,
 ): PendingExitItem[] {
   return items.map((item) => {
-    const total = totalCompartmentStock(cache.get(item.productId) ?? []);
+    const total = totalZoneStock(cache.get(item.productId) ?? []);
     return {
       ...item,
       availableStock: total > 0 ? total : item.availableStock,
@@ -63,8 +63,8 @@ export function useDraftExitEditor(clinicId: string | null, canExecute = true) {
     if (missing.length === 0) return stockCacheRef.current;
 
     const fetched = await prefetchProductStockCache(missing);
-    for (const [productId, compartments] of fetched) {
-      stockCacheRef.current.set(productId, compartments);
+    for (const [productId, zones] of fetched) {
+      stockCacheRef.current.set(productId, zones);
     }
     return stockCacheRef.current;
   }, []);
@@ -73,8 +73,8 @@ export function useDraftExitEditor(clinicId: string | null, canExecute = true) {
     async (pending: PendingExitItem[], cache?: ProductStockCache) => {
       const productIds = [...new Set(pending.map((item) => item.productId))];
       if (cache) {
-        for (const [productId, compartments] of cache) {
-          stockCacheRef.current.set(productId, compartments);
+        for (const [productId, zones] of cache) {
+          stockCacheRef.current.set(productId, zones);
         }
       }
       await ensureStockCache(productIds);
@@ -121,8 +121,8 @@ export function useDraftExitEditor(clinicId: string | null, canExecute = true) {
     const qty = Math.max(0, Math.floor(quantity));
     setProductQuantities((prev) => ({ ...prev, [productId]: qty }));
 
-    const compartments = stockCacheRef.current.get(productId) ?? [];
-    const maxAvailable = totalCompartmentStock(compartments);
+    const zones = stockCacheRef.current.get(productId) ?? [];
+    const maxAvailable = totalZoneStock(zones);
 
     if (qty > maxAvailable) {
       setQuantityErrors((prev) => ({
@@ -137,7 +137,7 @@ export function useDraftExitEditor(clinicId: string | null, canExecute = true) {
     setItems((prev) => {
       const head = prev.find((item) => item.productId === productId);
       if (!head) return prev;
-      return replanPendingProductLines(productId, qty, prev, compartments);
+      return replanPendingProductLines(productId, qty, prev, zones);
     });
   }, []);
 

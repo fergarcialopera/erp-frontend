@@ -34,7 +34,7 @@ const LOCATION_NONE = "__none__";
 
 const entrySchema = z.object({
   product_id: z.string().min(1, "Selecciona un producto"),
-  compartment_id: z.string().optional(),
+  zone_id: z.string().optional(),
   quantity: z.coerce.number().int().min(1, "La cantidad debe ser mayor a 0").max(999, "Máximo 999"),
   note: z.string().trim().max(120).optional(),
 });
@@ -72,12 +72,12 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
   });
 
   const selectedAmbiente = activeAmbientes.find((a) => a.id === filterAmbienteId);
-  const activeCompartments = (selectedAmbiente?.compartments ?? []).filter((c) => c.is_active);
+  const activeZones = (selectedAmbiente?.zones ?? []).filter((z) => z.is_active);
   const selectedProductId = watch("product_id");
 
   useEffect(() => {
     if (open) {
-      reset({ quantity: 1, note: "", compartment_id: undefined });
+      reset({ quantity: 1, note: "", zone_id: undefined });
       setFilterAmbienteId(undefined);
     }
   }, [open, reset]);
@@ -98,8 +98,8 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
       return;
     }
 
-    const compartment = data.compartment_id
-      ? activeCompartments.find((c) => c.id === data.compartment_id)
+    const zone = data.zone_id
+      ? activeZones.find((z) => z.id === data.zone_id)
       : undefined;
 
     try {
@@ -108,10 +108,10 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
         name: selectedProduct.name,
         quantity: data.quantity,
         note: data.note,
-        ...(compartment
+        ...(zone
           ? {
-              compartment_id: compartment.id,
-              ambiente_id: compartment.ambiente_id || filterAmbienteId,
+              zone_id: zone.id,
+              ambiente_id: zone.ambiente_id || filterAmbienteId,
             }
           : {}),
       });
@@ -186,7 +186,7 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
                 value={filterAmbienteId ?? LOCATION_NONE}
                 onValueChange={(v) => {
                   setFilterAmbienteId(v === LOCATION_NONE ? undefined : v);
-                  setValue("compartment_id", undefined);
+                  setValue("zone_id", undefined);
                 }}
                 disabled={ambienteTreeLoading || activeAmbientes.length === 0}
               >
@@ -205,24 +205,24 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="entry-compartment_id" className="text-xs font-medium">
-                Compartimento <span className="text-muted-foreground font-normal">(opcional)</span>
+              <Label htmlFor="entry-zone_id" className="text-xs font-medium">
+                Zona <span className="text-muted-foreground font-normal">(opcional)</span>
               </Label>
               <Select
-                value={watch("compartment_id") ?? LOCATION_NONE}
+                value={watch("zone_id") ?? LOCATION_NONE}
                 onValueChange={(v) =>
-                  setValue("compartment_id", v === LOCATION_NONE ? undefined : v)
+                  setValue("zone_id", v === LOCATION_NONE ? undefined : v)
                 }
                 disabled={
                   ambienteTreeLoading ||
                   !filterAmbienteId ||
-                  activeCompartments.length === 0
+                  activeZones.length === 0
                 }
               >
                 <SelectTrigger
-                  id="entry-compartment_id"
+                  id="entry-zone_id"
                   className="h-10"
-                  aria-invalid={!!errors.compartment_id}
+                  aria-invalid={!!errors.zone_id}
                 >
                   <SelectValue
                     placeholder={
@@ -230,24 +230,24 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
                         ? "Cargando ambientes…"
                         : !filterAmbienteId
                           ? "Elige un ambiente para ubicar"
-                          : activeCompartments.length === 0
-                            ? "Sin compartimentos en este ambiente"
-                            : "Sin compartimento"
+                          : activeZones.length === 0
+                            ? "Sin zonas en este ambiente"
+                            : "Sin zona"
                     }
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={LOCATION_NONE}>Sin compartimento</SelectItem>
-                  {activeCompartments.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.code}
+                  <SelectItem value={LOCATION_NONE}>Sin zona</SelectItem>
+                  {activeZones.map((z) => (
+                    <SelectItem key={z.id} value={z.id}>
+                      {z.code}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {errors.compartment_id && (
+              {errors.zone_id && (
                 <p className="text-xs text-destructive" role="alert">
-                  {errors.compartment_id.message}
+                  {errors.zone_id.message}
                 </p>
               )}
             </div>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { PendingExitItem } from "@/features/dashboard/types";
 import { replanPendingProductLines } from "./replanPendingProductLines";
-import type { CompartmentStock } from "./planExitPick";
+import type { ZonaStock } from "./planExitPick";
 
 const baseItem: PendingExitItem = {
   productId: "p1",
@@ -14,26 +14,26 @@ const baseItem: PendingExitItem = {
   exitLogItemId: "line-1",
 };
 
-const compartments: CompartmentStock[] = [
+const zones: ZonaStock[] = [
   {
-    compartmentId: "c1",
+    zoneId: "z1",
     quantity: 3,
-    location: { ambiente: "A", compartment: "C1" },
+    location: { ambiente: "A", zona: "Z1" },
   },
   {
-    compartmentId: "c2",
+    zoneId: "z2",
     quantity: 5,
-    location: { ambiente: "A", compartment: "C2" },
+    location: { ambiente: "A", zona: "Z2" },
   },
 ];
 
 describe("replanPendingProductLines", () => {
-  it("recalcula compartimentos al cambiar la cantidad", () => {
-    const result = replanPendingProductLines("p1", 6, [baseItem], compartments);
+  it("recalcula zonas al cambiar la cantidad", () => {
+    const result = replanPendingProductLines("p1", 6, [baseItem], zones);
     const p1Lines = result.filter((row) => row.productId === "p1");
 
     expect(p1Lines).toHaveLength(2);
-    expect(p1Lines.find((row) => row.compartmentId === "c2")?.quantity).toBe(5);
-    expect(p1Lines.find((row) => row.compartmentId === "c1")?.quantity).toBe(1);
+    expect(p1Lines.find((row) => row.zoneId === "z2")?.quantity).toBe(5);
+    expect(p1Lines.find((row) => row.zoneId === "z1")?.quantity).toBe(1);
   });
 });

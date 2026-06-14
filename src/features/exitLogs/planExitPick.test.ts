@@ -1,35 +1,35 @@
 import { describe, expect, it } from "vitest";
-import { planExitPick, type CompartmentStock } from "./planExitPick";
+import { planExitPick, type ZonaStock } from "./planExitPick";
 
-const comp1: CompartmentStock = {
-  compartmentId: "comp1",
+const zone1: ZonaStock = {
+  zoneId: "zone1",
   quantity: 3,
-  location: { ambiente: "Ambiente A", compartment: "Compartimento 1" },
+  location: { ambiente: "Ambiente A", zona: "Zona 1" },
 };
 
-const comp2: CompartmentStock = {
-  compartmentId: "comp2",
+const zone2: ZonaStock = {
+  zoneId: "zone2",
   quantity: 5,
-  location: { ambiente: "Ambiente A", compartment: "Compartimento 2" },
+  location: { ambiente: "Ambiente A", zona: "Zona 2" },
 };
 
 describe("planExitPick", () => {
-  it("situación 1: elige un solo compartimento que cubre la solicitud completa", () => {
-    expect(planExitPick(4, [comp1, comp2])).toEqual([
-      { compartmentId: "comp2", quantity: 4, location: comp2.location },
+  it("situación 1: elige una sola zona que cubre la solicitud completa", () => {
+    expect(planExitPick(4, [zone1, zone2])).toEqual([
+      { zoneId: "zone2", quantity: 4, location: zone2.location },
     ]);
   });
 
-  it("situación 2: si varios pueden cubrir, prioriza el de menos unidades", () => {
-    expect(planExitPick(2, [comp1, comp2])).toEqual([
-      { compartmentId: "comp1", quantity: 2, location: comp1.location },
+  it("situación 2: si varias pueden cubrir, prioriza la de menos unidades", () => {
+    expect(planExitPick(2, [zone1, zone2])).toEqual([
+      { zoneId: "zone1", quantity: 2, location: zone1.location },
     ]);
   });
 
-  it("situación 3: combina compartimentos empezando por el más cercano al solicitado", () => {
-    expect(planExitPick(6, [comp1, comp2])).toEqual([
-      { compartmentId: "comp2", quantity: 5, location: comp2.location },
-      { compartmentId: "comp1", quantity: 1, location: comp1.location },
+  it("situación 3: combina zonas empezando por la más cercana al solicitado", () => {
+    expect(planExitPick(6, [zone1, zone2])).toEqual([
+      { zoneId: "zone2", quantity: 5, location: zone2.location },
+      { zoneId: "zone1", quantity: 1, location: zone1.location },
     ]);
   });
 

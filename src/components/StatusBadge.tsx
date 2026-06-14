@@ -1,48 +1,23 @@
-import { CompartmentStatus } from "@/types/models";
 import { cn } from "@/lib/utils";
 
-type BadgeVariant =
-  | "pending"
-  | "retired"
-  | "cancelled"
-  | "available"
-  | "maintenance"
-  | "active"
-  | "inactive";
+type BadgeVariant = "active" | "inactive";
 
 const variants: Record<BadgeVariant, string> = {
-  pending: "bg-accent/15 text-accent border-accent/25",
-  retired: "bg-muted text-muted-foreground border-border",
-  cancelled: "bg-muted/50 text-muted-foreground/70 border-border/50",
-  available: "bg-success/10 text-success border-success/20",
-  maintenance: "bg-warning/10 text-warning border-warning/20",
   active: "bg-success/10 text-success border-success/20",
   inactive: "bg-muted/50 text-muted-foreground/70 border-border/50",
 };
 
-const compartmentStatusMap: Record<CompartmentStatus, BadgeVariant> = {
-  AVAILABLE: "available",
-  MAINTENANCE: "maintenance",
-};
-
 interface StatusBadgeProps {
   status: string;
-  type?: "compartment" | "active";
+  type?: "active";
   className?: string;
 }
 
-export function StatusBadge({ status, type = "compartment", className }: StatusBadgeProps) {
-  let variant: BadgeVariant;
+export function StatusBadge({ status, type = "active", className }: StatusBadgeProps) {
+  const variant: BadgeVariant =
+    status === "true" || status === "active" || status === "Activo" ? "active" : "inactive";
 
-  if (type === "compartment") {
-    variant = compartmentStatusMap[status as CompartmentStatus] || "retired";
-  } else {
-    variant =
-      status === "true" || status === "active" || status === "Activo" ? "active" : "inactive";
-  }
-
-  const label =
-    type === "active" ? (variant === "active" ? "Activo" : "Inactivo") : (status as string);
+  const label = variant === "active" ? "Activo" : "Inactivo";
 
   return (
     <span

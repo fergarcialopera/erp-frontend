@@ -160,7 +160,7 @@ export default function NewIncidentPage() {
             <Input
               id="title"
               className="h-10"
-              placeholder="Ej: Error al abrir compartimento"
+              placeholder="Ej: Error al abrir zona"
               aria-invalid={!!errors.title}
               {...register("title")}
             />

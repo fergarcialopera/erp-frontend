@@ -17,7 +17,7 @@ export function mapExitLogDetailToPendingItems(detail: ExitLogDetail): PendingEx
     );
 
     for (const line of productItem.locations ?? []) {
-      const pickLocation = resolveStockLocationLabels(line.ambiente, line.compartment);
+      const pickLocation = resolveStockLocationLabels(line.ambiente, line.zone);
       const qty = line.requested_quantity;
 
       rows.push({
@@ -30,7 +30,7 @@ export function mapExitLogDetailToPendingItems(detail: ExitLogDetail): PendingEx
         exitLogId,
         exitLogItemId: line.item_id,
         confirmedQuantity: qty,
-        compartmentId: line.compartment?.id,
+        zoneId: line.zone?.id,
         pickLocation,
       });
     }

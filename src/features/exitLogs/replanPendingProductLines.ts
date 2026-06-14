@@ -2,20 +2,20 @@ import type { PendingExitItem } from "@/features/dashboard/types";
 import {
   planExitPick,
   sumPickQuantity,
-  type CompartmentStock,
+  type ZonaStock,
 } from "./planExitPick";
 
 function pendingLineId(
   productId: string,
-  compartmentId: string | null,
+  zoneId: string | null,
   existingId?: string,
 ): string {
   if (existingId && !existingId.startsWith("pending:")) return existingId;
-  return `pending:${productId}:${compartmentId ?? "general"}`;
+  return `pending:${productId}:${zoneId ?? "general"}`;
 }
 
-function compartmentKey(compartmentId: string | undefined): string | null {
-  return compartmentId ?? null;
+function zoneKey(zoneId: string | undefined): string | null {
+  return zoneId ?? null;
 }
 
 /** Recalcula las líneas de un producto según cantidad y stock en caché. */
@@ -23,7 +23,7 @@ export function replanPendingProductLines(
   productId: string,
   quantity: number,
   currentItems: PendingExitItem[],
-  compartments: CompartmentStock[],
+  zones: ZonaStock[],
 ): PendingExitItem[] {
   const head = currentItems.find((item) => item.productId === productId);
   if (!head) return currentItems;
@@ -33,7 +33,7 @@ export function replanPendingProductLines(
     return currentItems.filter((item) => item.productId !== productId);
   }
 
-  const plan = planExitPick(qty, compartments);
+  const plan = planExitPick(qty, zones);
   if (sumPickQuantity(plan) < qty) {
     return currentItems;
   }
@@ -41,7 +41,7 @@ export function replanPendingProductLines(
   const existingIds = new Map<string | null, string>();
   for (const item of currentItems) {
     if (item.productId !== productId) continue;
-    existingIds.set(compartmentKey(item.compartmentId), item.exitLogItemId);
+    existingIds.set(zoneKey(item.zoneId), item.exitLogItemId);
   }
 
   const newLines: PendingExitItem[] = plan.map((line) => ({
@@ -53,12 +53,12 @@ export function replanPendingProductLines(
     exitLogId: head.exitLogId,
     exitLogItemId: pendingLineId(
       productId,
-      line.compartmentId,
-      existingIds.get(line.compartmentId),
+      line.zoneId,
+      existingIds.get(line.zoneId),
     ),
     quantity: line.quantity,
     confirmedQuantity: line.quantity,
-    compartmentId: line.compartmentId ?? undefined,
+    zoneId: line.zoneId ?? undefined,
     pickLocation: line.location,
   }));
 

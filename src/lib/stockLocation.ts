@@ -1,7 +1,7 @@
-/** Etiquetas de ambiente y compartimento para mostrar en UI. */
+/** Etiquetas de ambiente y zona para mostrar en UI. */
 export interface StockLocationLabels {
   ambiente?: string | null;
-  compartment?: string | null;
+  zona?: string | null;
 }
 
 export interface AmbienteRefLike {
@@ -10,7 +10,7 @@ export interface AmbienteRefLike {
   device_id?: string | null;
 }
 
-export interface CompartmentRefLike {
+export interface ZonaRefLike {
   id?: string;
   code?: string;
   name?: string;
@@ -21,10 +21,10 @@ export interface AmbienteFlatFallbacks {
   ambiente_name?: string;
 }
 
-export interface CompartmentFlatFallbacks {
-  compartment_id?: string;
-  compartment_code?: string;
-  compartment_name?: string;
+export interface ZonaFlatFallbacks {
+  zone_id?: string;
+  zone_code?: string;
+  zone_name?: string;
 }
 
 export function resolveAmbienteLabel(
@@ -39,33 +39,33 @@ export function resolveAmbienteLabel(
   return label || undefined;
 }
 
-export function resolveCompartmentLabel(
-  compartment?: CompartmentRefLike | null,
-  fallbacks?: CompartmentFlatFallbacks,
+export function resolveZonaLabel(
+  zone?: ZonaRefLike | null,
+  fallbacks?: ZonaFlatFallbacks,
 ): string | undefined {
   const label =
-    compartment?.code?.trim() ||
-    compartment?.name?.trim() ||
-    fallbacks?.compartment_code?.trim() ||
-    fallbacks?.compartment_name?.trim() ||
-    fallbacks?.compartment_id?.trim();
+    zone?.code?.trim() ||
+    zone?.name?.trim() ||
+    fallbacks?.zone_code?.trim() ||
+    fallbacks?.zone_name?.trim() ||
+    fallbacks?.zone_id?.trim();
   return label || undefined;
 }
 
 export function resolveStockLocationLabels(
   ambiente?: AmbienteRefLike | null,
-  compartment?: CompartmentRefLike | null,
-  fallbacks?: AmbienteFlatFallbacks & CompartmentFlatFallbacks,
+  zone?: ZonaRefLike | null,
+  fallbacks?: AmbienteFlatFallbacks & ZonaFlatFallbacks,
 ): StockLocationLabels {
   return {
     ambiente: resolveAmbienteLabel(ambiente, fallbacks),
-    compartment: resolveCompartmentLabel(compartment, fallbacks),
+    zona: resolveZonaLabel(zone, fallbacks),
   };
 }
 
 /** Clave estable para deduplicar ubicaciones en listas. */
 export function stockLocationKey(labels: StockLocationLabels): string {
-  return `${labels.ambiente ?? ""}|${labels.compartment ?? ""}`;
+  return `${labels.ambiente ?? ""}|${labels.zona ?? ""}`;
 }
 
 export function uniqueStockLocations(locations: StockLocationLabels[]): StockLocationLabels[] {
@@ -82,6 +82,6 @@ export function uniqueStockLocations(locations: StockLocationLabels[]): StockLoc
 
 /** Texto plano para ordenación, búsqueda o aria-label. */
 export function formatStockLocationPlain(labels: StockLocationLabels, separator = " · "): string {
-  const parts = [labels.ambiente, labels.compartment].filter(Boolean);
+  const parts = [labels.ambiente, labels.zona].filter(Boolean);
   return parts.length > 0 ? parts.join(separator) : "";
 }

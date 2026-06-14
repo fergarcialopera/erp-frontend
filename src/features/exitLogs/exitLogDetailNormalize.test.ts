@@ -10,13 +10,13 @@ describe("normalizeExitLogDetail", () => {
           id: "line-1",
           product: { id: "p1", name: "Prod", sku: "S1" },
           requested_quantity: 2,
-          compartment: { id: "c1", code: "C1" },
+          zone: { id: "z1", code: "Z1" },
         },
         {
           id: "line-2",
           product: { id: "p1", name: "Prod", sku: "S1" },
           requested_quantity: 1,
-          compartment: { id: "c2", code: "C2" },
+          zone: { id: "z2", code: "Z2" },
         },
       ] as never,
     });

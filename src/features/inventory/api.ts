@@ -1,11 +1,11 @@
 import { apiClient } from "@/lib/apiClient";
 import { unwrapData, unwrapList } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
-import type { CompartmentInventory, ProductStockLocations } from "@/types/models";
+import type { ProductStockLocations, ZonaInventory } from "@/types/models";
 
 export interface AdjustProductInventoryLocation {
   quantity: number;
-  compartment_id?: string | null;
+  zone_id?: string | null;
 }
 
 export interface AdjustProductInventoryBody {
@@ -17,7 +17,7 @@ type InventoryLocationApi = {
   qty_available?: number;
   qty_reserved?: number;
   reserved_quantity?: number;
-  compartment?: { id?: string; code?: string; name?: string } | null;
+  zone?: { id?: string; code?: string; name?: string } | null;
   ambiente?: { id?: string; name?: string; device_id?: string | null } | null;
 };
 
@@ -47,30 +47,30 @@ function isGroupedByProduct(row: unknown): row is InventoryByProductApi {
 }
 
 /** Clave estable para React; el API puede repetir item.id / product.id entre ubicaciones. */
-function stableInventoryRowKey(row: CompartmentInventory, index: number): string {
+function stableInventoryRowKey(row: ZonaInventory, index: number): string {
   const productId = row.product_id || row.product?.id || "";
-  const compartmentId = row.compartment_id || row.compartment?.id || "";
+  const zoneId = row.zone_id || row.zone?.id || "";
   const ambienteId = row.ambiente_id || row.ambiente?.id || "";
-  if (productId || compartmentId || ambienteId) {
-    return [productId || "_", compartmentId || "_", ambienteId || "_", String(index)].join(":");
+  if (productId || zoneId || ambienteId) {
+    return [productId || "_", zoneId || "_", ambienteId || "_", String(index)].join(":");
   }
   return row.id ? `${row.id}:${index}` : `inventory-row:${index}`;
 }
 
-function mapByProductRows(item: InventoryByProductApi): CompartmentInventory[] {
+function mapByProductRows(item: InventoryByProductApi): ZonaInventory[] {
   const product = item.product ?? {};
   const locations = Array.isArray(item.locations) ? item.locations : [];
 
   return locations.map((location) => {
     const ambiente = location.ambiente ?? undefined;
-    const compartment = location.compartment ?? undefined;
+    const zone = location.zone ?? undefined;
     const qtyAvailable =
       location.qty_available !== undefined ? location.qty_available : location.quantity;
 
     return {
       id: "",
       clinic_id: String(item.clinic_id ?? product.clinic_id ?? ""),
-      compartment_id: String(compartment?.id ?? ""),
+      zone_id: String(zone?.id ?? ""),
       product_id: String(product.id ?? ""),
       qty_available: toNumber(qtyAvailable),
       qty_reserved: toNumber(
@@ -79,8 +79,8 @@ function mapByProductRows(item: InventoryByProductApi): CompartmentInventory[] {
       ),
       ambiente_id: ambiente?.id,
       ambiente_name: ambiente?.name,
-      compartment_code: compartment?.code,
-      compartment_name: compartment?.name,
+      zone_code: zone?.code,
+      zone_name: zone?.name,
       product_name: product.name,
       product_sku: product.sku,
       product: {
@@ -99,12 +99,11 @@ function mapByProductRows(item: InventoryByProductApi): CompartmentInventory[] {
             is_active: true,
           }
         : undefined,
-      compartment: compartment
+      zone: zone
         ? {
-            id: String(compartment.id ?? ""),
+            id: String(zone.id ?? ""),
             ambiente_id: String(ambiente?.id ?? ""),
-            code: String(compartment.code ?? compartment.name ?? compartment.id ?? ""),
-            status: "AVAILABLE",
+            code: String(zone.code ?? zone.name ?? zone.id ?? ""),
             is_active: true,
           }
         : undefined,
@@ -121,14 +120,14 @@ export const adjustProductInventory = async (
   return unwrapData<ProductStockLocations>(res.data);
 };
 
-export const fetchInventory = async (): Promise<CompartmentInventory[]> => {
+export const fetchInventory = async (): Promise<ZonaInventory[]> => {
   const res = await apiClient.get(ENDPOINTS.INVENTORY.LIST);
-  const raw = unwrapList<CompartmentInventory | InventoryByProductApi>(res.data);
+  const raw = unwrapList<ZonaInventory | InventoryByProductApi>(res.data);
 
   if (!raw.length) return [];
 
   const rows = raw.flatMap((entry) =>
-    isGroupedByProduct(entry) ? mapByProductRows(entry) : [entry as CompartmentInventory],
+    isGroupedByProduct(entry) ? mapByProductRows(entry) : [entry as ZonaInventory],
   );
 
   return rows.map((row, index) => ({

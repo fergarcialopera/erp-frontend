@@ -52,7 +52,7 @@ export default function AmbientesPage() {
     <div className="space-y-6">
       <div className="page-header">
         <h2 className="page-title">Ambientes</h2>
-        <p className="page-description">Gestión de ambientes y compartimientos</p>
+        <p className="page-description">Gestión de ambientes y zonas</p>
       </div>
 
       <DataTable

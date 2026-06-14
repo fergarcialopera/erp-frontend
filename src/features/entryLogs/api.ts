@@ -8,8 +8,8 @@ export interface CreateEntryLogBody {
   name?: string;
   quantity: number;
   note?: string;
-  compartment_id?: string;
-  /** Solo con compartment_id; debe ser el ambiente del compartimento. */
+  zone_id?: string;
+  /** Solo con zone_id; debe ser el ambiente de la zona. */
   ambiente_id?: string;
 }
 
@@ -19,7 +19,7 @@ export interface AmbienteRef {
   device_id?: string | null;
 }
 
-export interface CompartmentRef {
+export interface ZoneRef {
   id: string;
   code?: string;
 }
@@ -33,7 +33,7 @@ export interface EntryLogListItem {
   created_by?: string;
   created_at?: string;
   ambiente?: AmbienteRef | null;
-  compartment?: CompartmentRef | null;
+  zone?: ZoneRef | null;
 }
 
 export interface CreateEntryLogResponse {
@@ -41,13 +41,13 @@ export interface CreateEntryLogResponse {
   inventory?: {
     sku?: string;
     quantity?: number;
-    compartment_id?: string | null;
+    zone_id?: string | null;
     ambiente?: AmbienteRef | null;
-    compartment?: CompartmentRef | null;
+    zone?: ZoneRef | null;
   };
 }
 
-/** Construye el body según contrato OpenAPI (ambiente_id nunca sin compartment_id). */
+/** Construye el body según contrato OpenAPI (ambiente_id nunca sin zone_id). */
 export function buildCreateEntryLogRequestBody(data: CreateEntryLogBody): Record<string, unknown> {
   const body: Record<string, unknown> = {
     sku: data.sku,
@@ -57,8 +57,8 @@ export function buildCreateEntryLogRequestBody(data: CreateEntryLogBody): Record
   if (name) body.name = name;
   const note = data.note?.trim();
   if (note) body.note = note;
-  if (data.compartment_id) {
-    body.compartment_id = data.compartment_id;
+  if (data.zone_id) {
+    body.zone_id = data.zone_id;
     if (data.ambiente_id) body.ambiente_id = data.ambiente_id;
   }
   return body;

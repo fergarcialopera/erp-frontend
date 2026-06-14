@@ -1,9 +1,9 @@
 import { apiClient } from "@/lib/apiClient";
 import { unwrapData, unwrapList } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
-import { Ambiente, Compartment } from "@/types/models";
+import { Ambiente, Zona } from "@/types/models";
 
-type AmbienteTreeCompartmentApi = {
+type AmbienteTreeZoneApi = {
   id?: string;
   ambiente_id?: string;
   code?: string;
@@ -17,23 +17,20 @@ type AmbienteTreeNodeApi = {
   location?: string | null;
   device_id?: string | null;
   is_active?: boolean;
-  compartments?: AmbienteTreeCompartmentApi[] | null;
+  zones?: AmbienteTreeZoneApi[] | null;
 };
 
-function mapTreeCompartment(raw: AmbienteTreeCompartmentApi): Compartment {
+function mapTreeZone(raw: AmbienteTreeZoneApi): Zona {
   return {
     id: String(raw.id ?? ""),
     ambiente_id: String(raw.ambiente_id ?? ""),
     code: String(raw.code ?? raw.id ?? ""),
-    status: "AVAILABLE",
     is_active: raw.is_active !== false,
   };
 }
 
 function mapAmbienteFromApi(raw: AmbienteTreeNodeApi, clinicId: string): Ambiente {
-  const compartments = Array.isArray(raw.compartments)
-    ? raw.compartments.map(mapTreeCompartment)
-    : [];
+  const zones = Array.isArray(raw.zones) ? raw.zones.map(mapTreeZone) : [];
 
   return {
     id: String(raw.id ?? ""),
@@ -42,7 +39,7 @@ function mapAmbienteFromApi(raw: AmbienteTreeNodeApi, clinicId: string): Ambient
     location: raw.location ?? undefined,
     device_id: raw.device_id ?? undefined,
     is_active: raw.is_active !== false,
-    compartments,
+    zones,
   };
 }
 
@@ -62,7 +59,7 @@ export const fetchAmbienteById = async (id: string): Promise<Ambiente> => {
   return mapAmbienteFromApi(data, String(data.clinic_id ?? ""));
 };
 
-/** GET /ambientes/tree — catálogo con compartimentos anidados (pickers de ubicación). */
+/** GET /ambientes/tree — catálogo con zonas anidadas (pickers de ubicación). */
 export const fetchAmbientesTree = async (
   clinicId: string,
   params?: { active?: boolean },

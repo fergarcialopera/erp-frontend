@@ -11,19 +11,19 @@ import { TableHeaderButton } from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
 import { StockLocationDisplay } from "@/components/StockLocationDisplay";
 import { formatStockLocationPlain, resolveStockLocationLabels } from "@/lib/stockLocation";
-import type { CompartmentInventory } from "@/types/models";
+import type { ZonaInventory } from "@/types/models";
 
-function rowLocationLabels(r: CompartmentInventory) {
-  return resolveStockLocationLabels(r.ambiente, r.compartment, r);
+function rowLocationLabels(r: ZonaInventory) {
+  return resolveStockLocationLabels(r.ambiente, r.zone, r);
 }
-function rowProductSku(r: CompartmentInventory): string {
+function rowProductSku(r: ZonaInventory): string {
   return r.product?.sku ?? r.product_sku ?? r.product_id ?? "—";
 }
-function rowProductName(r: CompartmentInventory): string {
+function rowProductName(r: ZonaInventory): string {
   return r.product?.name ?? r.product_name ?? r.product_id ?? "—";
 }
 
-type InventoryRow = CompartmentInventory;
+type InventoryRow = ZonaInventory;
 
 const baseColumns: Column<InventoryRow>[] = [
   {
@@ -47,7 +47,7 @@ const baseColumns: Column<InventoryRow>[] = [
       return (
         <StockLocationDisplay
           ambiente={labels.ambiente}
-          compartment={labels.compartment}
+          zona={labels.zona}
           className="min-w-0"
         />
       );

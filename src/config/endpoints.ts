@@ -51,8 +51,8 @@ export const ENDPOINTS = {
     ...resource("/ambientes"),
     TREE: "/ambientes/tree",
   },
-  COMPARTMENTS: {
-    DETAIL: (id: string) => `/compartments/${id}`,
+  ZONES: {
+    DETAIL: (id: string) => `/zones/${id}`,
   },
   PRODUCTS: {
     ...resource("/products"),
