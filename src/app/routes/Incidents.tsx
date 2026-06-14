@@ -6,13 +6,22 @@ import { tableCell } from "@/components/tableTypography";
 import { DataTable, type Column } from "@/components/DataTable";
 import { useAuth } from "@/app/providers/useAuth";
 import { useIncidents } from "@/features/incidents/queries";
-import type { Incident } from "@/types/models";
+import type { Incident, IncidentSeverity } from "@/types/models";
 
 function sourceLabel(incident: Incident): string {
   const source = String(incident.source ?? "").toUpperCase();
-  if (source === "LOCKER") return "Locker físico";
+  if (source === "AMBIENTE") return "Ambiente físico";
   if (source === "ERP") return "Sistema ERP";
   return source || "—";
+}
+
+function severityLabel(severity: IncidentSeverity | string | undefined): string {
+  const value = String(severity ?? "").toUpperCase();
+  if (value === "LOW") return "Baja";
+  if (value === "MEDIUM") return "Media";
+  if (value === "HIGH") return "Alta";
+  if (value === "CRITICAL") return "Crítica";
+  return value || "—";
 }
 
 function statusLabel(incident: Incident): string {
@@ -49,6 +58,14 @@ const columns: Column<IncidentRow>[] = [
     header: "ORIGEN",
     sortable: true,
     render: (incident) => <span className={tableCell.primary}>{sourceLabel(incident)}</span>,
+  },
+  {
+    key: "severity",
+    header: "SEVERIDAD",
+    sortable: true,
+    render: (incident) => (
+      <span className={tableCell.primary}>{severityLabel(incident.severity)}</span>
+    ),
   },
   {
     key: "status",
@@ -96,7 +113,7 @@ export default function IncidentsPage() {
       <div className="page-header">
         <h2 className="page-title">Incidencias</h2>
         <p className="page-description">
-          Registro de incidencias reportadas por técnicos en ERP y lockers físicos
+          Registro de incidencias reportadas por técnicos en ERP y ambientes físicos
         </p>
       </div>
 

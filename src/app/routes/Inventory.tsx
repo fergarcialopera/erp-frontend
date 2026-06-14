@@ -14,7 +14,7 @@ import { formatStockLocationPlain, resolveStockLocationLabels } from "@/lib/stoc
 import type { CompartmentInventory } from "@/types/models";
 
 function rowLocationLabels(r: CompartmentInventory) {
-  return resolveStockLocationLabels(r.locker, r.compartment, r);
+  return resolveStockLocationLabels(r.ambiente, r.compartment, r);
 }
 function rowProductSku(r: CompartmentInventory): string {
   return r.product?.sku ?? r.product_sku ?? r.product_id ?? "—";
@@ -46,7 +46,7 @@ const baseColumns: Column<InventoryRow>[] = [
       const labels = rowLocationLabels(r);
       return (
         <StockLocationDisplay
-          locker={labels.locker}
+          ambiente={labels.ambiente}
           compartment={labels.compartment}
           className="min-w-0"
         />

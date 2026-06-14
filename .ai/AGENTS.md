@@ -4,7 +4,7 @@ Este archivo define el contexto operativo del proyecto frontend y debe cargarse 
 
 ## 1. Objetivo del proyecto
 
-Aplicacion frontend para gestion de inventario clinico con lockers.
+Aplicacion frontend para gestion de inventario clinico con ambientes.
 
 - Backend esperado: `http://localhost:8080`
 - Frontend esperado: `http://localhost:8081`
@@ -62,7 +62,7 @@ Rutas principales:
 - `/exit-logs`
 - `/exit-logs/new`
 - `/products`
-- `/lockers`
+- `/ambientes`
 - `/users`
 - `/audit-logs`
 

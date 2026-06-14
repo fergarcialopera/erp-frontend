@@ -17,7 +17,7 @@ export function mapExitLogDetailToPendingItems(detail: ExitLogDetail): PendingEx
     );
 
     for (const line of productItem.locations ?? []) {
-      const pickLocation = resolveStockLocationLabels(line.locker, line.compartment);
+      const pickLocation = resolveStockLocationLabels(line.ambiente, line.compartment);
       const qty = line.requested_quantity;
 
       rows.push({

@@ -9,11 +9,11 @@ export interface CreateEntryLogBody {
   quantity: number;
   note?: string;
   compartment_id?: string;
-  /** Solo con compartment_id; debe ser el locker del compartimento. */
-  locker_id?: string;
+  /** Solo con compartment_id; debe ser el ambiente del compartimento. */
+  ambiente_id?: string;
 }
 
-export interface LockerRef {
+export interface AmbienteRef {
   id: string;
   name?: string;
   device_id?: string | null;
@@ -32,7 +32,7 @@ export interface EntryLogListItem {
   note?: string | null;
   created_by?: string;
   created_at?: string;
-  locker?: LockerRef | null;
+  ambiente?: AmbienteRef | null;
   compartment?: CompartmentRef | null;
 }
 
@@ -42,12 +42,12 @@ export interface CreateEntryLogResponse {
     sku?: string;
     quantity?: number;
     compartment_id?: string | null;
-    locker?: LockerRef | null;
+    ambiente?: AmbienteRef | null;
     compartment?: CompartmentRef | null;
   };
 }
 
-/** Construye el body según contrato OpenAPI (locker_id nunca sin compartment_id). */
+/** Construye el body según contrato OpenAPI (ambiente_id nunca sin compartment_id). */
 export function buildCreateEntryLogRequestBody(data: CreateEntryLogBody): Record<string, unknown> {
   const body: Record<string, unknown> = {
     sku: data.sku,
@@ -59,7 +59,7 @@ export function buildCreateEntryLogRequestBody(data: CreateEntryLogBody): Record
   if (note) body.note = note;
   if (data.compartment_id) {
     body.compartment_id = data.compartment_id;
-    if (data.locker_id) body.locker_id = data.locker_id;
+    if (data.ambiente_id) body.ambiente_id = data.ambiente_id;
   }
   return body;
 }

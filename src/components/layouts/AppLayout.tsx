@@ -9,7 +9,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/products": "Productos",
   "/inventory": "Inventario",
-  "/lockers": "Lockers",
+  "/ambientes": "Ambientes",
   "/exit-logs": "Salidas de stock",
   "/exit-logs/new": "Nueva salida",
   "/incidents": "Incidencias",
@@ -20,7 +20,7 @@ const PAGE_TITLES: Record<string, string> = {
 
 function getPageTitle(pathname: string): string {
   if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
-  if (pathname.startsWith("/lockers/")) return "Detalle de Locker";
+  if (pathname.startsWith("/ambientes/")) return "Detalle de ambiente";
   return "LockERP";
 }
 

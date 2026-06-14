@@ -94,7 +94,7 @@ export function productStockLocationsToCompartments(
     .map((loc) => ({
       compartmentId: loc.compartment?.id ?? null,
       quantity: loc.quantity,
-      location: resolveStockLocationLabels(loc.locker, loc.compartment),
+      location: resolveStockLocationLabels(loc.ambiente, loc.compartment),
     }));
 }
 

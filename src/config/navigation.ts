@@ -14,7 +14,7 @@ import type { Role } from "@/types/models";
 export const ROLE_MIN = {
   /** Dashboard, salidas de stock. */
   OPERATIONS: "STAFF",
-  /** Inventario, incidencias, productos, lockers. */
+  /** Inventario, incidencias, productos, ambientes. */
   MANAGEMENT: "TECHNICIAN",
   /** Usuarios, auditoría y ajustes de clínica (configuración). */
   CONFIG: "ADMIN",
@@ -32,8 +32,8 @@ export type NavItem = {
 export const ROUTE_MIN_ROLE = {
   products: ROLE_MIN.MANAGEMENT,
   inventory: ROLE_MIN.MANAGEMENT,
-  lockers: ROLE_MIN.MANAGEMENT,
-  lockerDetail: ROLE_MIN.MANAGEMENT,
+  ambientes: ROLE_MIN.MANAGEMENT,
+  ambienteDetail: ROLE_MIN.MANAGEMENT,
   incidents: ROLE_MIN.MANAGEMENT,
   incidentsNew: ROLE_MIN.MANAGEMENT,
   users: ROLE_MIN.CONFIG,
@@ -48,10 +48,10 @@ export const mainNav: NavItem[] = [
   { title: "Incidencias", url: "/incidents", icon: AlertTriangle, requiredRole: ROLE_MIN.MANAGEMENT },
 ];
 
-/** Catálogo y lockers (técnico+, no es configuración del sistema). */
+/** Catálogo y ambientes (técnico+, no es configuración del sistema). */
 export const managementNav: NavItem[] = [
   { title: "Productos", url: "/products", icon: Package, requiredRole: ROLE_MIN.MANAGEMENT },
-  { title: "Lockers", url: "/lockers", icon: Lock, requiredRole: ROLE_MIN.MANAGEMENT },
+  { title: "Ambientes", url: "/ambientes", icon: Lock, requiredRole: ROLE_MIN.MANAGEMENT },
 ];
 
 /** Solo administración / configuración (usuarios, auditoría, ajustes API). */

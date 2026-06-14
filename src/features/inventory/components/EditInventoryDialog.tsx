@@ -113,7 +113,7 @@ export function EditInventoryDialog({ row, onOpenChange }: EditInventoryDialogPr
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs text-muted-foreground">Ubicación:</span>
-                  <StockLocationDisplay {...resolveStockLocationLabels(row.locker, row.compartment, row)} />
+                  <StockLocationDisplay {...resolveStockLocationLabels(row.ambiente, row.compartment, row)} />
                 </div>
                 <p>
                   Reservado actual:{" "}

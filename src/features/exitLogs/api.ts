@@ -10,7 +10,7 @@ import { normalizeExitLogDetail } from "./exitLogDetailNormalize";
 export interface CreateExitLogLocationAllocation {
   compartment_id: string;
   quantity: number;
-  locker_id?: string;
+  ambiente_id?: string;
 }
 
 /** Un producto con varias ubicaciones (recomendado para multi-compartimento). */
@@ -24,7 +24,7 @@ export interface CreateExitLogItemLegacy {
   product_id: string;
   quantity: number;
   compartment_id?: string;
-  locker_id?: string;
+  ambiente_id?: string;
 }
 
 export type CreateExitLogItem = CreateExitLogItemWithLocations | CreateExitLogItemLegacy;
@@ -55,7 +55,7 @@ export interface ExitLogLocationLine {
   requested_quantity: number;
   confirmed_quantity?: number | null;
   stock_available?: number | null;
-  locker?: { id: string; name?: string; device_id?: string | null } | null;
+  ambiente?: { id: string; name?: string; device_id?: string | null } | null;
   compartment?: { id: string; code?: string } | null;
 }
 
@@ -85,7 +85,7 @@ export interface ExitLogHeader {
     email?: string | null;
   };
   location?: {
-    locker?: { id: string; name?: string; device_id?: string | null } | null;
+    ambiente?: { id: string; name?: string; device_id?: string | null } | null;
     compartment?: { id: string; code?: string } | null;
   } | null;
 }
@@ -116,7 +116,7 @@ function serializeCreateItem(item: CreateExitLogItem): Record<string, unknown> {
       locations: item.locations.map((loc) => ({
         compartment_id: loc.compartment_id,
         quantity: loc.quantity,
-        ...(loc.locker_id ? { locker_id: loc.locker_id } : {}),
+        ...(loc.ambiente_id ? { ambiente_id: loc.ambiente_id } : {}),
       })),
     };
   }
@@ -124,7 +124,7 @@ function serializeCreateItem(item: CreateExitLogItem): Record<string, unknown> {
     product_id: item.product_id,
     quantity: item.quantity,
     ...(item.compartment_id ? { compartment_id: item.compartment_id } : {}),
-    ...(item.locker_id ? { locker_id: item.locker_id } : {}),
+    ...(item.ambiente_id ? { ambiente_id: item.ambiente_id } : {}),
   };
 }
 

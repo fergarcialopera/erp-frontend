@@ -47,9 +47,9 @@ export const ENDPOINTS = {
     IMAGE: (id: string) => `/users/${id}/image`,
     RECOVERY: (id: string) => `/users/${id}/recovery`,
   },
-  LOCKERS: {
-    ...resource("/lockers"),
-    TREE: "/lockers/tree",
+  AMBIENTES: {
+    ...resource("/ambientes"),
+    TREE: "/ambientes/tree",
   },
   COMPARTMENTS: {
     DETAIL: (id: string) => `/compartments/${id}`,

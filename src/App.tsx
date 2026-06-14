@@ -11,8 +11,8 @@ import RecoverPage from "@/app/routes/Recover";
 import DashboardPage from "@/app/routes/Dashboard";
 import ProductsPage from "@/app/routes/Products";
 import InventoryPage from "@/app/routes/Inventory";
-import LockersPage from "@/app/routes/Lockers";
-import LockerDetailPage from "@/app/routes/LockerDetail";
+import AmbientesPage from "@/app/routes/Ambientes";
+import AmbienteDetailPage from "@/app/routes/AmbienteDetail";
 import ExitLogsPage from "@/app/routes/ExitLogs";
 import NewExitLogPage from "@/app/routes/NewExitLog";
 import IncidentsPage from "@/app/routes/Incidents";
@@ -69,18 +69,18 @@ const App = () => (
                 }
               />
               <Route
-                path="/lockers"
+                path="/ambientes"
                 element={
-                  <ProtectedRoute requiredRole={ROUTE_MIN_ROLE.lockers}>
-                    <LockersPage />
+                  <ProtectedRoute requiredRole={ROUTE_MIN_ROLE.ambientes}>
+                    <AmbientesPage />
                   </ProtectedRoute>
                 }
               />
               <Route
-                path="/lockers/:id"
+                path="/ambientes/:id"
                 element={
-                  <ProtectedRoute requiredRole={ROUTE_MIN_ROLE.lockerDetail}>
-                    <LockerDetailPage />
+                  <ProtectedRoute requiredRole={ROUTE_MIN_ROLE.ambienteDetail}>
+                    <AmbienteDetailPage />
                   </ProtectedRoute>
                 }
               />

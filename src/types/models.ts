@@ -58,22 +58,22 @@ export function mapUserFromApiResponse(data: Partial<UserApiResponse>): User {
   };
 }
 
-export interface Locker {
+export interface Ambiente {
   id: string;
   clinic_id: string;
-  code: string;
   name: string;
   location?: string;
+  device_id?: string | null;
   is_active: boolean;
-  /** Incluido en GET /lockers/:id */
+  /** Incluido en GET /ambientes/:id */
   compartments?: Compartment[];
 }
 
 export interface Compartment {
   id: string;
-  locker_id: string;
+  ambiente_id: string;
   code: string;
-  status: CompartmentStatus;
+  status?: CompartmentStatus;
   is_active: boolean;
 }
 
@@ -89,7 +89,7 @@ export interface Product {
 /** GET /products/{id}/stock-locations — ubicación con stock > 0. */
 export interface ProductStockLocation {
   quantity: number;
-  locker?: { id: string; name?: string; device_id?: string | null } | null;
+  ambiente?: { id: string; name?: string; device_id?: string | null } | null;
   compartment?: { id: string; code?: string } | null;
 }
 
@@ -109,11 +109,10 @@ export interface CompartmentInventory {
   /** Objetos enriquecidos (GET /inventory) */
   product?: Product;
   compartment?: Compartment;
-  locker?: Locker;
+  ambiente?: Ambiente;
   /** Fallbacks planos (si el API los incluye) */
-  locker_id?: string;
-  locker_code?: string;
-  locker_name?: string;
+  ambiente_id?: string;
+  ambiente_name?: string;
   compartment_name?: string;
   compartment_code?: string;
   product_name?: string;
@@ -129,7 +128,7 @@ export interface EntryLog {
   note?: string | null;
   created_by?: string;
   created_at?: string;
-  locker?: { id: string; name?: string; device_id?: string | null } | null;
+  ambiente?: { id: string; name?: string; device_id?: string | null } | null;
   compartment?: { id: string; code?: string } | null;
 }
 
@@ -142,23 +141,23 @@ export interface ExitLog {
   status?: string;
   created_at?: string;
   requested_by_user_id?: string;
-  locker_id?: string;
+  ambiente_id?: string;
   compartment_id?: string;
   product_id?: string;
   product_name?: string;
   product_sku?: string;
-  locker_name?: string;
-  locker_code?: string;
+  ambiente_name?: string;
   compartment_name?: string;
   compartment_code?: string;
   requested_by_user_name?: string;
   requested_by?: User;
   product?: Product;
-  locker?: Locker;
+  ambiente?: Ambiente;
   compartment?: Compartment;
 }
 
-export type IncidentSource = "ERP" | "LOCKER";
+export type IncidentSource = "ERP" | "AMBIENTE";
+export type IncidentSeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 
 export interface Incident {
   id: string;
@@ -166,10 +165,11 @@ export interface Incident {
   title?: string;
   description: string;
   source: IncidentSource | string;
+  severity?: IncidentSeverity | string;
   status?: string;
   reported_by_user_id?: string;
   reported_by_user_name?: string;
-  locker_id?: string;
+  ambiente_id?: string;
   compartment_id?: string;
   created_at?: string;
   updated_at?: string;

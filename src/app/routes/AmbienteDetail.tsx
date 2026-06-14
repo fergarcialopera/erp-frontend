@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { DataTable, Column } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { useLocker } from "@/features/lockers/queries";
+import { useAmbiente } from "@/features/ambientes/queries";
 import { ArrowLeft } from "lucide-react";
 import type { Compartment } from "@/types/models";
 import { tableCell } from "@/components/tableTypography";
@@ -14,32 +14,26 @@ const columns: Column<Compartment>[] = [
     render: (c) => <span className={`${tableCell.mono} font-medium`}>{c.code}</span>,
   },
   {
-    key: "status",
-    header: "ESTADO",
-    render: (c) => <StatusBadge status={c.status} type="compartment" />,
-  },
-  {
     key: "is_active",
     header: "ACTIVO",
     render: (c) => <StatusBadge status={c.is_active ? "Activo" : "Inactivo"} type="active" />,
   },
 ];
 
-export default function LockerDetailPage() {
+export default function AmbienteDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const {
-    data: locker,
-    isLoading: lockerLoading,
-    isFetching: lockerFetching,
+    data: ambiente,
+    isLoading: ambienteLoading,
+    isFetching: ambienteFetching,
     isError,
     refetch,
-  } = useLocker(id ?? null);
-  const compartments = locker?.compartments ?? [];
-  const isLoading = lockerLoading || lockerFetching;
+  } = useAmbiente(id ?? null);
+  const compartments = ambiente?.compartments ?? [];
+  const isLoading = ambienteLoading || ambienteFetching;
 
-  const availableCount = compartments.filter((c) => c.status === "AVAILABLE" && c.is_active).length;
-  const maintenanceCount = compartments.filter((c) => c.status === "MAINTENANCE").length;
+  const activeCount = compartments.filter((c) => c.is_active).length;
 
   return (
     <div className="space-y-6">
@@ -48,33 +42,29 @@ export default function LockerDetailPage() {
           variant="ghost"
           size="icon"
           className="h-8 w-8"
-          aria-label="Volver a lockers"
-          onClick={() => navigate("/lockers")}
+          aria-label="Volver a ambientes"
+          onClick={() => navigate("/ambientes")}
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="page-header mb-0">
-          <h2 className="page-title">Locker {locker?.code ?? id ?? "—"}</h2>
-          <p className="page-description">Compartimientos asignados</p>
+          <h2 className="page-title">{ambiente?.name ?? id ?? "—"}</h2>
+          <p className="page-description">
+            {ambiente?.location
+              ? `${ambiente.location}${ambiente.device_id ? ` · ${ambiente.device_id}` : ""}`
+              : "Compartimientos asignados"}
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="stat-card">
           <span className="text-xs text-muted-foreground uppercase tracking-wider">Total</span>
           <div className="text-2xl font-bold mt-1">{compartments.length}</div>
         </div>
         <div className="stat-card">
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">
-            Disponibles
-          </span>
-          <div className="text-2xl font-bold mt-1 text-success">{availableCount}</div>
-        </div>
-        <div className="stat-card">
-          <span className="text-xs text-muted-foreground uppercase tracking-wider">
-            Mantenimiento
-          </span>
-          <div className="text-2xl font-bold mt-1 text-warning">{maintenanceCount}</div>
+          <span className="text-xs text-muted-foreground uppercase tracking-wider">Activos</span>
+          <div className="text-2xl font-bold mt-1 text-success">{activeCount}</div>
         </div>
       </div>
 
@@ -86,8 +76,8 @@ export default function LockerDetailPage() {
         columns={columns}
         searchKey="code"
         searchPlaceholder="Buscar compartimiento..."
-        emptyTitle="Sin compartimientos"
-        emptyDescription="No hay compartimientos en este locker."
+        emptyTitle="Sin compartimentos"
+        emptyDescription="No hay compartimentos en este ambiente."
       />
     </div>
   );

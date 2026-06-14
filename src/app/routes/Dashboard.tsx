@@ -132,7 +132,7 @@ export default function DashboardPage() {
     } catch (error) {
       if (error instanceof ExitPickInsufficientStockError) {
         toast.error("Stock insuficiente", {
-          description: `No hay stock suficiente en lockers para ${error.productName}.`,
+          description: `No hay stock suficiente en ambientes para ${error.productName}.`,
         });
         return;
       }

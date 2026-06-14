@@ -33,7 +33,7 @@ export function normalizeExitLogDetail(raw: ExitLogDetail): ExitLogDetail {
     id?: string;
     item_id?: string;
     product?: ExitLogProductItem["product"];
-    locker?: ExitLogLocationLine["locker"];
+    ambiente?: ExitLogLocationLine["ambiente"];
     compartment?: ExitLogLocationLine["compartment"];
     requested_quantity?: number;
     confirmed_quantity?: number | null;
@@ -51,7 +51,7 @@ export function normalizeExitLogDetail(raw: ExitLogDetail): ExitLogDetail {
       requested_quantity: Number(line.requested_quantity ?? 0),
       confirmed_quantity: line.confirmed_quantity,
       stock_available: line.stock_available,
-      locker: line.locker,
+      ambiente: line.ambiente,
       compartment: line.compartment,
     };
 
@@ -83,7 +83,7 @@ export function flattenExitLogLocationLines(detail: ExitLogDetail) {
       requestedQuantity: location.requested_quantity,
       confirmedQuantity: location.confirmed_quantity,
       stockAvailable: location.stock_available,
-      locker: location.locker,
+      ambiente: location.ambiente,
       compartment: location.compartment,
     })),
   );

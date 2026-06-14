@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -147,7 +147,7 @@ export function LoginFlow() {
   };
 
   const onPinSubmit = async (value: string) => {
-    if (!selectedStaff || value.length !== 4) return;
+    if (!selectedStaff || value.length !== 4 || pinSubmitting) return;
     setError(null);
     setPinSubmitting(true);
     try {
@@ -194,6 +194,11 @@ export function LoginFlow() {
       }
       setError(detail ?? "Ocurrió un error al iniciar sesión");
     }
+  };
+
+  const handlePinFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void onPinSubmit(pin);
   };
 
   const onRecoverySubmit = async (data: { email: string }, type: "clinic" | "user") => {
@@ -306,6 +311,7 @@ export function LoginFlow() {
                   id="clinic-password"
                   type="password"
                   autoComplete="current-password"
+                  autoFocus
                   className="h-10"
                   {...clinicPasswordForm.register("password")}
                 />
@@ -398,23 +404,33 @@ export function LoginFlow() {
             />
             <span className="text-[10px] text-muted-foreground">Toca para cambiar usuario</span>
           </div>
-          <InputOTP maxLength={4} value={pin} onChange={setPin} disabled={pinSubmitting}>
-            <InputOTPGroup>
-              <InputOTPSlot index={0} masked />
-              <InputOTPSlot index={1} masked />
-              <InputOTPSlot index={2} masked />
-              <InputOTPSlot index={3} masked />
-            </InputOTPGroup>
-          </InputOTP>
-          <p className="text-[11px] text-muted-foreground">PIN de 4 dígitos</p>
-          <Button
-            type="button"
-            className="w-full h-10"
-            disabled={pin.length !== 4 || pinSubmitting}
-            onClick={() => void onPinSubmit(pin)}
+          <form
+            onSubmit={handlePinFormSubmit}
+            className="w-full flex flex-col items-center gap-4"
           >
-            {pinSubmitting ? "Validando..." : "Acceder"}
-          </Button>
+            <InputOTP
+              maxLength={4}
+              value={pin}
+              onChange={setPin}
+              disabled={pinSubmitting}
+              autoFocus
+            >
+              <InputOTPGroup>
+                <InputOTPSlot index={0} masked />
+                <InputOTPSlot index={1} masked />
+                <InputOTPSlot index={2} masked />
+                <InputOTPSlot index={3} masked />
+              </InputOTPGroup>
+            </InputOTP>
+            <p className="text-[11px] text-muted-foreground">PIN de 4 dígitos</p>
+            <Button
+              type="submit"
+              className="w-full h-10"
+              disabled={pin.length !== 4 || pinSubmitting}
+            >
+              {pinSubmitting ? "Validando..." : "Acceder"}
+            </Button>
+          </form>
           <Button type="button" variant="link" className="text-xs" onClick={() => setStep("classic")}>
             Acceder con email y contraseña
           </Button>

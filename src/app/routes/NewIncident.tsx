@@ -20,8 +20,15 @@ import { useAuth } from "@/app/providers/useAuth";
 import { createIncident } from "@/features/incidents/api";
 
 const incidentSchema = z.object({
-  title: z.string().trim().max(120, "Máximo 120 caracteres").optional(),
-  source: z.enum(["ERP", "LOCKER"], { required_error: "Selecciona el origen de la incidencia" }),
+  title: z
+    .string()
+    .trim()
+    .min(1, "El título es obligatorio")
+    .max(120, "Máximo 120 caracteres"),
+  source: z.enum(["ERP", "AMBIENTE"], { required_error: "Selecciona el origen de la incidencia" }),
+  severity: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"], {
+    required_error: "Selecciona la severidad",
+  }),
   description: z
     .string()
     .trim()
@@ -30,6 +37,13 @@ const incidentSchema = z.object({
 });
 
 type IncidentForm = z.infer<typeof incidentSchema>;
+
+const SEVERITY_LABELS: Record<IncidentForm["severity"], string> = {
+  LOW: "Baja",
+  MEDIUM: "Media",
+  HIGH: "Alta",
+  CRITICAL: "Crítica",
+};
 
 export default function NewIncidentPage() {
   const navigate = useNavigate();
@@ -46,6 +60,7 @@ export default function NewIncidentPage() {
     resolver: zodResolver(incidentSchema),
     defaultValues: {
       source: "ERP",
+      severity: "MEDIUM",
       title: "",
       description: "",
     },
@@ -56,7 +71,8 @@ export default function NewIncidentPage() {
       await createIncident({
         source: data.source,
         description: data.description,
-        title: data.title || undefined,
+        title: data.title,
+        severity: data.severity,
       });
       toast.success("Incidencia registrada", {
         description: "La incidencia se guardó correctamente.",
@@ -82,7 +98,7 @@ export default function NewIncidentPage() {
         </Button>
         <div className="page-header mb-0">
           <h2 className="page-title">Nueva incidencia</h2>
-          <p className="page-description">Reporta una incidencia detectada en ERP o en locker físico</p>
+          <p className="page-description">Reporta una incidencia detectada en ERP o en ambiente físico</p>
         </div>
       </div>
 
@@ -92,13 +108,16 @@ export default function NewIncidentPage() {
             <Label htmlFor="source" className="text-xs font-medium">
               Origen
             </Label>
-            <Select value={watch("source")} onValueChange={(v) => setValue("source", v as "ERP" | "LOCKER")}>
+            <Select
+              value={watch("source")}
+              onValueChange={(v) => setValue("source", v as "ERP" | "AMBIENTE")}
+            >
               <SelectTrigger id="source" className="h-10" aria-invalid={!!errors.source}>
                 <SelectValue placeholder="Selecciona un origen" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ERP">Sistema ERP</SelectItem>
-                <SelectItem value="LOCKER">Locker físico</SelectItem>
+                <SelectItem value="AMBIENTE">Ambiente físico</SelectItem>
               </SelectContent>
             </Select>
             {errors.source && (
@@ -109,8 +128,34 @@ export default function NewIncidentPage() {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="severity" className="text-xs font-medium">
+              Severidad
+            </Label>
+            <Select
+              value={watch("severity")}
+              onValueChange={(v) => setValue("severity", v as IncidentForm["severity"])}
+            >
+              <SelectTrigger id="severity" className="h-10" aria-invalid={!!errors.severity}>
+                <SelectValue placeholder="Selecciona la severidad" />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.keys(SEVERITY_LABELS) as IncidentForm["severity"][]).map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {SEVERITY_LABELS[key]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.severity && (
+              <p className="text-xs text-destructive" role="alert">
+                {errors.severity.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="title" className="text-xs font-medium">
-              Título (opcional)
+              Título
             </Label>
             <Input
               id="title"

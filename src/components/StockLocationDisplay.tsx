@@ -12,20 +12,20 @@ const locationPillsLayout =
 
 interface StockLocationDisplayProps extends StockLocationLabels {
   className?: string;
-  /** Texto cuando no hay locker ni compartimento. */
+  /** Texto cuando no hay ambiente ni compartimento. */
   emptyLabel?: string;
 }
 
 export function StockLocationDisplay({
-  locker,
+  ambiente,
   compartment,
   className,
   emptyLabel = "—",
 }: StockLocationDisplayProps) {
-  const lockerLabel = locker?.trim() || null;
+  const ambienteLabel = ambiente?.trim() || null;
   const compartmentLabel = compartment?.trim() || null;
 
-  if (!lockerLabel && !compartmentLabel) {
+  if (!ambienteLabel && !compartmentLabel) {
     return (
       <span className={cn("text-xs sm:text-sm text-muted-foreground", className)}>{emptyLabel}</span>
     );
@@ -33,13 +33,13 @@ export function StockLocationDisplay({
 
   return (
     <div className={cn(locationPillsLayout, className)}>
-      {lockerLabel ? (
+      {ambienteLabel ? (
         <Badge
           variant="secondary"
-          title={lockerLabel}
+          title={ambienteLabel}
           className={locationPillBase}
         >
-          {lockerLabel}
+          {ambienteLabel}
         </Badge>
       ) : null}
       {compartmentLabel ? (
@@ -78,7 +78,7 @@ export function StockLocationsList({
       {locations.map((loc, index) => (
         <StockLocationDisplay
           key={`${stockLocationKey(loc)}:${index}`}
-          locker={loc.locker}
+          ambiente={loc.ambiente}
           compartment={loc.compartment}
         />
       ))}

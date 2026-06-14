@@ -26,7 +26,7 @@ import { useAuth } from "@/app/providers/useAuth";
 import { productsNewUrl } from "@/features/products/constants";
 import { useProducts } from "@/features/products/queries";
 import { ProductStockLocationsPanel } from "@/features/products/components/ProductStockLocationsPanel";
-import { useLockersTree } from "@/features/lockers/queries";
+import { useAmbientesTree } from "@/features/ambientes/queries";
 import { createEntryLog } from "@/features/entryLogs/api";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -52,12 +52,12 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
   const { clinicId, canAccessManagement } = useAuth();
   const canManageProducts = canAccessManagement();
   const { data: products = [] } = useProducts(clinicId);
-  const { data: lockerTree = [], isLoading: lockerTreeLoading } = useLockersTree(clinicId, {
+  const { data: ambienteTree = [], isLoading: ambienteTreeLoading } = useAmbientesTree(clinicId, {
     enabled: open,
   });
   const activeProducts = products.filter((p) => p.is_active);
-  const activeLockers = lockerTree.filter((l) => l.is_active);
-  const [filterLockerId, setFilterLockerId] = useState<string | undefined>();
+  const activeAmbientes = ambienteTree.filter((a) => a.is_active);
+  const [filterAmbienteId, setFilterAmbienteId] = useState<string | undefined>();
 
   const {
     watch,
@@ -71,14 +71,14 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
     defaultValues: { quantity: 1 },
   });
 
-  const selectedLocker = activeLockers.find((l) => l.id === filterLockerId);
-  const activeCompartments = (selectedLocker?.compartments ?? []).filter((c) => c.is_active);
+  const selectedAmbiente = activeAmbientes.find((a) => a.id === filterAmbienteId);
+  const activeCompartments = (selectedAmbiente?.compartments ?? []).filter((c) => c.is_active);
   const selectedProductId = watch("product_id");
 
   useEffect(() => {
     if (open) {
       reset({ quantity: 1, note: "", compartment_id: undefined });
-      setFilterLockerId(undefined);
+      setFilterAmbienteId(undefined);
     }
   }, [open, reset]);
 
@@ -111,7 +111,7 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
         ...(compartment
           ? {
               compartment_id: compartment.id,
-              locker_id: compartment.locker_id || filterLockerId,
+              ambiente_id: compartment.ambiente_id || filterAmbienteId,
             }
           : {}),
       });
@@ -120,7 +120,7 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
       });
       queryClient.invalidateQueries({ queryKey: ["inventory", clinicId] });
       queryClient.invalidateQueries({ queryKey: ["products", "stock-locations"] });
-      queryClient.invalidateQueries({ queryKey: ["lockers", "tree", clinicId] });
+      queryClient.invalidateQueries({ queryKey: ["ambientes", "tree", clinicId] });
       close();
     } catch {
       // Error mostrado por interceptor
@@ -179,26 +179,25 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="entry-filter-locker" className="text-xs font-medium">
-                Locker <span className="text-muted-foreground font-normal">(opcional)</span>
+              <Label htmlFor="entry-filter-ambiente" className="text-xs font-medium">
+                Ambiente <span className="text-muted-foreground font-normal">(opcional)</span>
               </Label>
               <Select
-                value={filterLockerId ?? LOCATION_NONE}
+                value={filterAmbienteId ?? LOCATION_NONE}
                 onValueChange={(v) => {
-                  setFilterLockerId(v === LOCATION_NONE ? undefined : v);
+                  setFilterAmbienteId(v === LOCATION_NONE ? undefined : v);
                   setValue("compartment_id", undefined);
                 }}
-                disabled={lockerTreeLoading || activeLockers.length === 0}
+                disabled={ambienteTreeLoading || activeAmbientes.length === 0}
               >
-                <SelectTrigger id="entry-filter-locker" className="h-10">
-                  <SelectValue placeholder="Todos los lockers" />
+                <SelectTrigger id="entry-filter-ambiente" className="h-10">
+                  <SelectValue placeholder="Todos los ambientes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={LOCATION_NONE}>Todos los lockers</SelectItem>
-                  {activeLockers.map((l) => (
-                    <SelectItem key={l.id} value={l.id}>
-                      {l.code}
-                      {l.name && l.name !== l.code ? ` — ${l.name}` : ""}
+                  <SelectItem value={LOCATION_NONE}>Todos los ambientes</SelectItem>
+                  {activeAmbientes.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -215,8 +214,8 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
                   setValue("compartment_id", v === LOCATION_NONE ? undefined : v)
                 }
                 disabled={
-                  lockerTreeLoading ||
-                  !filterLockerId ||
+                  ambienteTreeLoading ||
+                  !filterAmbienteId ||
                   activeCompartments.length === 0
                 }
               >
@@ -227,12 +226,12 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
                 >
                   <SelectValue
                     placeholder={
-                      lockerTreeLoading
-                        ? "Cargando lockers…"
-                        : !filterLockerId
-                          ? "Elige un locker para ubicar"
+                      ambienteTreeLoading
+                        ? "Cargando ambientes…"
+                        : !filterAmbienteId
+                          ? "Elige un ambiente para ubicar"
                           : activeCompartments.length === 0
-                            ? "Sin compartimentos en este locker"
+                            ? "Sin compartimentos en este ambiente"
                             : "Sin compartimento"
                     }
                   />
@@ -242,7 +241,6 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
                   {activeCompartments.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.code}
-                      {c.status === "MAINTENANCE" ? " (mantenimiento)" : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>

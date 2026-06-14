@@ -1,6 +1,6 @@
 # LockERP Frontend
 
-Aplicación frontend para gestión de inventario clínico con lockers.
+Aplicación frontend para gestión de inventario clínico con ambientes.
 
 ---
 
@@ -118,7 +118,7 @@ npm run build
 - `/exit-logs`
 - `/exit-logs/new` (registrar salida)
 - `/products`
-- `/lockers`
+- `/ambientes`
 - `/users` (admin)
 - `/audit-logs` (admin)
 

@@ -7,12 +7,12 @@ describe("planLinesToCreateItem", () => {
       {
         compartmentId: "c1",
         quantity: 3,
-        location: { locker: "L", compartment: "C1" },
+        location: { ambiente: "A", compartment: "C1" },
       },
       {
         compartmentId: "c2",
         quantity: 2,
-        location: { locker: "L", compartment: "C2" },
+        location: { ambiente: "A", compartment: "C2" },
       },
     ]);
 

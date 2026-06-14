@@ -4,13 +4,13 @@ import { planExitPick, type CompartmentStock } from "./planExitPick";
 const comp1: CompartmentStock = {
   compartmentId: "comp1",
   quantity: 3,
-  location: { locker: "Locker A", compartment: "Compartimento 1" },
+  location: { ambiente: "Ambiente A", compartment: "Compartimento 1" },
 };
 
 const comp2: CompartmentStock = {
   compartmentId: "comp2",
   quantity: 5,
-  location: { locker: "Locker A", compartment: "Compartimento 2" },
+  location: { ambiente: "Ambiente A", compartment: "Compartimento 2" },
 };
 
 describe("planExitPick", () => {

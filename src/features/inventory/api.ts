@@ -18,7 +18,7 @@ type InventoryLocationApi = {
   qty_reserved?: number;
   reserved_quantity?: number;
   compartment?: { id?: string; code?: string; name?: string } | null;
-  locker?: { id?: string; code?: string; name?: string } | null;
+  ambiente?: { id?: string; name?: string; device_id?: string | null } | null;
 };
 
 type InventoryProductApi = {
@@ -50,9 +50,9 @@ function isGroupedByProduct(row: unknown): row is InventoryByProductApi {
 function stableInventoryRowKey(row: CompartmentInventory, index: number): string {
   const productId = row.product_id || row.product?.id || "";
   const compartmentId = row.compartment_id || row.compartment?.id || "";
-  const lockerId = row.locker_id || row.locker?.id || "";
-  if (productId || compartmentId || lockerId) {
-    return [productId || "_", compartmentId || "_", lockerId || "_", String(index)].join(":");
+  const ambienteId = row.ambiente_id || row.ambiente?.id || "";
+  if (productId || compartmentId || ambienteId) {
+    return [productId || "_", compartmentId || "_", ambienteId || "_", String(index)].join(":");
   }
   return row.id ? `${row.id}:${index}` : `inventory-row:${index}`;
 }
@@ -61,8 +61,8 @@ function mapByProductRows(item: InventoryByProductApi): CompartmentInventory[] {
   const product = item.product ?? {};
   const locations = Array.isArray(item.locations) ? item.locations : [];
 
-  return locations.map((location, locationIndex) => {
-    const locker = location.locker ?? undefined;
+  return locations.map((location) => {
+    const ambiente = location.ambiente ?? undefined;
     const compartment = location.compartment ?? undefined;
     const qtyAvailable =
       location.qty_available !== undefined ? location.qty_available : location.quantity;
@@ -77,9 +77,8 @@ function mapByProductRows(item: InventoryByProductApi): CompartmentInventory[] {
         location.qty_reserved ?? location.reserved_quantity,
         0,
       ),
-      locker_id: locker?.id,
-      locker_code: locker?.code,
-      locker_name: locker?.name,
+      ambiente_id: ambiente?.id,
+      ambiente_name: ambiente?.name,
       compartment_code: compartment?.code,
       compartment_name: compartment?.name,
       product_name: product.name,
@@ -91,19 +90,19 @@ function mapByProductRows(item: InventoryByProductApi): CompartmentInventory[] {
         name: String(product.name ?? ""),
         is_active: product.is_active !== false,
       },
-      locker: locker
+      ambiente: ambiente
         ? {
-            id: String(locker.id ?? ""),
+            id: String(ambiente.id ?? ""),
             clinic_id: String(item.clinic_id ?? product.clinic_id ?? ""),
-            code: String(locker.code ?? locker.name ?? locker.id ?? ""),
-            name: String(locker.name ?? locker.code ?? locker.id ?? ""),
+            name: String(ambiente.name ?? ambiente.id ?? ""),
+            device_id: ambiente.device_id ?? undefined,
             is_active: true,
           }
         : undefined,
       compartment: compartment
         ? {
             id: String(compartment.id ?? ""),
-            locker_id: String(locker?.id ?? ""),
+            ambiente_id: String(ambiente?.id ?? ""),
             code: String(compartment.code ?? compartment.name ?? compartment.id ?? ""),
             status: "AVAILABLE",
             is_active: true,
@@ -137,4 +136,3 @@ export const fetchInventory = async (): Promise<CompartmentInventory[]> => {
     id: stableInventoryRowKey(row, index),
   }));
 };
-
