@@ -30,14 +30,18 @@ describe("parseUserFromLoginResponse", () => {
     expect(user.name).toBe("Elena Martin");
   });
 
-  it("usa el email como respaldo cuando falta el nombre", () => {
+  it("preserva SUPER_ADMIN desde login", () => {
     const user = parseUserFromLoginResponse("token", {
-      id: "user-1",
-      clinic_id: "clinic-1",
-      email: "staff@clinic.local",
-      role: "STAFF",
+      user: {
+        id: "user-sa",
+        clinic_id: "",
+        name: "Super Admin",
+        email: "super@lock.local",
+        role: "SUPER_ADMIN",
+        is_active: true,
+      },
     });
 
-    expect(user.name).toBe("Staff");
+    expect(user.role).toBe("SUPER_ADMIN");
   });
 });

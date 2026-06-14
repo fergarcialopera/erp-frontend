@@ -1,8 +1,10 @@
 import { User, Role, mapUserFromApiResponse } from "@/types/models";
 import { resolveUserName } from "@/lib/userDisplay";
 
+const VALID_ROLES: Role[] = ["SUPER_ADMIN", "ADMIN", "TECHNICIAN", "STAFF"];
+
 function normalizeRole(role: unknown): Role {
-  if (role === "ADMIN" || role === "TECHNICIAN" || role === "STAFF") return role;
+  if (typeof role === "string" && VALID_ROLES.includes(role as Role)) return role as Role;
   return "STAFF";
 }
 

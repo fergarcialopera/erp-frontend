@@ -1,6 +1,9 @@
 import type { StockLocationLabels } from "@/lib/stockLocation";
 
-export type Role = "ADMIN" | "TECHNICIAN" | "STAFF";
+export type Role = "SUPER_ADMIN" | "ADMIN" | "TECHNICIAN" | "STAFF";
+
+/** Roles asignables a usuarios de clínica (no incluye SUPER_ADMIN). */
+export type ClinicAssignableRole = Exclude<Role, "SUPER_ADMIN">;
 
 export type ActorType = "USER" | "SYSTEM";
 
@@ -36,8 +39,10 @@ export interface UserApiResponse {
 }
 
 /** Convierte la respuesta del API al modelo User (solo campos usados en la app). */
+const VALID_ROLES: Role[] = ["SUPER_ADMIN", "ADMIN", "TECHNICIAN", "STAFF"];
+
 function normalizeRole(role: unknown): Role {
-  if (role === "ADMIN" || role === "TECHNICIAN" || role === "STAFF") return role;
+  if (typeof role === "string" && VALID_ROLES.includes(role as Role)) return role as Role;
   return "STAFF";
 }
 
@@ -62,7 +67,10 @@ export interface Ambiente {
   name: string;
   location?: string;
   device_id?: string | null;
+  /** Activo en catálogo global (SUPER_ADMIN). */
   is_active: boolean;
+  /** Visible / activo para la clínica actual. */
+  is_visible?: boolean;
   /** Incluido en GET /ambientes/:id */
   zones?: Zona[];
 }
@@ -80,7 +88,10 @@ export interface Product {
   sku: string;
   name: string;
   barcode?: string;
+  /** Activo en catálogo global (SUPER_ADMIN). */
   is_active: boolean;
+  /** Visible en la clínica actual; habilita operaciones con el producto en esa clínica. */
+  is_visible?: boolean;
 }
 
 /** GET /products/{id}/stock-locations — ubicación con stock > 0. */

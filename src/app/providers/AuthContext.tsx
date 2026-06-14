@@ -3,11 +3,22 @@ import { useQueryClient } from "@tanstack/react-query";
 import { User } from "@/types/models";
 import {
   AuthState,
+  canAccessAudit,
+  canAccessClinicApp,
   canAccessConfig,
   canAccessManagement,
   canAccessOperations,
+  canEditIncidents,
+  canManageCatalogAmbientes,
+  canManageCatalogProducts,
+  canManageUsers,
+  canToggleAmbienteClinicSettings,
+  canToggleProductClinicSettings,
+  hasAuthPermission,
   hasPermission,
+  isSuperAdmin,
 } from "@/types/auth";
+import type { AuthPermission } from "@/types/auth";
 import { Role } from "@/types/models";
 import {
   getAccessToken,
@@ -28,11 +39,13 @@ import {
 import {
   loginClinic as apiLoginClinic,
   loginWithPin as apiLoginPin,
+  loginWithPassword,
   loginWithPasswordAutoClinic,
   logoutUserApi,
   logoutClinicApi,
   fetchMe,
 } from "@/features/auth/api";
+import { SuperAdminLoginError } from "@/features/auth/errors";
 import type { ClinicLoginResult, UserLoginResult } from "@/types/auth";
 import { AUTH_STAFF_QUERY_ROOT } from "@/features/auth/queryKeys";
 
@@ -67,6 +80,18 @@ function applyUserLoginResult(result: UserLoginResult): Pick<
 > {
   setAccessToken(result.access_token);
   setAuthUserJson(JSON.stringify(result.user));
+
+  if (isSuperAdmin(result.user.role)) {
+    clearClinicSession();
+    clearClinicMeta();
+    return {
+      accessToken: result.access_token,
+      user: result.user,
+      isAuthenticated: true,
+      clinicId: null,
+    };
+  }
+
   const clinicId = result.user.clinic_id || getClinicId() || null;
   if (clinicId) {
     setClinicId(clinicId);
@@ -85,6 +110,8 @@ interface AuthContextType extends AuthState {
   /** Alias de accessToken (compatibilidad). */
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
+  /** Login global (sin token de clínica); solo acepta cuentas SUPER_ADMIN. */
+  loginSuperAdmin: (email: string, password: string) => Promise<void>;
   loginClinic: (clinicId: string, password: string) => Promise<ClinicLoginResult>;
   loginPin: (
     userId: string,
@@ -98,9 +125,19 @@ interface AuthContextType extends AuthState {
   logoutAll: () => Promise<void>;
   can: (requiredRole: Role) => boolean;
   isRole: (role: Role) => boolean;
+  hasPermission: (permission: AuthPermission) => boolean;
+  isSuperAdmin: () => boolean;
+  canAccessClinicApp: () => boolean;
   canAccessOperations: () => boolean;
   canAccessManagement: () => boolean;
   canAccessConfig: () => boolean;
+  canAccessAudit: () => boolean;
+  canManageUsers: () => boolean;
+  canManageCatalogProducts: () => boolean;
+  canManageCatalogAmbientes: () => boolean;
+  canToggleProductClinicSettings: () => boolean;
+  canToggleAmbienteClinicSettings: () => boolean;
+  canEditIncidents: () => boolean;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -174,9 +211,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           ? { ...result.user, name: profile.name, email: result.user.email || profile.email || "" }
           : result.user;
       const patch = applyUserLoginResult({ ...result, user });
+      const superAdminSession = isSuperAdmin(user.role);
       setState((prev) => ({
         ...prev,
         ...patch,
+        ...(superAdminSession
+          ? {
+              clinicAccessToken: null,
+              clinicName: null,
+              hasClinicSession: false,
+            }
+          : {}),
       }));
     },
     [],
@@ -196,6 +241,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       completeUserLogin(result);
     },
     [completeUserLogin],
+  );
+
+  const loginSuperAdmin = useCallback(
+    async (email: string, password: string) => {
+      try {
+        if (getClinicAccessToken()) await logoutClinicApi();
+      } catch {
+        /* cerrar en cliente aunque falle el backend */
+      }
+      clearClinicSession();
+      clearClinicMeta();
+      queryClient.removeQueries({ queryKey: AUTH_STAFF_QUERY_ROOT });
+
+      const result = await loginWithPassword(email, password, { useClinicToken: false });
+      if (!isSuperAdmin(result.user.role)) {
+        clearUserSession();
+        throw new SuperAdminLoginError();
+      }
+      completeUserLogin(result);
+    },
+    [completeUserLogin, queryClient],
   );
 
   const logoutUser = useCallback(async () => {
@@ -271,6 +337,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isRole = useCallback((role: Role) => state.user?.role === role, [state.user]);
 
+  const checkPermission = useCallback(
+    (permission: AuthPermission) => hasAuthPermission(state.user?.role, permission),
+    [state.user?.role],
+  );
+
   const role = state.user?.role;
   const clinicId = state.user?.clinic_id ?? state.clinicId;
 
@@ -289,6 +360,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clinicId,
         token: state.accessToken,
         login,
+        loginSuperAdmin,
         loginClinic,
         loginPin,
         applyClinicSession,
@@ -298,9 +370,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logoutAll,
         can,
         isRole,
+        hasPermission: checkPermission,
+        isSuperAdmin: () => isSuperAdmin(role),
+        canAccessClinicApp: () => (role ? canAccessClinicApp(role) : false),
         canAccessOperations: () => (role ? canAccessOperations(role) : false),
         canAccessManagement: () => (role ? canAccessManagement(role) : false),
         canAccessConfig: () => (role ? canAccessConfig(role) : false),
+        canAccessAudit: () => (role ? canAccessAudit(role) : false),
+        canManageUsers: () => (role ? canManageUsers(role) : false),
+        canManageCatalogProducts: () => (role ? canManageCatalogProducts(role) : false),
+        canManageCatalogAmbientes: () => (role ? canManageCatalogAmbientes(role) : false),
+        canToggleProductClinicSettings: () =>
+          role ? canToggleProductClinicSettings(role) : false,
+        canToggleAmbienteClinicSettings: () =>
+          role ? canToggleAmbienteClinicSettings(role) : false,
+        canEditIncidents: () => (role ? canEditIncidents(role) : false),
       }}
     >
       {children}

@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, Loader2, Shield } from "lucide-react";
 import { useAuth } from "@/app/providers/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,12 +13,13 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { SelectableEntityCard } from "./SelectableEntityCard";
 import { LoginShell } from "./LoginShell";
 import { fetchVisibleClinics, fetchStaff } from "@/features/auth/api";
+import { isSuperAdminLoginError } from "@/features/auth/errors";
 import {
   isPinFallbackToClassicError,
   isPinLockedError,
   parseApiError,
 } from "@/lib/apiError";
-import type { AuthClinicSummary, AuthStaffMember, LoginWizardStep } from "@/types/auth";
+import type { AuthClinicSummary, AuthStaffMember, ClassicLoginMode, LoginWizardStep } from "@/types/auth";
 import { requestClinicRecovery, requestUserRecovery } from "@/features/auth/api";
 import { authStaffQueryKey, AUTH_STAFF_QUERY_ROOT } from "@/features/auth/queryKeys";
 import { toast } from "sonner";
@@ -48,6 +49,58 @@ function resolveInitialStep(
   return "clinics";
 }
 
+function resolveStepSubtitle(
+  step: LoginWizardStep,
+  classicMode: ClassicLoginMode,
+  selectedClinic: AuthClinicSummary | null,
+  clinicName: string | null,
+  selectedStaff: AuthStaffMember | null,
+): string {
+  switch (step) {
+    case "clinics":
+      return "Selecciona tu clínica";
+    case "clinic-password":
+      return selectedClinic?.name ?? "Contraseña de clínica";
+    case "staff":
+      return clinicName ?? "Selecciona tu usuario";
+    case "pin":
+      return selectedStaff?.name ?? "Introduce tu PIN";
+    case "classic":
+      return classicMode === "super-admin"
+        ? "Acceso super administrador"
+        : "Acceso con email y contraseña";
+    case "locked":
+      return "Cuenta bloqueada";
+    default:
+      return "Acceso al sistema";
+  }
+}
+
+function ClassicLoginActions({
+  onClinicAdmin,
+  onSuperAdmin,
+}: {
+  onClinicAdmin: () => void;
+  onSuperAdmin: () => void;
+}) {
+  return (
+    <div className="pt-2 border-t space-y-1">
+      <Button type="button" variant="ghost" className="w-full text-xs h-9" onClick={onClinicAdmin}>
+        Acceso con email (administración de clínica)
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        className="w-full text-xs h-9 text-primary/90 hover:text-primary"
+        onClick={onSuperAdmin}
+      >
+        <Shield className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+        Acceso super administrador
+      </Button>
+    </div>
+  );
+}
+
 export function LoginFlow() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -59,10 +112,13 @@ export function LoginFlow() {
     loginClinic,
     loginPin,
     login,
+    loginSuperAdmin,
     logoutClinic,
   } = useAuth();
 
   const [step, setStep] = useState<LoginWizardStep>("clinics");
+  const [classicMode, setClassicMode] = useState<ClassicLoginMode>("clinic-admin");
+  const [classicReturnStep, setClassicReturnStep] = useState<LoginWizardStep>("clinics");
   const [selectedClinic, setSelectedClinic] = useState<AuthClinicSummary | null>(null);
   const [selectedStaff, setSelectedStaff] = useState<AuthStaffMember | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +130,7 @@ export function LoginFlow() {
   useEffect(() => {
     const initial = resolveInitialStep(isAuthenticated, hasClinicSession);
     if (initial === null) {
-      navigate("/dashboard", { replace: true });
+      navigate("/", { replace: true });
       return;
     }
     setStep(initial);
@@ -114,6 +170,15 @@ export function LoginFlow() {
     resolver: zodResolver(recoveryEmailSchema),
   });
 
+  const openClassicLogin = (mode: ClassicLoginMode, returnStep: LoginWizardStep) => {
+    setError(null);
+    setClassicMode(mode);
+    setClassicReturnStep(returnStep);
+    setShowUserRecovery(false);
+    classicForm.reset();
+    setStep("classic");
+  };
+
   const goToClinics = async () => {
     setError(null);
     setSelectedClinic(null);
@@ -152,7 +217,7 @@ export function LoginFlow() {
     setPinSubmitting(true);
     try {
       await loginPin(selectedStaff.id, value, { name: selectedStaff.name, email: "" });
-      navigate("/dashboard", { replace: true });
+      navigate("/", { replace: true });
     } catch (err: unknown) {
       if (isPinLockedError(err)) {
         setStep("locked");
@@ -160,7 +225,7 @@ export function LoginFlow() {
         return;
       }
       if (isPinFallbackToClassicError(err)) {
-        setStep("classic");
+        openClassicLogin("clinic-admin", "pin");
         setError("Demasiados intentos. Usa tu email y contraseña.");
         return;
       }
@@ -180,9 +245,17 @@ export function LoginFlow() {
   const onClassicSubmit = async (data: ClassicLoginForm) => {
     setError(null);
     try {
-      await login(data.email, data.password);
-      navigate("/dashboard", { replace: true });
+      if (classicMode === "super-admin") {
+        await loginSuperAdmin(data.email, data.password);
+      } else {
+        await login(data.email, data.password);
+      }
+      navigate("/", { replace: true });
     } catch (err: unknown) {
+      if (isSuperAdminLoginError(err)) {
+        setError(err.message);
+        return;
+      }
       if (isPinLockedError(err)) {
         setStep("locked");
         return;
@@ -218,21 +291,20 @@ export function LoginFlow() {
     }
   };
 
-  const stepSubtitle: Record<LoginWizardStep, string> = {
-    clinics: "Selecciona tu clínica",
-    "clinic-password": selectedClinic?.name ?? "Contraseña de clínica",
-    staff: clinicName ?? "Selecciona tu usuario",
-    pin: selectedStaff?.name ?? "Introduce tu PIN",
-    classic: "Acceso con email y contraseña",
-    locked: "Cuenta bloqueada",
-  };
+  const stepSubtitle = resolveStepSubtitle(
+    step,
+    classicMode,
+    selectedClinic,
+    clinicName,
+    selectedStaff,
+  );
 
   if (isAuthenticated) {
     return null;
   }
 
   return (
-    <LoginShell subtitle={stepSubtitle[step]}>
+    <LoginShell subtitle={stepSubtitle}>
       {error && step !== "locked" && (
         <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2 mb-4">
           <AlertCircle className="h-4 w-4 shrink-0" />
@@ -271,11 +343,10 @@ export function LoginFlow() {
               />
             ))}
           </div>
-          <div className="pt-2 border-t">
-            <Button type="button" variant="ghost" className="w-full text-xs" onClick={() => setStep("classic")}>
-              Acceso con email (administración)
-            </Button>
-          </div>
+          <ClassicLoginActions
+            onClinicAdmin={() => openClassicLogin("clinic-admin", "clinics")}
+            onSuperAdmin={() => openClassicLogin("super-admin", "clinics")}
+          />
         </div>
       )}
 
@@ -371,9 +442,10 @@ export function LoginFlow() {
               />
             ))}
           </div>
-          <Button type="button" variant="ghost" className="w-full text-xs" onClick={() => setStep("classic")}>
-            Usar email y contraseña
-          </Button>
+          <ClassicLoginActions
+            onClinicAdmin={() => openClassicLogin("clinic-admin", "staff")}
+            onSuperAdmin={() => openClassicLogin("super-admin", "staff")}
+          />
         </div>
       )}
 
@@ -431,7 +503,12 @@ export function LoginFlow() {
               {pinSubmitting ? "Validando..." : "Acceder"}
             </Button>
           </form>
-          <Button type="button" variant="link" className="text-xs" onClick={() => setStep("classic")}>
+          <Button
+            type="button"
+            variant="link"
+            className="text-xs"
+            onClick={() => openClassicLogin("clinic-admin", "pin")}
+          >
             Acceder con email y contraseña
           </Button>
         </div>
@@ -446,15 +523,19 @@ export function LoginFlow() {
             className="-ml-2"
             onClick={() => {
               setError(null);
-              if (hasClinicSession && selectedStaff) setStep("pin");
-              else if (hasClinicSession) setStep("staff");
-              else setStep("clinics");
+              setShowUserRecovery(false);
+              setStep(classicReturnStep);
             }}
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             Volver
           </Button>
-          {showUserRecovery ? (
+          {classicMode === "super-admin" && (
+            <p className="text-xs text-muted-foreground -mt-2">
+              Acceso global a la plataforma. No requiere seleccionar clínica.
+            </p>
+          )}
+          {showUserRecovery && classicMode === "clinic-admin" ? (
             <form
               onSubmit={recoveryForm.handleSubmit((d) => onRecoverySubmit(d, "user"))}
               className="space-y-3"
@@ -480,6 +561,7 @@ export function LoginFlow() {
                   id="email"
                   type="email"
                   autoComplete="email"
+                  autoFocus
                   className="h-10"
                   {...classicForm.register("email")}
                 />
@@ -509,15 +591,21 @@ export function LoginFlow() {
                 className="w-full h-10"
                 disabled={classicForm.formState.isSubmitting}
               >
-                {classicForm.formState.isSubmitting ? "Ingresando..." : "Iniciar sesión"}
+                {classicForm.formState.isSubmitting
+                  ? "Ingresando..."
+                  : classicMode === "super-admin"
+                    ? "Acceder como super administrador"
+                    : "Iniciar sesión"}
               </Button>
-              <button
-                type="button"
-                className="w-full text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => setShowUserRecovery(true)}
-              >
-                ¿Olvidaste tu contraseña?
-              </button>
+              {classicMode === "clinic-admin" && (
+                <button
+                  type="button"
+                  className="w-full text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowUserRecovery(true)}
+                >
+                  ¿Olvidaste tu contraseña?
+                </button>
+              )}
             </form>
           )}
         </div>

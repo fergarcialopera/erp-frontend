@@ -67,7 +67,7 @@ const columns: Column<AuditLogRow>[] = [
   },
 ];
 
-export default function AuditLogsPage() {
+export default function AuditLogsPage({ platformScope = false }: { platformScope?: boolean }) {
   const { clinicId } = useAuth();
   const {
     data: logs = [],
@@ -75,12 +75,12 @@ export default function AuditLogsPage() {
     isFetching: logsFetching,
     isError,
     refetch,
-  } = useAuditLogs(clinicId);
+  } = useAuditLogs(clinicId, { platformScope });
   const {
     data: users = [],
     isLoading: usersLoading,
     isFetching: usersFetching,
-  } = useUsers(clinicId);
+  } = useUsers(clinicId, { allowWithoutClinic: platformScope });
   const isLoading =
     logsLoading || logsFetching || usersLoading || usersFetching;
 

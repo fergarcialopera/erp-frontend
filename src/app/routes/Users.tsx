@@ -31,9 +31,10 @@ import { Pencil, Plus } from "lucide-react";
 import { TableHeaderButton } from "@/components/TableHeaderButton";
 import { TABLE_CHIP_CLASS, tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
-import { User, Role } from "@/types/models";
+import { User, Role, ClinicAssignableRole } from "@/types/models";
 
 const roleStyles: Record<string, string> = {
+  SUPER_ADMIN: "bg-primary/15 text-primary border-primary/25",
   ADMIN: "bg-accent/15 text-accent border-accent/25",
   TECHNICIAN: "bg-soft/30 text-soft-foreground border-soft/40",
   STAFF: "bg-muted text-muted-foreground border-border",
@@ -89,22 +90,22 @@ const editUserSchema = z.object({
 type NewUserForm = z.infer<typeof newUserSchema>;
 type EditUserForm = z.infer<typeof editUserSchema>;
 
-const ROLES: Role[] = ["ADMIN", "TECHNICIAN", "STAFF"];
+const CLINIC_ROLES: ClinicAssignableRole[] = ["ADMIN", "TECHNICIAN", "STAFF"];
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
-  const { clinicId, canAccessConfig } = useAuth();
+  const { clinicId, canManageUsers } = useAuth();
   const {
     data: records = [],
     isLoading: usersLoading,
     isFetching: usersFetching,
     isError,
     refetch,
-  } = useUsers(clinicId);
+  } = useUsers(clinicId, { allowWithoutClinic: true });
   const isLoading = usersLoading || usersFetching;
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const canEdit = canAccessConfig();
+  const canEdit = canManageUsers();
 
   const {
     register,
@@ -212,7 +213,7 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div className="page-header">
         <h2 className="page-title">Usuarios</h2>
-        <p className="page-description">Gestión de usuarios del sistema</p>
+        <p className="page-description">Gestión global de cuentas y roles del sistema.</p>
       </div>
 
       <DataTable
@@ -226,7 +227,9 @@ export default function UsersPage() {
         emptyTitle="Sin usuarios"
         emptyDescription="No hay usuarios registrados."
         headerAction={
-          <TableHeaderButton label="Nuevo usuario" icon={<Plus />} onClick={openModal} />
+          canEdit ? (
+            <TableHeaderButton label="Nuevo usuario" icon={<Plus />} onClick={openModal} />
+          ) : undefined
         }
       />
 
@@ -281,13 +284,13 @@ export default function UsersPage() {
               <Label>Rol</Label>
               <Select
                 value={watch("role")}
-                onValueChange={(value) => setValue("role", value as Role)}
+                  onValueChange={(value) => setValue("role", value as ClinicAssignableRole)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar rol" />
                 </SelectTrigger>
                 <SelectContent>
-                  {ROLES.map((role) => (
+                  {CLINIC_ROLES.map((role) => (
                     <SelectItem key={role} value={role}>
                       {role}
                     </SelectItem>
@@ -363,13 +366,13 @@ export default function UsersPage() {
                 <Label>Rol</Label>
                 <Select
                   value={editForm.watch("role")}
-                  onValueChange={(value) => editForm.setValue("role", value as Role)}
+                  onValueChange={(value) => editForm.setValue("role", value as ClinicAssignableRole)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Seleccionar rol" />
                   </SelectTrigger>
                   <SelectContent>
-                    {ROLES.map((role) => (
+                    {CLINIC_ROLES.map((role) => (
                       <SelectItem key={role} value={role}>
                         {role}
                       </SelectItem>

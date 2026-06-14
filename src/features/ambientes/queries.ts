@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchAmbientes, fetchAmbienteById, fetchAmbientesTree } from "./api";
 
-export const useAmbientes = (clinicId: string | null) => {
+export const useAmbientes = (clinicId: string | null, options?: { platformScope?: boolean }) => {
+  const platformScope = options?.platformScope === true;
   return useQuery({
-    queryKey: ["ambientes", clinicId],
+    queryKey: platformScope ? ["ambientes", "platform"] : ["ambientes", clinicId],
     queryFn: fetchAmbientes,
-    enabled: !!clinicId,
+    enabled: platformScope || !!clinicId,
   });
 };
 

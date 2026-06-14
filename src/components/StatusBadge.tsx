@@ -7,17 +7,29 @@ const variants: Record<BadgeVariant, string> = {
   inactive: "bg-muted/50 text-muted-foreground/70 border-border/50",
 };
 
+function resolveVariant(status: string): BadgeVariant {
+  const normalized = status.trim().toLowerCase();
+  if (
+    normalized === "true" ||
+    normalized === "active" ||
+    normalized === "activo" ||
+    normalized === "visible" ||
+    normalized.startsWith("activo") ||
+    normalized.startsWith("visible")
+  ) {
+    return "active";
+  }
+  return "inactive";
+}
+
 interface StatusBadgeProps {
   status: string;
   type?: "active";
   className?: string;
 }
 
-export function StatusBadge({ status, type = "active", className }: StatusBadgeProps) {
-  const variant: BadgeVariant =
-    status === "true" || status === "active" || status === "Activo" ? "active" : "inactive";
-
-  const label = variant === "active" ? "Activo" : "Inactivo";
+export function StatusBadge({ status, className }: StatusBadgeProps) {
+  const variant = resolveVariant(status);
 
   return (
     <span
@@ -28,7 +40,7 @@ export function StatusBadge({ status, type = "active", className }: StatusBadgeP
       )}
       role="status"
     >
-      {label}
+      {status}
     </span>
   );
 }

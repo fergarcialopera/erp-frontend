@@ -19,11 +19,18 @@ import { LogOut } from "lucide-react";
 import { getUserDisplayName } from "@/lib/userDisplay";
 import { Separator } from "@/components/ui/separator";
 
-function filterNav<T extends { requiredRole: import("@/types/models").Role }>(
+import type { AuthPermission } from "@/types/auth";
+
+function filterNav<T extends { requiredRole: import("@/types/models").Role; requiredPermission?: AuthPermission }>(
   items: T[],
   can: (role: import("@/types/models").Role) => boolean,
+  hasPermission: (permission: AuthPermission) => boolean,
 ): T[] {
-  return items.filter((item) => can(item.requiredRole));
+  return items.filter(
+    (item) =>
+      can(item.requiredRole) &&
+      (!item.requiredPermission || hasPermission(item.requiredPermission)),
+  );
 }
 
 function NavGroup({
@@ -80,16 +87,16 @@ export function AppSidebar() {
   };
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logoutUser, can } = useAuth();
+  const { user, logoutUser, can, hasPermission } = useAuth();
 
   const handleLogout = async () => {
     await logoutUser();
     navigate("/login", { replace: true });
   };
 
-  const visibleMainNav = filterNav(mainNav, can);
-  const visibleManagementNav = filterNav(managementNav, can);
-  const visibleConfigNav = filterNav(configNav, can);
+  const visibleMainNav = filterNav(mainNav, can, hasPermission);
+  const visibleManagementNav = filterNav(managementNav, can, hasPermission);
+  const visibleConfigNav = filterNav(configNav, can, hasPermission);
 
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + "/");

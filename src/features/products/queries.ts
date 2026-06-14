@@ -3,13 +3,14 @@ import { fetchProducts, fetchProductStockLocations } from "./api";
 
 export const useProducts = (
   clinicId: string | null,
-  options?: { activeOnly?: boolean }
+  options?: { activeOnly?: boolean; platformScope?: boolean },
 ) => {
   const activeOnly = options?.activeOnly ?? true;
+  const platformScope = options?.platformScope === true;
   return useQuery({
-    queryKey: ["products", clinicId, activeOnly],
+    queryKey: platformScope ? ["products", "platform", activeOnly] : ["products", clinicId, activeOnly],
     queryFn: () => (activeOnly ? fetchProducts({ active: true }) : fetchProducts()),
-    enabled: !!clinicId,
+    enabled: platformScope || !!clinicId,
   });
 };
 

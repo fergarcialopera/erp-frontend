@@ -59,3 +59,19 @@ export const createIncident = async (data: CreateIncidentBody): Promise<Incident
   const responseData = unwrapData<Record<string, unknown>>(res.data);
   return mapRawIncident(responseData);
 };
+
+export interface UpdateIncidentBody {
+  title?: string;
+  description?: string;
+  severity?: IncidentSeverity | string;
+  status?: string;
+}
+
+export const updateIncident = async (
+  incidentId: string,
+  data: UpdateIncidentBody,
+): Promise<Incident> => {
+  const res = await apiClient.patch(ENDPOINTS.INCIDENTS.DETAIL(incidentId), data);
+  const responseData = unwrapData<Record<string, unknown>>(res.data);
+  return mapRawIncident(responseData);
+};

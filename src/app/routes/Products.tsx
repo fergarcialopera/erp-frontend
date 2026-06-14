@@ -1,15 +1,11 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useProducts } from "@/features/products/queries";
-import { createProduct, updateProduct, deleteProduct } from "@/features/products/api";
+import { patchClinicProductSettingsByClinic } from "@/features/clinics/api";
 import { DataTable, Column } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -21,65 +17,32 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/app/providers/useAuth";
-import { Pencil, Plus, Trash2 } from "lucide-react";
-import { TableHeaderButton } from "@/components/TableHeaderButton";
+import { Settings2 } from "lucide-react";
 import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
 import { Product } from "@/types/models";
-import { AxiosError } from "axios";
 import {
   PRODUCTS_NEW_QUERY_PARAM,
   PRODUCTS_NEW_QUERY_VALUE,
 } from "@/features/products/constants";
 
-const newProductSchema = z.object({
-  sku: z.string().trim().min(1, "El SKU es obligatorio").max(255),
-  name: z.string().trim().min(1, "El nombre es obligatorio").max(255),
-  barcode: z.string().trim().max(255).optional().or(z.literal("")),
-});
+function resolveClinicVisible(product: Product): boolean {
+  return product.is_visible === true;
+}
 
-const editProductSchema = z.object({
-  sku: z.string().trim().min(1, "El SKU es obligatorio").max(255),
-  name: z.string().trim().min(1, "El nombre es obligatorio").max(255),
-  barcode: z.string().trim().max(255).optional().or(z.literal("")),
-  is_active: z.boolean(),
-});
+function catalogStatusLabel(product: Product): string {
+  return product.is_active ? "Activo" : "Inactivo";
+}
 
-type NewProductForm = z.infer<typeof newProductSchema>;
-type EditProductForm = z.infer<typeof editProductSchema>;
-
-const baseColumns: Column<Product>[] = [
-  {
-    key: "sku",
-    header: "SKU",
-    sortable: true,
-    render: (p) => <span className={tableCell.mono}>{p.sku}</span>,
-  },
-  {
-    key: "name",
-    header: "NOMBRE",
-    sortable: true,
-    render: (p) => <span className={tableCell.primary}>{p.name}</span>,
-  },
-  {
-    key: "barcode",
-    header: "CÓDIGO BARRAS",
-    hideBelowMd: true,
-    render: (p) => (
-      <span className={`${tableCell.mono} text-muted-foreground`}>{p.barcode || "—"}</span>
-    ),
-  },
-  {
-    key: "is_active",
-    header: "ESTADO",
-    render: (p) => <StatusBadge status={p.is_active ? "Activo" : "Inactivo"} type="active" />,
-  },
-];
+function clinicVisibilityLabel(product: Product): string {
+  if (!product.is_active) return "Catálogo inactivo";
+  return resolveClinicVisible(product) ? "Visible" : "No visible";
+}
 
 export default function ProductsPage() {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { clinicId, canAccessManagement, canAccessConfig } = useAuth();
+  const { clinicId, canToggleProductClinicSettings } = useAuth();
   const {
     data: records,
     isLoading: productsLoading,
@@ -88,44 +51,65 @@ export default function ProductsPage() {
     refetch,
   } = useProducts(clinicId, { activeOnly: false });
   const isLoading = productsLoading || productsFetching;
-  const canEdit = canAccessManagement();
-  const canDelete = canAccessConfig();
-  const [modalOpen, setModalOpen] = useState(false);
+  const canConfigureClinic = canToggleProductClinicSettings();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [clinicVisible, setClinicVisible] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    reset,
-    setError,
-  } = useForm<NewProductForm>({
-    resolver: zodResolver(newProductSchema),
-    defaultValues: { sku: "", name: "", barcode: "" },
-  });
+  const baseColumns: Column<Product>[] = [
+    {
+      key: "sku",
+      header: "SKU",
+      sortable: true,
+      render: (p) => <span className={tableCell.mono}>{p.sku}</span>,
+    },
+    {
+      key: "name",
+      header: "NOMBRE",
+      sortable: true,
+      render: (p) => <span className={tableCell.primary}>{p.name}</span>,
+    },
+    {
+      key: "barcode",
+      header: "CÓDIGO BARRAS",
+      hideBelowMd: true,
+      render: (p) => (
+        <span className={`${tableCell.mono} text-muted-foreground`}>{p.barcode || "—"}</span>
+      ),
+    },
+    {
+      key: "is_active",
+      header: "CATÁLOGO",
+      render: (p) => (
+        <StatusBadge
+          status={catalogStatusLabel(p)}
+          type={p.is_active ? "active" : "inactive"}
+        />
+      ),
+    },
+    {
+      key: "is_visible",
+      header: "EN CLÍNICA",
+      render: (p) => (
+        <StatusBadge
+          status={clinicVisibilityLabel(p)}
+          type={p.is_active && resolveClinicVisible(p) ? "active" : "inactive"}
+        />
+      ),
+    },
+  ];
 
-  const editForm = useForm<EditProductForm>({
-    resolver: zodResolver(editProductSchema),
-    defaultValues: { sku: "", name: "", barcode: "", is_active: true },
-  });
-
-  const openEditModal = (product: Product) => {
+  const openClinicSettings = (product: Product) => {
     setEditingProduct(product);
-    editForm.reset({
-      sku: product.sku,
-      name: product.name,
-      barcode: product.barcode ?? "",
-      is_active: product.is_active,
-    });
+    setClinicVisible(resolveClinicVisible(product));
   };
 
-  const closeEditModal = () => {
+  const closeClinicSettings = () => {
     setEditingProduct(null);
   };
 
   const columns: Column<Product>[] = [
     ...baseColumns,
-    ...(canEdit
+    ...(canConfigureClinic
       ? [
           {
             key: "actions",
@@ -137,10 +121,11 @@ export default function ProductsPage() {
                   variant="outline"
                   size="sm"
                   className="h-8 w-8 p-0"
-                  onClick={() => openEditModal(p)}
-                  aria-label={`Editar ${p.name}`}
+                  onClick={() => openClinicSettings(p)}
+                  disabled={!p.is_active}
+                  aria-label={`Configurar visibilidad de ${p.name}`}
                 >
-                  <Pencil className="h-3.5 w-3.5" />
+                  <Settings2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
             ),
@@ -149,106 +134,48 @@ export default function ProductsPage() {
       : []),
   ];
 
-  const createMutation = useMutation({
-    mutationFn: (data: NewProductForm) =>
-      createProduct({
-        sku: data.sku,
-        name: data.name,
-        barcode: data.barcode?.trim() || undefined,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products", clinicId] });
-      toast.success("Producto creado", {
-        description: "El producto se ha registrado correctamente.",
-      });
-      reset({ sku: "", name: "", barcode: "" });
-      setModalOpen(false);
-    },
-    onError: (err: AxiosError<{ errors?: Record<string, string[]>; message?: string }>) => {
-      const payload = err.response?.data;
-      if (err.response?.status === 422 && payload?.errors) {
-        Object.entries(payload.errors).forEach(([field, messages]) => {
-          const key = field as keyof NewProductForm;
-          if (["sku", "name", "barcode"].includes(field) && messages?.[0]) {
-            setError(key, { type: "server", message: messages[0] });
-          }
-        });
+  const settingsMutation = useMutation({
+    mutationFn: async ({ productId, visible }: { productId: string; visible: boolean }) => {
+      if (!clinicId) {
+        throw new Error("Missing clinic context");
       }
+      return patchClinicProductSettingsByClinic(clinicId, productId, { visible });
     },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: EditProductForm }) =>
-      updateProduct(id, {
-        sku: data.sku,
-        name: data.name,
-        barcode: data.barcode?.trim() || undefined,
-        is_active: data.is_active,
-      }),
-    onSuccess: () => {
+    onSuccess: (updatedProduct) => {
+      queryClient.setQueryData<Product[]>(["products", clinicId, false], (current) =>
+        current?.map((product) => (product.id === updatedProduct.id ? updatedProduct : product)),
+      );
       queryClient.invalidateQueries({ queryKey: ["products", clinicId] });
-      toast.success("Producto actualizado", {
-        description: "Los cambios se han guardado correctamente.",
+      toast.success("Visibilidad actualizada", {
+        description: `«${updatedProduct.name}» — ${updatedProduct.is_visible ? "visible" : "oculto"} en esta clínica.`,
       });
-      closeEditModal();
-    },
-    onError: (err: AxiosError<{ errors?: Record<string, string[]> }>) => {
-      const payload = err.response?.data;
-      if (err.response?.status === 422 && payload?.errors) {
-        Object.entries(payload.errors).forEach(([field, messages]) => {
-          const key = field as keyof EditProductForm;
-          if (["sku", "name", "barcode", "is_active"].includes(field) && messages?.[0]) {
-            editForm.setError(key, { type: "server", message: messages[0] });
-          }
-        });
-      }
+      closeClinicSettings();
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteProduct(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["products", clinicId] });
-      toast.success("Producto desactivado", {
-        description: "El producto ha sido desactivado correctamente.",
-      });
-      closeEditModal();
-    },
-  });
-
-  const onSubmit = (data: NewProductForm) => {
-    createMutation.mutate(data);
-  };
-
-  const onEditSubmit = (data: EditProductForm) => {
-    if (editingProduct) updateMutation.mutate({ id: editingProduct.id, data });
-  };
-
-  const handleDeleteProduct = () => {
-    if (editingProduct) deleteMutation.mutate(editingProduct.id);
-  };
-
-  const openModal = () => {
-    reset({ sku: "", name: "", barcode: "" });
-    setModalOpen(true);
+  const handleSaveClinicSettings = () => {
+    if (!editingProduct || !clinicId) return;
+    settingsMutation.mutate({
+      productId: editingProduct.id,
+      visible: clinicVisible,
+    });
   };
 
   useEffect(() => {
     if (searchParams.get(PRODUCTS_NEW_QUERY_PARAM) !== PRODUCTS_NEW_QUERY_VALUE) return;
-    if (canEdit) {
-      reset({ sku: "", name: "", barcode: "" });
-      setModalOpen(true);
-    }
     const next = new URLSearchParams(searchParams);
     next.delete(PRODUCTS_NEW_QUERY_PARAM);
     setSearchParams(next, { replace: true });
-  }, [searchParams, canEdit, reset, setSearchParams]);
+  }, [searchParams, setSearchParams]);
 
   return (
     <div className="space-y-6">
       <div className="page-header">
         <h2 className="page-title">Productos</h2>
-        <p className="page-description">Catálogo de productos registrados en el sistema</p>
+        <p className="page-description">
+          El estado de catálogo lo gestiona el super administrador. En esta clínica, la visibilidad
+          determina si el producto puede usarse en operaciones (entradas, salidas, inventario).
+        </p>
       </div>
 
       <DataTable
@@ -261,164 +188,58 @@ export default function ProductsPage() {
         searchPlaceholder="Buscar producto..."
         emptyTitle="Sin productos"
         emptyDescription="No hay productos registrados aún."
-        headerAction={
-          canEdit ? (
-            <TableHeaderButton label="Nuevo producto" icon={<Plus />} onClick={openModal} />
-          ) : undefined
-        }
       />
 
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+      <Dialog open={editingProduct !== null} onOpenChange={(open) => !open && closeClinicSettings()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Nuevo producto</DialogTitle>
+            <DialogTitle>Visibilidad en clínica</DialogTitle>
             <DialogDescription>
-              Introduce SKU y nombre. El código de barras es opcional.
+              {editingProduct
+                ? `«${editingProduct.name}» — catálogo ${editingProduct.is_active ? "activo" : "inactivo"}.`
+                : "Configuración del producto para esta clínica."}
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="new-product-sku">SKU</Label>
-              <Input
-                id="new-product-sku"
-                placeholder="Ej. PROD-001"
-                autoComplete="off"
-                {...register("sku")}
-              />
-              {errors.sku && (
-                <p className="text-xs text-destructive">{errors.sku.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-product-name">Nombre</Label>
-              <Input
-                id="new-product-name"
-                placeholder="Nombre del producto"
-                autoComplete="off"
-                {...register("name")}
-              />
-              {errors.name && (
-                <p className="text-xs text-destructive">{errors.name.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-product-barcode">Código de barras (opcional)</Label>
-              <Input
-                id="new-product-barcode"
-                placeholder="EAN, UPC, etc."
-                autoComplete="off"
-                {...register("barcode")}
-              />
-              {errors.barcode && (
-                <p className="text-xs text-destructive">{errors.barcode.message}</p>
-              )}
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setModalOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isSubmitting || createMutation.isPending}>
-                {createMutation.isPending ? "Creando…" : "Crear producto"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={editingProduct !== null} onOpenChange={(open) => !open && closeEditModal()}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Editar producto</DialogTitle>
-            <DialogDescription>
-              Modifica los datos del producto. Puedes desactivarlo con el botón Eliminar.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-product-sku">SKU</Label>
-              <Input
-                id="edit-product-sku"
-                placeholder="Ej. PROD-001"
-                autoComplete="off"
-                {...editForm.register("sku")}
-              />
-              {editForm.formState.errors.sku && (
-                <p className="text-xs text-destructive">{editForm.formState.errors.sku.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-product-name">Nombre</Label>
-              <Input
-                id="edit-product-name"
-                placeholder="Nombre del producto"
-                autoComplete="off"
-                {...editForm.register("name")}
-              />
-              {editForm.formState.errors.name && (
-                <p className="text-xs text-destructive">{editForm.formState.errors.name.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-product-barcode">Código de barras (opcional)</Label>
-              <Input
-                id="edit-product-barcode"
-                placeholder="EAN, UPC, etc."
-                autoComplete="off"
-                {...editForm.register("barcode")}
-              />
-              {editForm.formState.errors.barcode && (
-                <p className="text-xs text-destructive">
-                  {editForm.formState.errors.barcode.message}
-                </p>
-              )}
+          <div className="space-y-4">
+            <div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm">
+              <p className="font-medium">Catálogo</p>
+              <p className="text-muted-foreground text-xs mt-1">
+                Activo o inactivo a nivel global. Solo el super administrador puede modificarlo.
+              </p>
+              <p className="mt-2">
+                <StatusBadge
+                  status={editingProduct ? catalogStatusLabel(editingProduct) : "—"}
+                  type={editingProduct?.is_active ? "active" : "inactive"}
+                />
+              </p>
             </div>
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
-                <Label htmlFor="edit-product-active">Producto activo</Label>
+                <Label htmlFor="clinic-product-visible">Visible en clínica</Label>
                 <p className="text-xs text-muted-foreground">
-                  Si está desactivado, no aparecerá en listas activas.
+                  Si está visible, el producto puede utilizarse en operaciones de esta clínica.
                 </p>
               </div>
               <Switch
-                id="edit-product-active"
-                checked={editForm.watch("is_active")}
-                onCheckedChange={(checked) => editForm.setValue("is_active", checked)}
+                id="clinic-product-visible"
+                checked={clinicVisible}
+                onCheckedChange={setClinicVisible}
+                disabled={!editingProduct?.is_active}
               />
             </div>
-            <DialogFooter className="flex-row justify-between sm:justify-between">
-              {canDelete ? (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="mr-auto gap-1.5"
-                  onClick={handleDeleteProduct}
-                  disabled={updateMutation.isPending || deleteMutation.isPending}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  {deleteMutation.isPending ? "Desactivando…" : "Eliminar"}
-                </Button>
-              ) : (
-                <span className="mr-auto" />
-              )}
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={closeEditModal}>
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={
-                    editForm.formState.isSubmitting || updateMutation.isPending || deleteMutation.isPending
-                  }
-                >
-                  {updateMutation.isPending ? "Guardando…" : "Guardar"}
-                </Button>
-              </div>
-            </DialogFooter>
-          </form>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={closeClinicSettings}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSaveClinicSettings}
+              disabled={settingsMutation.isPending || !editingProduct?.is_active}
+            >
+              {settingsMutation.isPending ? "Guardando…" : "Guardar"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

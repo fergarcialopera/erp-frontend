@@ -59,24 +59,104 @@ export type LoginWizardStep =
   | "classic"
   | "locked";
 
-export const ROLE_HIERARCHY: Record<Role, number> = {
+/** Modo del formulario email/contraseña en el wizard de login. */
+export type ClassicLoginMode = "clinic-admin" | "super-admin";
+
+/** Roles operativos dentro de una clínica (jerarquía inclusiva). */
+export type ClinicRole = Exclude<Role, "SUPER_ADMIN">;
+
+export const CLINIC_ROLE_HIERARCHY: Record<ClinicRole, number> = {
   ADMIN: 3,
   TECHNICIAN: 2,
   STAFF: 1,
 };
 
+export function isSuperAdmin(role: Role | undefined | null): boolean {
+  return role === "SUPER_ADMIN";
+}
+
+export function isClinicRole(role: Role): role is ClinicRole {
+  return role !== "SUPER_ADMIN";
+}
+
+export function hasClinicPermission(userRole: Role, requiredRole: ClinicRole): boolean {
+  if (!isClinicRole(userRole)) return false;
+  return CLINIC_ROLE_HIERARCHY[userRole] >= CLINIC_ROLE_HIERARCHY[requiredRole];
+}
+
+/** Compatibilidad con guards basados en rol mínimo de clínica. */
 export function hasPermission(userRole: Role, requiredRole: Role): boolean {
-  return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[requiredRole];
+  if (requiredRole === "SUPER_ADMIN") return userRole === "SUPER_ADMIN";
+  if (isSuperAdmin(userRole)) return false;
+  if (!isClinicRole(requiredRole)) return false;
+  return hasClinicPermission(userRole, requiredRole);
 }
 
-export function canAccessOperations(userRole: Role): boolean {
-  return hasPermission(userRole, "STAFF");
+export function canAccessClinicApp(role: Role | undefined | null): boolean {
+  return !!role && !isSuperAdmin(role);
 }
 
-export function canAccessManagement(userRole: Role): boolean {
-  return hasPermission(userRole, "TECHNICIAN");
+export function canAccessOperations(role: Role): boolean {
+  return hasClinicPermission(role, "STAFF");
 }
 
-export function canAccessConfig(userRole: Role): boolean {
-  return hasPermission(userRole, "ADMIN");
+/** TECHNICIAN+: entradas de stock, inventario operativo, incidencias. */
+export function canAccessManagement(role: Role): boolean {
+  return hasClinicPermission(role, "TECHNICIAN");
+}
+
+/** ADMIN de clínica: ajustes de inventario y visibilidad por clínica. */
+export function canAccessConfig(role: Role): boolean {
+  return hasClinicPermission(role, "ADMIN");
+}
+
+export function canAccessAudit(role: Role): boolean {
+  return role === "ADMIN" || role === "SUPER_ADMIN";
+}
+
+export function canManageUsers(role: Role): boolean {
+  return role === "SUPER_ADMIN";
+}
+
+export function canManageCatalogProducts(role: Role): boolean {
+  return role === "SUPER_ADMIN";
+}
+
+export function canManageCatalogAmbientes(role: Role): boolean {
+  return role === "SUPER_ADMIN";
+}
+
+/** ADMIN: activar producto en clínica y controlar visibilidad en salidas. */
+export function canToggleProductClinicSettings(role: Role): boolean {
+  return role === "ADMIN";
+}
+
+export function canToggleAmbienteClinicSettings(role: Role): boolean {
+  return role === "ADMIN";
+}
+
+export function canEditIncidents(role: Role): boolean {
+  return role === "SUPER_ADMIN";
+}
+
+export type AuthPermission =
+  | "clinicApp"
+  | "superAdminPlatform"
+  | "audit"
+  | "manageUsers";
+
+export function hasAuthPermission(role: Role | undefined | null, permission: AuthPermission): boolean {
+  if (!role) return false;
+  switch (permission) {
+    case "clinicApp":
+      return canAccessClinicApp(role);
+    case "superAdminPlatform":
+      return isSuperAdmin(role);
+    case "audit":
+      return canAccessAudit(role);
+    case "manageUsers":
+      return canManageUsers(role);
+    default:
+      return false;
+  }
 }

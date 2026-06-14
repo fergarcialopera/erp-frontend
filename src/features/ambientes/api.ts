@@ -17,6 +17,8 @@ type AmbienteTreeNodeApi = {
   location?: string | null;
   device_id?: string | null;
   is_active?: boolean;
+  is_visible?: boolean;
+  visible?: boolean;
   zones?: AmbienteTreeZoneApi[] | null;
 };
 
@@ -39,6 +41,12 @@ function mapAmbienteFromApi(raw: AmbienteTreeNodeApi, clinicId: string): Ambient
     location: raw.location ?? undefined,
     device_id: raw.device_id ?? undefined,
     is_active: raw.is_active !== false,
+    is_visible:
+      raw.is_visible !== undefined
+        ? raw.is_visible !== false
+        : raw.visible !== undefined
+          ? raw.visible !== false
+          : undefined,
     zones,
   };
 }
@@ -50,7 +58,9 @@ export const fetchAmbientes = async (params?: {
     params:
       params?.active !== undefined ? { active: params.active } : undefined,
   });
-  return unwrapList<Ambiente>(res.data);
+  return unwrapList<AmbienteTreeNodeApi>(res.data).map((node) =>
+    mapAmbienteFromApi(node, String(node.clinic_id ?? "")),
+  );
 };
 
 export const fetchAmbienteById = async (id: string): Promise<Ambiente> => {
@@ -79,4 +89,8 @@ export const createAmbiente = async (data: Partial<Ambiente>) => {
 export const updateAmbiente = async (id: string, data: Partial<Ambiente>) => {
   const res = await apiClient.patch(ENDPOINTS.AMBIENTES.DETAIL(id), data);
   return unwrapData<Ambiente>(res.data);
+};
+
+export const deleteAmbiente = async (id: string): Promise<void> => {
+  await apiClient.delete(ENDPOINTS.AMBIENTES.DETAIL(id));
 };

@@ -41,6 +41,20 @@ export const ENDPOINTS = {
     UPDATE_SETTINGS: "/clinic/settings",
     IMAGE: "/clinic/image",
     RECOVERY: "/clinic/recovery",
+    PRODUCT: (productId: string) => `/clinic/products/${productId}`,
+    AMBIENTE: (ambienteId: string) => `/clinic/ambientes/${ambienteId}`,
+  },
+  CLINICS: {
+    LIST: "/clinics",
+    CREATE: "/clinics",
+    DETAIL: (id: string) => `/clinics/${id}`,
+    PRODUCT: (clinicId: string, productId: string) =>
+      `/clinics/${clinicId}/products/${productId}`,
+    AMBIENTE: (clinicId: string, ambienteId: string) =>
+      `/clinics/${clinicId}/ambientes/${ambienteId}`,
+    ASSOCIATE_AMBIENTE: (clinicId: string) => `/clinics/${clinicId}/ambientes`,
+    DISASSOCIATE_AMBIENTE: (clinicId: string, ambienteId: string) =>
+      `/clinics/${clinicId}/ambientes/${ambienteId}`,
   },
   USERS: {
     ...resource("/users"),
@@ -52,6 +66,7 @@ export const ENDPOINTS = {
     TREE: "/ambientes/tree",
   },
   ZONES: {
+    ...resource("/zones"),
     DETAIL: (id: string) => `/zones/${id}`,
   },
   PRODUCTS: {
@@ -79,6 +94,7 @@ export const ENDPOINTS = {
   INCIDENTS: {
     LIST: "/incidents",
     CREATE: "/incidents",
+    DETAIL: (incidentId: string) => `/incidents/${incidentId}`,
   },
   AUDIT_LOGS: { LIST: "/audit-logs" },
 } as const;
