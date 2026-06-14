@@ -14,7 +14,7 @@ import { mapExitLogDetailToPendingItems } from "@/features/exitLogs/mapExitLogDe
 import { useDraftExitEditor } from "@/features/exitLogs/useDraftExitEditor";
 import { OpenDraftExitButton } from "@/features/exitLogs/components/OpenDraftExitButton";
 import { Link } from "react-router-dom";
-import { Package, Lock, ClipboardList, AlertTriangle, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TableHeaderButtonLabel, tableHeaderButtonClassName } from "@/components/TableHeaderButton";
 import { TABLE_HEAD_CLASS, tableCell } from "@/components/tableTypography";
@@ -60,11 +60,10 @@ function draftReducer(state: ExitDraftItem[], action: DraftAction): ExitDraftIte
 }
 
 export default function DashboardPage() {
-  const { user, clinicId, canAccessManagement, canAccessOperations } = useAuth();
+  const { user, clinicId, canAccessOperations } = useAuth();
   const [search, setSearch] = useState("");
   const [draft, dispatch] = useReducer(draftReducer, []);
   const canExecute = canAccessOperations();
-  const showKpis = canAccessManagement();
   const draftEditor = useDraftExitEditor(clinicId, canExecute);
   const { results, isLoading: isSearchLoading } = useProductSearch(clinicId, search);
   const createExitMutation = useCreateExitLog();
@@ -143,62 +142,6 @@ export default function DashboardPage() {
     }
   };
 
-  const kpiCards = useMemo(
-    () => (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="stat-card animate-fade-in">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Productos
-            </span>
-            <Package className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="text-2xl font-bold">
-            {isLoading ? "…" : dashboard?.active_products_count ?? "—"}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-1">Productos activos</p>
-        </div>
-        <div className="stat-card animate-fade-in">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Lockers
-            </span>
-            <Lock className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="text-2xl font-bold">
-            {isLoading ? "…" : dashboard?.available_lockers_count ?? "—"}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-1">Lockers disponibles</p>
-        </div>
-        <div className="stat-card animate-fade-in">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Salidas registradas
-            </span>
-            <ClipboardList className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="text-2xl font-bold">
-            {isLoading ? "…" : dashboard?.pending_exits_count ?? "—"}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-1">Últimas salidas de stock</p>
-        </div>
-        <div className="stat-card animate-fade-in">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Inventario bajo
-            </span>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="text-2xl font-bold">
-            {isLoading ? "…" : dashboard?.has_low_stock != null ? (dashboard.has_low_stock ? "Sí" : "No") : "—"}
-          </div>
-          <p className="text-[11px] text-muted-foreground mt-1">Requiere atención</p>
-        </div>
-      </div>
-    ),
-    [dashboard, isLoading],
-  );
-
   return (
     <div className="space-y-6">
       <div className="page-header">
@@ -219,8 +162,6 @@ export default function DashboardPage() {
         onExecuteDraft={executeDraft}
         isExecuting={createExitMutation.isPending}
       />
-
-      {showKpis ? kpiCards : null}
 
       {/* Salidas de stock recientes */}
       <div className="table-container">

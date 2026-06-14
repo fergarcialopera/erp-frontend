@@ -5,7 +5,7 @@ import { fetchDashboard } from "./api";
 export const useDashboard = (clinicId: string | null, role: Role = "STAFF") => {
   return useQuery({
     queryKey: ["dashboard", clinicId, role],
-    queryFn: () => fetchDashboard(role),
+    queryFn: () => fetchDashboard(),
     enabled: !!clinicId,
   });
 };

@@ -202,10 +202,6 @@ export interface ExitLogProductDisplayRow {
 
 /** Datos agregados para la vista de dashboard. */
 export interface DashboardData {
-  active_products_count: number;
-  available_lockers_count: number;
-  pending_exits_count: number;
-  has_low_stock: boolean;
   latest_exits: ExitLogProductDisplayRow[];
 }
 
