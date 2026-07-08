@@ -16,11 +16,14 @@ const PAGE_TITLES: Record<string, string> = {
   "/incidents/new": "Nueva incidencia",
   "/users": "Usuarios",
   "/audit-logs": "Registro de Auditoría",
+  "/audit-logs/access": "Auditoría · Accesos",
+  "/audit-logs/activity": "Auditoría · Actividad",
 };
 
 function getPageTitle(pathname: string): string {
   if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
   if (pathname.startsWith("/ambientes/")) return "Detalle de ambiente";
+  if (pathname.startsWith("/audit-logs/")) return "Registro de Auditoría";
   return "LockERP";
 }
 

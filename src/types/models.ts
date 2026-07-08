@@ -213,29 +213,9 @@ export interface DashboardData {
   latest_exits: ExitLogProductDisplayRow[];
 }
 
-export interface AuditLog {
-  id: string;
-  clinic_id: string;
-  actor_user_id?: string;
-  actor_type: ActorType;
-  action: string;
-  entity_type: string;
-  entity_id: string;
-  occurred_at: string;
-  payload?: Record<string, unknown>;
-}
-
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;
   page: number;
   per_page: number;
-}
-
-/** Filtros GET /api/v1/audit-logs */
-export interface AuditLogFilters {
-  entity_type?: string;
-  entity_id?: string;
-  from?: string;
-  to?: string;
 }

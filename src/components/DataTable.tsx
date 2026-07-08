@@ -43,6 +43,8 @@ interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];
   isLoading?: boolean;
+  /** Actualización en segundo plano: atenúa solo el cuerpo de la tabla. */
+  isRefreshing?: boolean;
   /** Si true, se muestra mensaje de error (p. ej. API caída) con opción de reintentar */
   isError?: boolean;
   onRetry?: () => void;
@@ -55,6 +57,10 @@ interface DataTableProps<T> {
   headerAction?: React.ReactNode;
   filters?: React.ReactNode;
   pageSize?: number;
+  /** Oculta la paginación interna (p. ej. paginación servidor externa). */
+  hidePagination?: boolean;
+  /** Contenido bajo la tabla (p. ej. paginación servidor). */
+  footer?: React.ReactNode;
 }
 
 type SortDir = "asc" | "desc" | null;
@@ -63,6 +69,7 @@ export function DataTable<T extends object>({
   data,
   columns,
   isLoading,
+  isRefreshing = false,
   isError,
   onRetry,
   searchPlaceholder = "Buscar...",
@@ -74,6 +81,8 @@ export function DataTable<T extends object>({
   headerAction,
   filters,
   pageSize: defaultPageSize = 10,
+  hidePagination = false,
+  footer,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -121,7 +130,7 @@ export function DataTable<T extends object>({
     setPage(0);
   };
 
-  if (isLoading) {
+  if (isLoading && data.length === 0) {
     return <SkeletonTable columns={columns.length} />;
   }
 
@@ -148,28 +157,34 @@ export function DataTable<T extends object>({
   return (
     <div className="table-container">
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-3 sm:p-4 border-b">
-        {searchKey && (
-          <div className="relative w-full min-w-0 sm:w-72 sm:shrink-0">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(0);
-              }}
-              placeholder={searchPlaceholder}
-              className="pl-9 h-9 bg-background"
-            />
-          </div>
-        )}
-        {filters}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 border-b">
+        {filters ? (
+          <div className="flex flex-wrap items-center gap-2 min-w-0">{filters}</div>
+        ) : null}
         <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto sm:ml-auto shrink-0">
+          {searchKey && (
+            <div className="relative w-full min-w-0 sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(0);
+                }}
+                placeholder={searchPlaceholder}
+                className="pl-9 h-9 bg-background"
+              />
+            </div>
+          )}
           {headerAction}
         </div>
       </div>
 
       {/* Table */}
+      <div
+        className={`relative transition-opacity ${isRefreshing ? "opacity-50 pointer-events-none" : ""}`}
+        aria-busy={isRefreshing}
+      >
       {paged.length === 0 ? (
         <EmptyState title={emptyTitle} description={emptyDescription} action={emptyAction} />
       ) : (
@@ -228,9 +243,12 @@ export function DataTable<T extends object>({
           </TableBody>
         </Table>
       )}
+      </div>
+
+      {footer}
 
       {/* Pagination */}
-      {filtered.length > 0 && (
+      {!hidePagination && filtered.length > 0 && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-3 sm:px-4 py-3 border-t">
           <div className="text-xs text-muted-foreground shrink-0">
             {filtered.length} registro{filtered.length !== 1 ? "s" : ""}

@@ -39,3 +39,32 @@ export function unwrapList<T>(response: unknown): T[] {
   }
   return Array.isArray(response) ? (response as T[]) : [];
 }
+
+export interface PaginatedListMeta {
+  page: number;
+  per_page: number;
+  total: number;
+}
+
+/** Extrae lista paginada `{ data: T[], meta }` del API. */
+export function unwrapPaginatedList<T>(response: unknown): {
+  data: T[];
+  meta: PaginatedListMeta;
+} {
+  if (response != null && typeof response === "object" && "data" in response) {
+    const envelope = response as ApiListEnvelope<T>;
+    const data = Array.isArray(envelope.data) ? envelope.data : [];
+    const rawMeta = envelope.meta ?? {};
+    const page =
+      typeof rawMeta.page === "number"
+        ? rawMeta.page
+        : typeof rawMeta.current_page === "number"
+          ? rawMeta.current_page
+          : 1;
+    const per_page = typeof rawMeta.per_page === "number" ? rawMeta.per_page : data.length;
+    const total = typeof rawMeta.total === "number" ? rawMeta.total : data.length;
+    return { data, meta: { page, per_page, total } };
+  }
+  const data = Array.isArray(response) ? (response as T[]) : [];
+  return { data, meta: { page: 1, per_page: data.length, total: data.length } };
+}

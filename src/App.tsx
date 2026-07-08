@@ -24,7 +24,9 @@ import NewExitLogPage from "@/app/routes/NewExitLog";
 import IncidentsPage from "@/app/routes/Incidents";
 import NewIncidentPage from "@/app/routes/NewIncident";
 import UsersPage from "@/app/routes/Users";
-import AuditLogsPage from "@/app/routes/AuditLogs";
+import AuditLogsHub from "@/app/routes/audit/AuditLogsHub";
+import AuditAccessLogs from "@/app/routes/audit/AuditAccessLogs";
+import AuditActivityLogs from "@/app/routes/audit/AuditActivityLogs";
 import PlatformHomePage from "@/app/routes/platform/PlatformHome";
 import PlatformClinicsPage from "@/app/routes/platform/PlatformClinics";
 import PlatformClinicDetailPage from "@/app/routes/platform/PlatformClinicDetail";
@@ -80,7 +82,23 @@ const App = () => (
                 path="/platform/audit-logs"
                 element={
                   <ProtectedRoute requiredPermission="audit">
-                    <AuditLogsPage platformScope />
+                    <AuditLogsHub platformScope />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/platform/audit-logs/access"
+                element={
+                  <ProtectedRoute requiredPermission="audit">
+                    <AuditAccessLogs platformScope />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/platform/audit-logs/activity"
+                element={
+                  <ProtectedRoute requiredPermission="audit">
+                    <AuditActivityLogs platformScope />
                   </ProtectedRoute>
                 }
               />
@@ -150,7 +168,23 @@ const App = () => (
                 path="/audit-logs"
                 element={
                   <ProtectedRoute requiredPermission="audit">
-                    <AuditLogsPage />
+                    <AuditLogsHub />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/audit-logs/access"
+                element={
+                  <ProtectedRoute requiredPermission="audit">
+                    <AuditAccessLogs />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/audit-logs/activity"
+                element={
+                  <ProtectedRoute requiredPermission="audit">
+                    <AuditActivityLogs />
                   </ProtectedRoute>
                 }
               />
