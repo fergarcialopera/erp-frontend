@@ -110,7 +110,7 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="animate-slide-in">
-              <div className="font-semibold text-sidebar-foreground text-sm">LockERP</div>
+              <div className="font-semibold text-sidebar-foreground text-sm">LogiLock</div>
               <div className="text-[11px] text-sidebar-foreground/60">Sistema de gestión</div>
             </div>
           )}

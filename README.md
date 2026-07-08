@@ -1,4 +1,4 @@
-# LockERP Frontend
+# LogiLock Frontend
 
 Aplicación frontend para gestión de inventario clínico con ambientes.
 

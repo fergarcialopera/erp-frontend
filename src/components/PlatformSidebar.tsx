@@ -44,7 +44,7 @@ export function PlatformSidebar() {
           </div>
           {!collapsed && (
             <div className="animate-slide-in min-w-0">
-              <div className="font-semibold text-sidebar-foreground text-sm truncate">LockERP</div>
+              <div className="font-semibold text-sidebar-foreground text-sm truncate">LogiLock</div>
               <div className="text-[11px] text-sidebar-foreground/60">Plataforma global</div>
             </div>
           )}
