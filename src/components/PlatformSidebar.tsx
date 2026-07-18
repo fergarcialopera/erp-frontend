@@ -39,8 +39,8 @@ export function PlatformSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className={`p-3 ${collapsed ? "flex items-center justify-center" : ""}`}>
-        <div className={`flex items-center gap-2 ${collapsed ? "justify-center" : ""}`}>
+      <SidebarHeader className="!p-3">
+        <div className="flex h-10 items-center gap-2 overflow-hidden">
           <img
             src="/favicon/favicon.svg"
             alt=""
@@ -48,19 +48,19 @@ export function PlatformSidebar() {
             width={32}
             height={32}
           />
-          {!collapsed && (
-            <div className="animate-slide-in min-w-0">
-              <div className="truncate font-heading text-sm font-semibold text-sidebar-foreground">
-                <span className="text-sidebar-primary">Logi</span>Lock
-              </div>
-              <div className="text-[11px] text-sidebar-foreground/60">Plataforma global</div>
+          <div className="min-w-0 max-w-[11rem] overflow-hidden opacity-100 transition-[opacity,max-width] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
+            <div className="whitespace-nowrap font-heading text-sm font-semibold text-sidebar-foreground">
+              <span className="text-sidebar-primary">Logi</span>Lock
             </div>
-          )}
+            <div className="whitespace-nowrap text-[11px] text-sidebar-foreground/60">
+              Plataforma global
+            </div>
+          </div>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup className="p-2">
+        <SidebarGroup className="!p-3">
           <SidebarGroupContent>
             <SidebarMenu>
               {platformNav.map((item) => (
@@ -70,11 +70,11 @@ export function PlatformSidebar() {
                       to={item.url}
                       end={item.url === "/platform"}
                       onClick={closeMobileMenu}
-                      className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      className="text-sidebar-foreground/70 hover:text-sidebar-foreground"
+                      activeClassName="text-sidebar-accent-foreground font-medium"
                     >
                       <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -84,7 +84,7 @@ export function PlatformSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className={`p-3 ${collapsed ? "items-center" : ""}`}>
+      <SidebarFooter className="!p-3">
         <SidebarUserMenu
           user={user}
           roleLabel="SUPER_ADMIN"
