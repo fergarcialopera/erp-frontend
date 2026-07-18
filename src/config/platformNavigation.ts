@@ -76,6 +76,5 @@ export function getPlatformPageTitle(pathname: string): string {
   if (PLATFORM_PAGE_TITLES[pathname]) return PLATFORM_PAGE_TITLES[pathname];
   if (pathname.startsWith("/platform/clinics/")) return "Detalle de clínica";
   if (pathname.startsWith("/platform/ambientes/")) return "Detalle de ambiente";
-  if (pathname.startsWith("/platform/audit-logs/")) return "Auditoría";
-  return "LockERP Plataforma";
+  return "LogiLock Plataforma";
 }

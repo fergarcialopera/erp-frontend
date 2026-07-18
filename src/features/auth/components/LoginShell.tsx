@@ -8,7 +8,7 @@ interface LoginShellProps {
 }
 
 export function LoginShell({
-  title = "LockERP",
+  title = "LogiLock",
   subtitle = "Acceso al sistema",
   children,
   footer,

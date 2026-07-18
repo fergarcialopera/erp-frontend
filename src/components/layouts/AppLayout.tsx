@@ -23,8 +23,7 @@ const PAGE_TITLES: Record<string, string> = {
 function getPageTitle(pathname: string): string {
   if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
   if (pathname.startsWith("/ambientes/")) return "Detalle de ambiente";
-  if (pathname.startsWith("/audit-logs/")) return "Registro de Auditoría";
-  return "LockERP";
+  return "LogiLock";
 }
 
 export default function AppLayout() {

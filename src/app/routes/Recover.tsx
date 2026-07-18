@@ -169,7 +169,7 @@ function RecoverShell({
           <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center mb-4">
             <Lock className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-semibold">LockERP</h1>
+          <h1 className="text-xl font-semibold">LogiLock</h1>
           <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
         </div>
         <div className="bg-card rounded-lg border p-6 shadow-sm">{children}</div>
