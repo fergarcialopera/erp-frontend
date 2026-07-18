@@ -13,13 +13,15 @@ export function LoginShell({
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-lg animate-fade-up">
         <div className="mb-8 flex flex-col items-center text-center">
-          <img
-            src="/favicon/favicon.svg"
-            alt=""
-            className="mb-5 h-16 w-16"
-            width={64}
-            height={64}
-          />
+          <div className="mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-sidebar">
+            <img
+              src="/favicon/favicon.svg"
+              alt=""
+              className="h-16 w-16"
+              width={64}
+              height={64}
+            />
+          </div>
           <h1 className="font-heading text-3xl font-bold tracking-tight text-secondary sm:text-[2rem]">
             <span className="text-primary">Logi</span>
             Lock
