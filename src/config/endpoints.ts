@@ -96,5 +96,10 @@ export const ENDPOINTS = {
     CREATE: "/incidents",
     DETAIL: (incidentId: string) => `/incidents/${incidentId}`,
   },
-  AUDIT_LOGS: { LIST: "/audit-logs" },
+  AUDIT: {
+    ACCESS_LOGS: "/audit/logs",
+    ACCESS_LOG_DETAIL: (id: string) => `/audit/logs/${id}`,
+    ACTIVITY_LOGS: "/audit/activity",
+    ACTIVITY_LOG_DETAIL: (id: string) => `/audit/activity/${id}`,
+  },
 } as const;

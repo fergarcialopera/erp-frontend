@@ -16,6 +16,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/incidents/new": "Nueva incidencia",
   "/users": "Usuarios",
   "/audit-logs": "Registro de Auditoría",
+  "/audit-logs/access": "Auditoría · Accesos",
+  "/audit-logs/activity": "Auditoría · Actividad",
 };
 
 function getPageTitle(pathname: string): string {

@@ -68,6 +68,8 @@ export const PLATFORM_PAGE_TITLES: Record<string, string> = {
   "/platform/ambientes": "Ambientes",
   "/platform/incidents": "Incidencias",
   "/platform/audit-logs": "Auditoría",
+  "/platform/audit-logs/access": "Auditoría · Accesos",
+  "/platform/audit-logs/activity": "Auditoría · Actividad",
 };
 
 export function getPlatformPageTitle(pathname: string): string {
