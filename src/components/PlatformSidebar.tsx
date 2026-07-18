@@ -15,7 +15,7 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { LogOut, Shield } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { getUserDisplayName } from "@/lib/userDisplay";
 import { Separator } from "@/components/ui/separator";
 
@@ -39,12 +39,18 @@ export function PlatformSidebar() {
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded bg-primary flex items-center justify-center shrink-0">
-            <Shield className="h-4 w-4 text-primary-foreground" />
-          </div>
+          <img
+            src="/favicon/favicon.svg"
+            alt=""
+            className="h-8 w-8 shrink-0"
+            width={32}
+            height={32}
+          />
           {!collapsed && (
             <div className="animate-slide-in min-w-0">
-              <div className="font-semibold text-sidebar-foreground text-sm truncate">LogiLock</div>
+              <div className="truncate font-heading text-sm font-semibold text-sidebar-foreground">
+                <span className="text-sidebar-primary">Logi</span>Lock
+              </div>
               <div className="text-[11px] text-sidebar-foreground/60">Plataforma global</div>
             </div>
           )}

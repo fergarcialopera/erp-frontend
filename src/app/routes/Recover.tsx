@@ -3,13 +3,14 @@ import { useSearchParams, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Lock, AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { confirmRecovery, type RecoveryConfirmType } from "@/features/auth/api";
 import { parseApiError } from "@/lib/apiError";
+import { LoginShell } from "@/features/auth/components/LoginShell";
 
 const passwordSchema = z
   .object({
@@ -162,18 +163,5 @@ function RecoverShell({
   subtitle?: string;
   children: React.ReactNode;
 }) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center mb-8">
-          <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center mb-4">
-            <Lock className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <h1 className="text-xl font-semibold">LogiLock</h1>
-          <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
-        </div>
-        <div className="bg-card rounded-lg border p-6 shadow-sm">{children}</div>
-      </div>
-    </div>
-  );
+  return <LoginShell heading={subtitle}>{children}</LoginShell>;
 }

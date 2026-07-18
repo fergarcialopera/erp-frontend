@@ -19,7 +19,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Inter", "Poppins", "system-ui", "sans-serif"],
+        heading: ["Poppins", "Inter", "system-ui", "sans-serif"],
         mono: ["JetBrains Mono", "monospace"],
       },
       colors: {
@@ -28,9 +29,15 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        navy: {
+          950: "hsl(var(--ll-navy-950))",
+          900: "hsl(var(--ll-navy-900))",
+          800: "hsl(var(--ll-navy-800))",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          hover: "hsl(var(--ll-turquoise-600))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -84,6 +91,14 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        xl: "1.125rem",
+        "2xl": "1.75rem",
+        "3xl": "2.25rem",
+      },
+      boxShadow: {
+        soft: "0 16px 40px hsla(220, 87%, 6%, 0.08)",
+        card: "0 12px 32px hsla(220, 87%, 6%, 0.06)",
+        hero: "0 28px 80px hsla(220, 87%, 6%, 0.28)",
       },
       keyframes: {
         "accordion-down": {
@@ -98,6 +113,10 @@ export default {
           from: { opacity: "0", transform: "translateY(4px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
+        "fade-up": {
+          from: { opacity: "0", transform: "translateY(16px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
         "slide-in": {
           from: { opacity: "0", transform: "translateX(-8px)" },
           to: { opacity: "1", transform: "translateX(0)" },
@@ -107,6 +126,7 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
+        "fade-up": "fade-up 0.6s ease-out both",
         "slide-in": "slide-in 0.2s ease-out",
       },
     },

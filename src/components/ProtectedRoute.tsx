@@ -2,6 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/useAuth";
 import { Role } from "@/types/models";
 import type { AuthPermission } from "@/types/auth";
+import LandingPage from "@/features/landing/LandingPage";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -47,12 +48,12 @@ export function ProtectedRoute({
   return <>{children}</>;
 }
 
-/** Redirige SUPER_ADMIN al espacio global y usuarios clínicos al ERP. */
+/** Landing pública si no hay sesión; con sesión, home por rol. */
 export function RoleHomeRedirect() {
   const { isAuthenticated, hasPermission } = useAuth();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <LandingPage />;
   }
 
   if (hasPermission("superAdminPlatform")) {

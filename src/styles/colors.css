@@ -2,29 +2,33 @@
    LogiLock color primitives
    Single source of truth for brand colors.
    Values are HSL channels (without hsl()) for Tailwind: hsl(var(--token)).
+   Hex references from brand palette.
    ========================================================================== */
 
 :root {
-  /* Brand */
-  --ll-navy-950: 220 87% 6%;
-  --ll-navy-900: 215 76% 10%;
-  --ll-navy-800: 213 80% 15%;
-  --ll-turquoise-500: 167 90% 48%;
-  --ll-turquoise-600: 172 100% 37%;
-  --ll-turquoise-100: 168 66% 91%;
+  /* Brand — navy */
+  --ll-navy-950: 220 87% 6%;   /* #020B1D */
+  --ll-navy-900: 215 76% 10%;  /* #06162D */
+  --ll-navy-800: 213 80% 15%;  /* #082447 */
+
+  /* Brand — turquoise accent */
+  --ll-turquoise-500: 167 90% 48%; /* #0CE8B9 */
+  --ll-turquoise-600: 172 100% 37%; /* #00BFA6 */
+  --ll-turquoise-100: 168 66% 91%; /* #D8F7F1 */
+  --ll-turquoise-disabled: 168 20% 60%; /* muted for disabled primary text */
 
   /* Neutrals */
-  --ll-white: 0 0% 100%;
-  --ll-bg: 204 45% 98%;
-  --ll-muted: 210 31% 95%;
-  --ll-border: 213 27% 92%;
-  --ll-text: 217 58% 10%;
-  --ll-text-muted: 214 17% 39%;
-  --ll-text-on-dark: 210 40% 98%;
-  --ll-text-muted-on-dark: 216 26% 78%;
+  --ll-white: 0 0% 100%;           /* #FFFFFF */
+  --ll-bg: 204 45% 98%;            /* #F7FAFC */
+  --ll-muted: 210 31% 95%;         /* #EEF2F6 */
+  --ll-border: 213 27% 92%;        /* #E5EAF0 */
+  --ll-text: 217 58% 10%;          /* #0B172A */
+  --ll-text-muted: 214 17% 39%;    /* #526174 */
+  --ll-text-on-dark: 210 40% 98%;  /* #F8FAFC */
+  --ll-text-muted-on-dark: 216 26% 78%; /* #B7C3D5 */
 
   /* Functional */
-  --ll-warning-500: 36 100% 65%;
-  --ll-warning-700: 35 100% 36%;
+  --ll-warning-500: 36 100% 65%;   /* #FFB84D */
+  --ll-warning-700: 35 100% 36%;   /* #B76A00 */
   --ll-destructive: 0 60% 45%;
 }

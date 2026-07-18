@@ -105,12 +105,18 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r-0">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded bg-sidebar-primary flex items-center justify-center shrink-0">
-            <span className="text-sidebar-primary-foreground font-bold text-sm">ERP</span>
-          </div>
+          <img
+            src="/favicon/favicon.svg"
+            alt=""
+            className="h-8 w-8 shrink-0"
+            width={32}
+            height={32}
+          />
           {!collapsed && (
             <div className="animate-slide-in">
-              <div className="font-semibold text-sidebar-foreground text-sm">LogiLock</div>
+              <div className="font-heading text-sm font-semibold text-sidebar-foreground">
+                <span className="text-sidebar-primary">Logi</span>Lock
+              </div>
               <div className="text-[11px] text-sidebar-foreground/60">Sistema de gestión</div>
             </div>
           )}

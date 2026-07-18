@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -44,7 +44,7 @@
     --input: var(--ll-border);
     --ring: var(--ll-turquoise-500);
 
-    --radius: 0.375rem;
+    --radius: 0.75rem;
 
     --sidebar-background: var(--ll-navy-950);
     --sidebar-foreground: var(--ll-text-muted-on-dark);
@@ -118,7 +118,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight text-foreground;
+    @apply font-heading font-semibold tracking-tight text-foreground;
   }
 }
 
@@ -128,7 +128,7 @@
   }
 
   .page-title {
-    @apply text-xl sm:text-2xl font-semibold tracking-tight;
+    @apply text-xl sm:text-2xl font-heading font-semibold tracking-tight;
   }
 
   .page-description {
@@ -136,14 +136,37 @@
   }
 
   .stat-card {
-    @apply rounded-md border bg-card p-4 shadow-sm;
+    @apply rounded-xl border bg-card p-4 shadow-card;
   }
 
   .table-container {
-    @apply rounded-md border bg-card overflow-x-auto;
+    @apply rounded-xl border bg-card overflow-x-auto shadow-card;
   }
 
   .table-container table {
     @apply text-xs leading-snug sm:text-sm sm:leading-normal;
+  }
+
+  .ll-container {
+    @apply w-[min(100%-2rem,1180px)] mx-auto sm:w-[min(100%-2.5rem,1180px)];
+  }
+
+  .ll-section {
+    @apply py-16 md:py-24 lg:py-[clamp(4rem,8vw,7.5rem)];
+  }
+
+  .ll-section-dark {
+    @apply relative overflow-hidden text-[hsl(var(--ll-text-on-dark))];
+    background:
+      radial-gradient(circle at 80% 10%, hsla(167, 90%, 48%, 0.1), transparent 30%),
+      linear-gradient(135deg, hsl(var(--ll-navy-950)) 0%, hsl(var(--ll-navy-900)) 56%, hsl(var(--ll-navy-800)) 100%);
+  }
+
+  .ll-eyebrow {
+    @apply m-0 mb-3 text-[0.78rem] font-bold uppercase tracking-[0.12em] text-primary;
+  }
+
+  .ll-title {
+    @apply m-0 font-heading font-bold tracking-[-0.045em] leading-[1.02] text-inherit;
   }
 }
