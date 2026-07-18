@@ -1,5 +1,3 @@
-import { Lock } from "lucide-react";
-
 interface LoginShellProps {
   title?: string;
   subtitle?: string;
@@ -17,9 +15,11 @@ export function LoginShell({
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-lg animate-fade-in">
         <div className="flex flex-col items-center mb-8">
-          <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center mb-4">
-            <Lock className="h-6 w-6 text-primary-foreground" />
-          </div>
+          <img
+            src="/favicon/favicon.svg"
+            alt="LogiLock"
+            className="h-14 w-14 mb-4"
+          />
           <h1 className="text-xl font-semibold">{title}</h1>
           <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
         </div>
