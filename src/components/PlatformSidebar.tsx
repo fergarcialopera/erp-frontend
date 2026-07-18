@@ -7,7 +7,6 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -15,9 +14,7 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { LogOut } from "lucide-react";
-import { getUserDisplayName } from "@/lib/userDisplay";
-import { Separator } from "@/components/ui/separator";
+import { SidebarUserMenu } from "@/components/SidebarUserMenu";
 
 export function PlatformSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
@@ -35,10 +32,15 @@ export function PlatformSidebar() {
       ? location.pathname === "/platform"
       : location.pathname === path || location.pathname.startsWith(`${path}/`);
 
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login", { replace: true });
+  };
+
   return (
-    <Sidebar collapsible="icon" className="border-r-0">
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-2">
+    <Sidebar collapsible="icon">
+      <SidebarHeader className={`p-3 ${collapsed ? "flex items-center justify-center" : ""}`}>
+        <div className={`flex items-center gap-2 ${collapsed ? "justify-center" : ""}`}>
           <img
             src="/favicon/favicon.svg"
             alt=""
@@ -58,10 +60,7 @@ export function PlatformSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest">
-            Administración
-          </SidebarGroupLabel>
+        <SidebarGroup className="p-2">
           <SidebarGroupContent>
             <SidebarMenu>
               {platformNav.map((item) => (
@@ -85,36 +84,13 @@ export function PlatformSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3">
-        <Separator className="mb-3 bg-sidebar-border" />
-        {!collapsed && user && (
-          <div className="px-2 mb-2 animate-fade-in">
-            <div className="text-xs font-medium text-sidebar-foreground truncate">
-              {getUserDisplayName(user)}
-            </div>
-            <div className="text-[10px] text-sidebar-foreground/50 truncate">{user.email}</div>
-            <div className="mt-1">
-              <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-sidebar-primary/20 text-sidebar-primary">
-                SUPER_ADMIN
-              </span>
-            </div>
-          </div>
-        )}
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Cerrar sesión"
-              onClick={async () => {
-                await logout();
-                navigate("/login", { replace: true });
-              }}
-              className="text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-            >
-              <LogOut className="h-4 w-4" />
-              {!collapsed && <span>Cerrar sesión</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarFooter className={`p-3 ${collapsed ? "items-center" : ""}`}>
+        <SidebarUserMenu
+          user={user}
+          roleLabel="SUPER_ADMIN"
+          collapsed={collapsed}
+          onLogout={handleLogout}
+        />
       </SidebarFooter>
     </Sidebar>
   );
