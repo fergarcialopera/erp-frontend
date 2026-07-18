@@ -304,7 +304,7 @@ export function LoginFlow() {
   }
 
   return (
-    <LoginShell subtitle={stepSubtitle}>
+    <LoginShell heading={stepSubtitle}>
       {error && step !== "locked" && (
         <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2 mb-4">
           <AlertCircle className="h-4 w-4 shrink-0" />
