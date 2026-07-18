@@ -1,0 +1,40 @@
+---
+description: CI con npm ci y actualizaciones del ecosistema Vite en bloque
+globs: package.json,package-lock.json,.github/**
+alwaysApply: false
+---
+
+# GitHub Actions y dependencias Vite
+
+## CI
+
+- Los workflows deben instalar con `npm ci` (nunca `npm install` en CI).
+- No usar `--legacy-peer-deps` ni `--force` en Actions: ocultan conflictos de peers.
+- El job de CI (`.github/workflows/ci.yml`) debe fallar en PRs si `npm ci`, lint, test o build fallan.
+- Deploy en `main` asume que CI ya validó la resolución de dependencias.
+
+## Ecosistema Vite
+
+Al tocar majors o minors de tooling de build/test, actualizar **juntos**:
+
+- `vite`
+- `@vitejs/plugin-react-swc` (o `@vitejs/plugin-react`)
+- `vitest` y `@vitest/*` si aplica
+- `lovable-tagger` (peer de Vite; p. ej. >= 1.3.0 para Vite 8)
+
+Antes de mergear: regenerar `package-lock.json` y verificar con `npm ci`.
+
+```json
+// ❌ BAD — Vite 8 con plugin/tagger que no declaran peer ^8
+"vite": "^8.1.3",
+"@vitejs/plugin-react-swc": "^3.11.0",
+"lovable-tagger": "^1.1.13"
+
+// ✅ GOOD — peers alineados con Vite 8
+"vite": "^8.1.3",
+"@vitejs/plugin-react-swc": "^4.3.1",
+"vitest": "^4.1.0",
+"lovable-tagger": "^1.3.1"
+```
+
+Dependabot agrupa estos paquetes en `vite-ecosystem`; no aceptar bumps sueltos de `vite` sin el resto del grupo.
