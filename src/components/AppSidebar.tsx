@@ -7,18 +7,15 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarFooter,
   SidebarHeader,
+  SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { LogOut } from "lucide-react";
-import { getUserDisplayName } from "@/lib/userDisplay";
-import { Separator } from "@/components/ui/separator";
-
+import { SidebarUserMenu } from "@/components/SidebarUserMenu";
 import type { AuthPermission } from "@/types/auth";
 
 function filterNav<T extends { requiredRole: import("@/types/models").Role; requiredPermission?: AuthPermission }>(
@@ -34,15 +31,11 @@ function filterNav<T extends { requiredRole: import("@/types/models").Role; requ
 }
 
 function NavGroup({
-  label,
   items,
-  collapsed,
   isActive,
   onNavigate,
 }: {
-  label: string;
   items: typeof mainNav;
-  collapsed: boolean;
   isActive: (path: string) => boolean;
   onNavigate?: () => void;
 }) {
@@ -51,10 +44,7 @@ function NavGroup({
   }
 
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel className="text-sidebar-foreground/40 text-[10px] uppercase tracking-widest">
-        {label}
-      </SidebarGroupLabel>
+    <SidebarGroup className="!p-3">
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => (
@@ -64,11 +54,11 @@ function NavGroup({
                   to={item.url}
                   end={item.url === "/dashboard"}
                   onClick={onNavigate}
-                  className="text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                  activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                  className="text-sidebar-foreground/70 hover:text-sidebar-foreground"
+                  activeClassName="text-sidebar-accent-foreground font-medium"
                 >
                   <item.icon className="h-4 w-4" />
-                  {!collapsed && <span>{item.title}</span>}
+                  <span>{item.title}</span>
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -94,80 +84,48 @@ export function AppSidebar() {
     navigate("/login", { replace: true });
   };
 
-  const visibleMainNav = filterNav(mainNav, can, hasPermission);
-  const visibleManagementNav = filterNav(managementNav, can, hasPermission);
-  const visibleConfigNav = filterNav(configNav, can, hasPermission);
+  const groups = [
+    filterNav(mainNav, can, hasPermission),
+    filterNav(managementNav, can, hasPermission),
+    filterNav(configNav, can, hasPermission),
+  ].filter((items) => items.length > 0);
 
   const isActive = (path: string) =>
     location.pathname === path || location.pathname.startsWith(path + "/");
 
   return (
-    <Sidebar collapsible="icon" className="border-r-0">
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded bg-sidebar-primary flex items-center justify-center shrink-0">
-            <span className="text-sidebar-primary-foreground font-bold text-sm">ERP</span>
-          </div>
-          {!collapsed && (
-            <div className="animate-slide-in">
-              <div className="font-semibold text-sidebar-foreground text-sm">LogiLock</div>
-              <div className="text-[11px] text-sidebar-foreground/60">Sistema de gestión</div>
+    <Sidebar collapsible="icon">
+      <SidebarHeader className="!p-3">
+        <div className="flex h-10 items-center gap-2 overflow-hidden">
+          <img
+            src="/favicon/favicon.svg"
+            alt=""
+            className="h-8 w-8 shrink-0"
+            width={32}
+            height={32}
+          />
+          <div className="min-w-0 max-w-[11rem] overflow-hidden opacity-100 transition-[opacity,max-width] duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] group-data-[collapsible=icon]:max-w-0 group-data-[collapsible=icon]:opacity-0">
+            <div className="whitespace-nowrap font-heading text-sm font-semibold text-sidebar-foreground">
+              <span className="text-sidebar-primary">Logi</span>Lock
             </div>
-          )}
+            <div className="whitespace-nowrap text-[11px] text-sidebar-foreground/60">
+              Sistema de gestión
+            </div>
+          </div>
         </div>
       </SidebarHeader>
 
       <SidebarContent>
-        <NavGroup
-          label="Operaciones"
-          items={visibleMainNav}
-          collapsed={collapsed}
-          isActive={isActive}
-          onNavigate={closeMobileMenu}
-        />
-        <NavGroup
-          label="Gestión"
-          items={visibleManagementNav}
-          collapsed={collapsed}
-          isActive={isActive}
-          onNavigate={closeMobileMenu}
-        />
-        <NavGroup
-          label="Configuración"
-          items={visibleConfigNav}
-          collapsed={collapsed}
-          isActive={isActive}
-          onNavigate={closeMobileMenu}
-        />
+        {groups.map((items, index) => (
+          <div key={items.map((item) => item.url).join("|")}>
+            {index > 0 && <SidebarSeparator className="my-1" />}
+            <NavGroup items={items} isActive={isActive} onNavigate={closeMobileMenu} />
+          </div>
+        ))}
       </SidebarContent>
 
-      <SidebarFooter className="p-3">
-        <Separator className="mb-3 bg-sidebar-border" />
-        {!collapsed && user && (
-          <div className="px-2 mb-2 animate-fade-in">
-            <div className="text-xs font-medium text-sidebar-foreground truncate">
-              {getUserDisplayName(user)}
-            </div>
-            <div className="text-[10px] text-sidebar-foreground/50 truncate">{user.email}</div>
-            <div className="mt-1">
-              <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-sidebar-primary/20 text-sidebar-primary">
-                {user.role}
-              </span>
-            </div>
-          </div>
-        )}
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Cerrar sesión"
-              onClick={handleLogout}
-              className="text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-            >
-              <LogOut className="h-4 w-4" />
-              {!collapsed && <span>Cerrar sesión</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarFooter className="!p-3">
+        <SidebarUserMenu user={user} collapsed={collapsed} onLogout={handleLogout} />
       </SidebarFooter>
     </Sidebar>
   );

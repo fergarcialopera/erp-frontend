@@ -1,31 +1,47 @@
-import { Lock } from "lucide-react";
-
 interface LoginShellProps {
-  title?: string;
-  subtitle?: string;
+  heading?: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
 }
 
 export function LoginShell({
-  title = "LogiLock",
-  subtitle = "Acceso al sistema",
+  heading,
   children,
   footer,
 }: LoginShellProps) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-lg animate-fade-in">
-        <div className="flex flex-col items-center mb-8">
-          <div className="h-12 w-12 rounded-lg bg-primary flex items-center justify-center mb-4">
-            <Lock className="h-6 w-6 text-primary-foreground" />
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="w-full max-w-lg animate-fade-up">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <div className="mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-sidebar">
+            <img
+              src="/favicon/favicon.svg"
+              alt=""
+              className="h-16 w-16"
+              width={64}
+              height={64}
+            />
           </div>
-          <h1 className="text-xl font-semibold">{title}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+          <h1 className="font-heading text-3xl font-bold tracking-tight text-secondary sm:text-[2rem]">
+            <span className="text-primary">Logi</span>
+            Lock
+          </h1>
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
+            Stock, trazabilidad y acceso inteligente en una única plataforma.
+          </p>
+          <div className="mt-4 h-0.5 w-10 rounded-full bg-primary" aria-hidden />
         </div>
-        <div className="bg-card rounded-lg border p-6 shadow-sm">{children}</div>
+
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
+          {heading ? (
+            <h2 className="mb-4 text-center font-heading text-base font-semibold">{heading}</h2>
+          ) : null}
+          {children}
+        </div>
+
         {footer ? <div className="mt-4">{footer}</div> : null}
-        <p className="text-center text-[11px] text-muted-foreground mt-6">
+
+        <p className="mt-6 text-center text-[11px] text-muted-foreground">
           Sistema interno · Acceso restringido
         </p>
       </div>
