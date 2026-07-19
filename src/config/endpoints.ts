@@ -9,8 +9,7 @@ const BASE_URL = `${API_BASE_URL}${API_BASEPATH}`;
 export const getApiBaseUrl = () => BASE_URL;
 
 /** Construir URL absoluta (por si se necesita fuera de apiClient). */
-export const buildUrl = (path: string) =>
-  `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+export const buildUrl = (path: string) => `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
 
 /** Factory para recursos CRUD estándar (list, create, detail). */
 const resource = (base: string) =>
@@ -48,8 +47,7 @@ export const ENDPOINTS = {
     LIST: "/clinics",
     CREATE: "/clinics",
     DETAIL: (id: string) => `/clinics/${id}`,
-    PRODUCT: (clinicId: string, productId: string) =>
-      `/clinics/${clinicId}/products/${productId}`,
+    PRODUCT: (clinicId: string, productId: string) => `/clinics/${clinicId}/products/${productId}`,
     AMBIENTE: (clinicId: string, ambienteId: string) =>
       `/clinics/${clinicId}/ambientes/${ambienteId}`,
     ASSOCIATE_AMBIENTE: (clinicId: string) => `/clinics/${clinicId}/ambientes`,
@@ -72,7 +70,27 @@ export const ENDPOINTS = {
   PRODUCTS: {
     ...resource("/products"),
     STOCK_LOCATIONS: (id: string) => `/products/${id}/stock-locations`,
+    SUPPLIERS: (id: string) => `/products/${id}/suppliers`,
+    SUPPLIER: (id: string, productSupplierId: string) =>
+      `/products/${id}/suppliers/${productSupplierId}`,
+    SUPPLIER_PREFERRED: (id: string, productSupplierId: string) =>
+      `/products/${id}/suppliers/${productSupplierId}/preferred`,
   },
+  CATEGORIES: resource("/categories"),
+  SUBCATEGORIES: resource("/subcategories"),
+  BRANDS: {
+    ...resource("/brands"),
+    SUPPLIERS: (id: string) => `/brands/${id}/suppliers`,
+    SUPPLIER: (id: string, supplierId: string) => `/brands/${id}/suppliers/${supplierId}`,
+  },
+  SUPPLIERS: resource("/suppliers"),
+  DISPENSING_TYPES: {
+    ...resource("/dispensing-types"),
+    ROLES: (id: string) => `/dispensing-types/${id}/roles`,
+    ROLE: (id: string, roleId: string) => `/dispensing-types/${id}/roles/${roleId}`,
+  },
+  /** Roles operativos de locker (no confundir con users.role de autenticación). */
+  ROLES: resource("/roles"),
   INVENTORY: {
     LIST: "/inventory",
     /** Corrección de stock por ubicación (solo ADMIN, incidencias). */

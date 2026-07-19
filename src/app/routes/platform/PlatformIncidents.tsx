@@ -55,7 +55,13 @@ function severityLabel(severity: IncidentSeverity | string | undefined): string 
 
 export default function PlatformIncidentsPage() {
   const queryClient = useQueryClient();
-  const { data: incidents = [], isLoading, isFetching, isError, refetch } = useIncidents(null, {
+  const {
+    data: incidents = [],
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useIncidents(null, {
     platformScope: true,
   });
   const [editing, setEditing] = useState<Incident | null>(null);
@@ -139,7 +145,9 @@ export default function PlatformIncidentsPage() {
     <div className="space-y-6">
       <div className="page-header">
         <h2 className="page-title">Incidencias</h2>
-        <p className="page-description">Seguimiento y resolución de incidencias en todas las clínicas.</p>
+        <p className="page-description">
+          Seguimiento y resolución de incidencias en todas las clínicas.
+        </p>
       </div>
 
       <DataTable

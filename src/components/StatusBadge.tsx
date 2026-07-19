@@ -24,7 +24,7 @@ function resolveVariant(status: string): BadgeVariant {
 
 interface StatusBadgeProps {
   status: string;
-  type?: "active";
+  type?: BadgeVariant;
   className?: string;
 }
 

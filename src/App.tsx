@@ -31,6 +31,12 @@ import PlatformHomePage from "@/app/routes/platform/PlatformHome";
 import PlatformClinicsPage from "@/app/routes/platform/PlatformClinics";
 import PlatformClinicDetailPage from "@/app/routes/platform/PlatformClinicDetail";
 import PlatformProductsPage from "@/app/routes/platform/PlatformProducts";
+import PlatformCategoriesPage from "@/app/routes/platform/PlatformCategories";
+import PlatformSubcategoriesPage from "@/app/routes/platform/PlatformSubcategories";
+import PlatformBrandsPage from "@/app/routes/platform/PlatformBrands";
+import PlatformSuppliersPage from "@/app/routes/platform/PlatformSuppliers";
+import PlatformDispensingTypesPage from "@/app/routes/platform/PlatformDispensingTypes";
+import PlatformRolesPage from "@/app/routes/platform/PlatformRoles";
 import PlatformAmbientesPage from "@/app/routes/platform/PlatformAmbientes";
 import PlatformAmbienteDetailPage from "@/app/routes/platform/PlatformAmbienteDetail";
 import PlatformIncidentsPage from "@/app/routes/platform/PlatformIncidents";
@@ -75,6 +81,12 @@ const App = () => (
               <Route path="/platform/clinics/:id" element={<PlatformClinicDetailPage />} />
               <Route path="/platform/users" element={<UsersPage />} />
               <Route path="/platform/products" element={<PlatformProductsPage />} />
+              <Route path="/platform/categories" element={<PlatformCategoriesPage />} />
+              <Route path="/platform/subcategories" element={<PlatformSubcategoriesPage />} />
+              <Route path="/platform/brands" element={<PlatformBrandsPage />} />
+              <Route path="/platform/suppliers" element={<PlatformSuppliersPage />} />
+              <Route path="/platform/dispensing-types" element={<PlatformDispensingTypesPage />} />
+              <Route path="/platform/roles" element={<PlatformRolesPage />} />
               <Route path="/platform/ambientes" element={<PlatformAmbientesPage />} />
               <Route path="/platform/ambientes/:id" element={<PlatformAmbienteDetailPage />} />
               <Route path="/platform/incidents" element={<PlatformIncidentsPage />} />

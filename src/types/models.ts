@@ -48,8 +48,7 @@ function normalizeRole(role: unknown): Role {
 
 export function mapUserFromApiResponse(data: Partial<UserApiResponse>): User {
   const email = String(data.email ?? "");
-  const name =
-    data.name != null && String(data.name).trim() !== "" ? String(data.name).trim() : "";
+  const name = data.name != null && String(data.name).trim() !== "" ? String(data.name).trim() : "";
 
   return {
     id: String(data.id ?? ""),
@@ -82,16 +81,170 @@ export interface Zona {
   is_active: boolean;
 }
 
+/** Referencia embebida de catálogo (categoría, marca, etc.). */
+export interface CatalogRef {
+  id: string;
+  name: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Subcategory {
+  id: string;
+  category_id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Brand {
+  id: string;
+  name: string;
+  slug: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  slug: string;
+  legal_name?: string | null;
+  tax_id?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface DispensingType {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+/** Rol operativo de locker (tabla roles); distinto de users.role de autenticación. */
+export interface OperationalRole {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface ProductSupplierLink {
+  id: string;
+  product_id: string;
+  supplier_id: string;
+  name: string;
+  supplier_reference?: string | null;
+  purchase_price?: number | null;
+  pvp?: number | null;
+  net_cost?: number | null;
+  is_preferred: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BrandSupplierLink {
+  id: string;
+  brand_id: string;
+  supplier_id: string;
+  supplier_name: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface DispensingTypeRoleLink {
+  id: string;
+  dispensing_type_id: string;
+  role_id: string;
+  role_name: string;
+  role_slug: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Product {
   id: string;
-  clinic_id: string;
+  /** Presente en contextos clínicos antiguos; el catálogo global no lo incluye. */
+  clinic_id?: string;
   sku: string;
   name: string;
-  barcode?: string;
+  barcode?: string | null;
+  internal_reference?: string | null;
+  category_id?: string | null;
+  subcategory_id?: string | null;
+  brand_id?: string | null;
+  dispensing_type_id?: string | null;
+  unit_of_measure?: string;
   /** Activo en catálogo global (SUPER_ADMIN). */
   is_active: boolean;
   /** Visible en la clínica actual; habilita operaciones con el producto en esa clínica. */
   is_visible?: boolean;
+  category?: CatalogRef | null;
+  subcategory?: CatalogRef | null;
+  brand?: CatalogRef | null;
+  dispensing_type?: CatalogRef | null;
+  /** Incluidos en GET /products/{id}. */
+  suppliers?: ProductSupplierLink[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+/** Body create producto (SKU lo genera el servidor). */
+export interface ProductCreatePayload {
+  name: string;
+  barcode?: string | null;
+  internal_reference?: string | null;
+  category_id?: string | null;
+  subcategory_id?: string | null;
+  brand_id?: string | null;
+  dispensing_type_id?: string | null;
+  is_active?: boolean;
+  unit_of_measure?: string;
+}
+
+export type ProductUpdatePayload = Partial<ProductCreatePayload>;
+
+export interface ProductSupplierPayload {
+  supplier_id: string;
+  supplier_reference?: string | null;
+  purchase_price?: number | null;
+  pvp?: number | null;
+  net_cost?: number | null;
+  is_preferred?: boolean;
+}
+
+/** Filtros de listado de productos (enviados como query; filtrado cliente de respaldo). */
+export interface ProductListFilters {
+  active?: boolean;
+  category_id?: string;
+  subcategory_id?: string;
+  brand_id?: string;
+  dispensing_type_id?: string;
+  supplier_id?: string;
+  search?: string;
 }
 
 /** GET /products/{id}/stock-locations — ubicación con stock > 0. */

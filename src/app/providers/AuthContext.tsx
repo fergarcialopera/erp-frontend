@@ -9,8 +9,10 @@ import {
   canAccessManagement,
   canAccessOperations,
   canEditIncidents,
+  canEditProductRelations,
   canManageCatalogAmbientes,
   canManageCatalogProducts,
+  canManageCatalogs,
   canManageUsers,
   canToggleAmbienteClinicSettings,
   canToggleProductClinicSettings,
@@ -74,10 +76,9 @@ function readInitialState(): AuthState {
   };
 }
 
-function applyUserLoginResult(result: UserLoginResult): Pick<
-  AuthState,
-  "accessToken" | "user" | "isAuthenticated" | "clinicId"
-> {
+function applyUserLoginResult(
+  result: UserLoginResult,
+): Pick<AuthState, "accessToken" | "user" | "isAuthenticated" | "clinicId"> {
   setAccessToken(result.access_token);
   setAuthUserJson(JSON.stringify(result.user));
 
@@ -113,11 +114,7 @@ interface AuthContextType extends AuthState {
   /** Login global (sin token de clínica); solo acepta cuentas SUPER_ADMIN. */
   loginSuperAdmin: (email: string, password: string) => Promise<void>;
   loginClinic: (clinicId: string, password: string) => Promise<ClinicLoginResult>;
-  loginPin: (
-    userId: string,
-    pin: string,
-    profile?: Pick<User, "name" | "email">,
-  ) => Promise<void>;
+  loginPin: (userId: string, pin: string, profile?: Pick<User, "name" | "email">) => Promise<void>;
   applyClinicSession: (result: ClinicLoginResult) => void;
   logout: () => Promise<void>;
   logoutUser: () => Promise<void>;
@@ -135,6 +132,8 @@ interface AuthContextType extends AuthState {
   canManageUsers: () => boolean;
   canManageCatalogProducts: () => boolean;
   canManageCatalogAmbientes: () => boolean;
+  canManageCatalogs: () => boolean;
+  canEditProductRelations: () => boolean;
   canToggleProductClinicSettings: () => boolean;
   canToggleAmbienteClinicSettings: () => boolean;
   canEditIncidents: () => boolean;
@@ -198,11 +197,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const loginClinic = useCallback(async (clinicId: string, password: string) => {
-    const result = await apiLoginClinic(clinicId, password);
-    applyClinicSession(result);
-    return result;
-  }, [applyClinicSession]);
+  const loginClinic = useCallback(
+    async (clinicId: string, password: string) => {
+      const result = await apiLoginClinic(clinicId, password);
+      applyClinicSession(result);
+      return result;
+    },
+    [applyClinicSession],
+  );
 
   const completeUserLogin = useCallback(
     (result: UserLoginResult, profile?: Pick<User, "name" | "email">) => {
@@ -380,8 +382,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         canManageUsers: () => (role ? canManageUsers(role) : false),
         canManageCatalogProducts: () => (role ? canManageCatalogProducts(role) : false),
         canManageCatalogAmbientes: () => (role ? canManageCatalogAmbientes(role) : false),
-        canToggleProductClinicSettings: () =>
-          role ? canToggleProductClinicSettings(role) : false,
+        canManageCatalogs: () => (role ? canManageCatalogs(role) : false),
+        canEditProductRelations: () => (role ? canEditProductRelations(role) : false),
+        canToggleProductClinicSettings: () => (role ? canToggleProductClinicSettings(role) : false),
         canToggleAmbienteClinicSettings: () =>
           role ? canToggleAmbienteClinicSettings(role) : false,
         canEditIncidents: () => (role ? canEditIncidents(role) : false),

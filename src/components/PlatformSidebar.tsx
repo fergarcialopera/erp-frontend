@@ -1,12 +1,13 @@
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/useAuth";
-import { platformNav } from "@/config/platformNavigation";
+import { platformNav, type PlatformNavItem } from "@/config/platformNavigation";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -15,6 +16,21 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { SidebarUserMenu } from "@/components/SidebarUserMenu";
+import { useMemo } from "react";
+
+function groupNav(items: PlatformNavItem[]) {
+  const groups: { label: string | null; items: PlatformNavItem[] }[] = [];
+  for (const item of items) {
+    const label = item.section ?? null;
+    const last = groups[groups.length - 1];
+    if (last && last.label === label) {
+      last.items.push(item);
+    } else {
+      groups.push({ label, items: [item] });
+    }
+  }
+  return groups;
+}
 
 export function PlatformSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
@@ -22,6 +38,7 @@ export function PlatformSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const navGroups = useMemo(() => groupNav(platformNav), []);
 
   const closeMobileMenu = () => {
     if (isMobile) setOpenMobile(false);
@@ -60,28 +77,31 @@ export function PlatformSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup className="!p-3">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {platformNav.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                    <NavLink
-                      to={item.url}
-                      end={item.url === "/platform"}
-                      onClick={closeMobileMenu}
-                      className="text-sidebar-foreground/70 hover:text-sidebar-foreground"
-                      activeClassName="text-sidebar-accent-foreground font-medium"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {navGroups.map((group, index) => (
+          <SidebarGroup key={group.label ?? `main-${index}`} className="!p-3">
+            {group.label ? <SidebarGroupLabel>{group.label}</SidebarGroupLabel> : null}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+                      <NavLink
+                        to={item.url}
+                        end={item.url === "/platform"}
+                        onClick={closeMobileMenu}
+                        className="text-sidebar-foreground/70 hover:text-sidebar-foreground"
+                        activeClassName="text-sidebar-accent-foreground font-medium"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter className="!p-3">

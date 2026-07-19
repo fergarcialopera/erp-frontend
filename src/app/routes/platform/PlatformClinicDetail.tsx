@@ -13,10 +13,7 @@ import {
 } from "@/components/ui/select";
 import { useClinics, CLINICS_QUERY_KEY } from "@/features/clinics/queries";
 import { useAmbientes } from "@/features/ambientes/queries";
-import {
-  associateAmbienteToClinic,
-  disassociateAmbienteFromClinic,
-} from "@/features/clinics/api";
+import { associateAmbienteToClinic, disassociateAmbienteFromClinic } from "@/features/clinics/api";
 import { toast } from "sonner";
 import { StatusBadge } from "@/components/StatusBadge";
 
@@ -122,7 +119,9 @@ export default function PlatformClinicDetailPage() {
         </div>
 
         {linkedAmbientes.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No hay ambientes vinculados a esta clínica.</p>
+          <p className="text-sm text-muted-foreground">
+            No hay ambientes vinculados a esta clínica.
+          </p>
         ) : (
           <ul className="divide-y rounded-md border">
             {linkedAmbientes.map((a) => (

@@ -1,11 +1,18 @@
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useProducts } from "@/features/products/queries";
+import {
+  useBrands,
+  useCategories,
+  useDispensingTypes,
+  useSubcategories,
+} from "@/features/catalog/queries";
 import { patchClinicProductSettingsByClinic } from "@/features/clinics/api";
 import { DataTable, Column } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -16,15 +23,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/app/providers/useAuth";
 import { Settings2 } from "lucide-react";
 import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
 import { Product } from "@/types/models";
-import {
-  PRODUCTS_NEW_QUERY_PARAM,
-  PRODUCTS_NEW_QUERY_VALUE,
-} from "@/features/products/constants";
+import { PRODUCTS_NEW_QUERY_PARAM, PRODUCTS_NEW_QUERY_VALUE } from "@/features/products/constants";
+
+const NONE = "__none__";
 
 function resolveClinicVisible(product: Product): boolean {
   return product.is_visible === true;
@@ -43,13 +56,63 @@ export default function ProductsPage() {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const { clinicId, canToggleProductClinicSettings } = useAuth();
+
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [categoryFilter, setCategoryFilter] = useState(NONE);
+  const [subcategoryFilter, setSubcategoryFilter] = useState(NONE);
+  const [brandFilter, setBrandFilter] = useState(NONE);
+  const [dispensingFilter, setDispensingFilter] = useState(NONE);
+  const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
+
+  const listFilters = useMemo(
+    () => ({
+      ...(categoryFilter !== NONE ? { category_id: categoryFilter } : {}),
+      ...(subcategoryFilter !== NONE ? { subcategory_id: subcategoryFilter } : {}),
+      ...(brandFilter !== NONE ? { brand_id: brandFilter } : {}),
+      ...(dispensingFilter !== NONE ? { dispensing_type_id: dispensingFilter } : {}),
+      ...(deferredSearch.trim() ? { search: deferredSearch.trim() } : {}),
+      ...(statusFilter === "inactive" ? { active: false as const } : {}),
+    }),
+    [
+      categoryFilter,
+      subcategoryFilter,
+      brandFilter,
+      dispensingFilter,
+      deferredSearch,
+      statusFilter,
+    ],
+  );
+
   const {
-    data: records,
+    data: records = [],
     isLoading: productsLoading,
     isFetching: productsFetching,
     isError,
     refetch,
-  } = useProducts(clinicId, { activeOnly: false });
+  } = useProducts(clinicId, {
+    activeOnly: statusFilter === "active",
+    filters: Object.keys(listFilters).length ? listFilters : undefined,
+  });
+
+  const filteredRecords = useMemo(() => {
+    if (statusFilter === "inactive") return records.filter((p) => !p.is_active);
+    return records;
+  }, [records, statusFilter]);
+
+  const { data: categories = [] } = useCategories();
+  const { data: allSubcategories = [] } = useSubcategories();
+  const { data: brands = [] } = useBrands();
+  const { data: dispensingTypes = [] } = useDispensingTypes();
+
+  const filterSubcategories = useMemo(
+    () =>
+      categoryFilter !== NONE
+        ? allSubcategories.filter((s) => s.category_id === categoryFilter)
+        : allSubcategories,
+    [allSubcategories, categoryFilter],
+  );
+
   const isLoading = productsLoading || productsFetching;
   const canConfigureClinic = canToggleProductClinicSettings();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -57,16 +120,16 @@ export default function ProductsPage() {
 
   const baseColumns: Column<Product>[] = [
     {
-      key: "sku",
-      header: "SKU",
-      sortable: true,
-      render: (p) => <span className={tableCell.mono}>{p.sku}</span>,
-    },
-    {
       key: "name",
       header: "NOMBRE",
       sortable: true,
       render: (p) => <span className={tableCell.primary}>{p.name}</span>,
+    },
+    {
+      key: "internal_reference",
+      header: "REF. INTERNA",
+      hideBelowMd: true,
+      render: (p) => <span className={tableCell.mono}>{p.internal_reference || "—"}</span>,
     },
     {
       key: "barcode",
@@ -77,24 +140,38 @@ export default function ProductsPage() {
       ),
     },
     {
+      key: "category",
+      header: "CATEGORÍA",
+      hideBelowMd: true,
+      render: (p) => <span className={tableCell.muted}>{p.category?.name || "—"}</span>,
+    },
+    {
+      key: "subcategory",
+      header: "SUBCATEGORÍA",
+      hideBelowMd: true,
+      render: (p) => <span className={tableCell.muted}>{p.subcategory?.name || "—"}</span>,
+    },
+    {
+      key: "brand",
+      header: "MARCA",
+      hideBelowMd: true,
+      render: (p) => <span className={tableCell.muted}>{p.brand?.name || "—"}</span>,
+    },
+    {
+      key: "dispensing_type",
+      header: "DISPENSACIÓN",
+      hideBelowMd: true,
+      render: (p) => <span className={tableCell.muted}>{p.dispensing_type?.name || "—"}</span>,
+    },
+    {
       key: "is_active",
       header: "CATÁLOGO",
-      render: (p) => (
-        <StatusBadge
-          status={catalogStatusLabel(p)}
-          type={p.is_active ? "active" : "inactive"}
-        />
-      ),
+      render: (p) => <StatusBadge status={catalogStatusLabel(p)} type="active" />,
     },
     {
       key: "is_visible",
       header: "EN CLÍNICA",
-      render: (p) => (
-        <StatusBadge
-          status={clinicVisibilityLabel(p)}
-          type={p.is_active && resolveClinicVisible(p) ? "active" : "inactive"}
-        />
-      ),
+      render: (p) => <StatusBadge status={clinicVisibilityLabel(p)} type="active" />,
     },
   ];
 
@@ -142,9 +219,6 @@ export default function ProductsPage() {
       return patchClinicProductSettingsByClinic(clinicId, productId, { visible });
     },
     onSuccess: (updatedProduct) => {
-      queryClient.setQueryData<Product[]>(["products", clinicId, false], (current) =>
-        current?.map((product) => (product.id === updatedProduct.id ? updatedProduct : product)),
-      );
       queryClient.invalidateQueries({ queryKey: ["products", clinicId] });
       toast.success("Visibilidad actualizada", {
         description: `«${updatedProduct.name}» — ${updatedProduct.is_visible ? "visible" : "oculto"} en esta clínica.`,
@@ -179,18 +253,105 @@ export default function ProductsPage() {
       </div>
 
       <DataTable
-        data={records || []}
+        data={filteredRecords}
         isLoading={isLoading}
         isError={isError}
         onRetry={() => refetch()}
         columns={columns}
-        searchKey="name"
-        searchPlaceholder="Buscar producto..."
+        searchPlaceholder="Buscar por nombre, barcode o referencia…"
         emptyTitle="Sin productos"
         emptyDescription="No hay productos registrados aún."
+        filters={
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              className="h-9 w-[220px]"
+              placeholder="Buscar…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
+            >
+              <SelectTrigger className="h-9 w-[140px]">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Activos</SelectItem>
+                <SelectItem value="inactive">Inactivos</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={categoryFilter}
+              onValueChange={(v) => {
+                setCategoryFilter(v);
+                setSubcategoryFilter(NONE);
+              }}
+            >
+              <SelectTrigger className="h-9 w-[160px]">
+                <SelectValue placeholder="Categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Todas las categorías</SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={subcategoryFilter}
+              onValueChange={setSubcategoryFilter}
+              disabled={categoryFilter === NONE}
+            >
+              <SelectTrigger className="h-9 w-[170px]">
+                <SelectValue placeholder="Subcategoría" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Todas las subcategorías</SelectItem>
+                {filterSubcategories.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={brandFilter} onValueChange={setBrandFilter}>
+              <SelectTrigger className="h-9 w-[150px]">
+                <SelectValue placeholder="Marca" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Todas las marcas</SelectItem>
+                {brands.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={dispensingFilter} onValueChange={setDispensingFilter}>
+              <SelectTrigger className="h-9 w-[170px]">
+                <SelectValue placeholder="Dispensación" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>Todos los tipos</SelectItem>
+                {dispensingTypes.map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        }
       />
 
-      <Dialog open={editingProduct !== null} onOpenChange={(open) => !open && closeClinicSettings()}>
+      <Dialog
+        open={editingProduct !== null}
+        onOpenChange={(open) => !open && closeClinicSettings()}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Visibilidad en clínica</DialogTitle>
@@ -209,7 +370,7 @@ export default function ProductsPage() {
               <p className="mt-2">
                 <StatusBadge
                   status={editingProduct ? catalogStatusLabel(editingProduct) : "—"}
-                  type={editingProduct?.is_active ? "active" : "inactive"}
+                  type="active"
                 />
               </p>
             </div>
