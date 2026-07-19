@@ -19,10 +19,9 @@ export type PlatformNavItem = {
   url: string;
   icon: typeof LayoutDashboard;
   description?: string;
-  /** Agrupa ítems bajo una sección en el sidebar. */
+  /** Clave de agrupación en el sidebar (sin título visible; grupos separados por divisor). */
   section?: string;
 };
-
 export const platformNav: PlatformNavItem[] = [
   {
     title: "Inicio",
