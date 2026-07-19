@@ -10,13 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TABLE_CHIP_CLASS, tableCell } from "@/components/tableTypography";
+import {
+  ListFilterField,
+  ListFiltersToolbar,
+  type ListFilterChip,
+} from "@/components/ListFiltersToolbar";
 import { useClinics } from "@/features/clinics/queries";
 import { useActivityAuditLogDetail, useActivityAuditLogs } from "@/features/auditLogs/queries";
 import { AuditTablePagination } from "@/features/auditLogs/components/AuditTablePagination";
@@ -38,9 +38,7 @@ const TYPE_OPTIONS = [
   { value: "delete", label: "Baja" },
 ] as const;
 
-const columns = (
-  showClinic: boolean,
-): Column<ActivityAuditLog>[] => [
+const columns = (showClinic: boolean): Column<ActivityAuditLog>[] => [
   {
     key: "type",
     header: "ACCIÓN",
@@ -87,7 +85,9 @@ const columns = (
     header: "FECHA",
     sortable: true,
     render: (log) => (
-      <span className={`${tableCell.muted} tabular-nums`}>{formatAuditDate(log.registered_at)}</span>
+      <span className={`${tableCell.muted} tabular-nums`}>
+        {formatAuditDate(log.registered_at)}
+      </span>
     ),
   },
 ];
@@ -129,6 +129,35 @@ export default function AuditActivityLogs({ platformScope = false }: AuditScopeP
   const meta = data?.meta ?? { page: 1, per_page: perPage, total: 0 };
   const tableColumns = useMemo(() => columns(platformScope), [platformScope]);
 
+  const advancedActiveCount = platformScope && clinicFilter !== ALL ? 1 : 0;
+
+  const filterChips: ListFilterChip[] = useMemo(() => {
+    const chips: ListFilterChip[] = [];
+    if (typeFilter !== ALL) {
+      const label = TYPE_OPTIONS.find((o) => o.value === typeFilter)?.label ?? typeFilter;
+      chips.push({
+        id: "type",
+        label: `Acción: ${label}`,
+        onRemove: () => {
+          setTypeFilter(ALL);
+          setPage(1);
+        },
+      });
+    }
+    if (platformScope && clinicFilter !== ALL) {
+      const name = clinics.find((c) => c.id === clinicFilter)?.name ?? "Clínica";
+      chips.push({
+        id: "clinic",
+        label: `Clínica: ${name}`,
+        onRemove: () => {
+          setClinicFilter(ALL);
+          setPage(1);
+        },
+      });
+    }
+    return chips;
+  }, [typeFilter, clinicFilter, platformScope, clinics]);
+
   return (
     <div className="space-y-6">
       <div className="page-header">
@@ -145,33 +174,34 @@ export default function AuditActivityLogs({ platformScope = false }: AuditScopeP
       </div>
 
       <DataTable
-          data={records}
-          columns={tableColumns}
-          isLoading={isLoading}
-          isRefreshing={isRefreshing}
-          isError={isError}
-          onRetry={() => refetch()}
-          onRowClick={(log) => setSelectedId(log.id)}
-          searchKey="entity"
-          searchPlaceholder="Buscar por entidad..."
-          emptyTitle="Sin registros de actividad"
-          emptyDescription="No hay cambios registrados que coincidan con los filtros."
-          hidePagination
-          pageSize={perPage}
-          footer={
-            <AuditTablePagination
-              meta={meta}
-              pageSize={perPage}
-              isRefreshing={isRefreshing}
-              onPageChange={setPage}
-              onPageSizeChange={(size) => {
-                setPerPage(size);
-                setPage(1);
-              }}
-            />
-          }
-          filters={
-            <>
+        data={records}
+        columns={tableColumns}
+        isLoading={isLoading}
+        isRefreshing={isRefreshing}
+        isError={isError}
+        onRetry={() => refetch()}
+        onRowClick={(log) => setSelectedId(log.id)}
+        searchKey="entity"
+        searchPlaceholder="Buscar por entidad..."
+        emptyTitle="Sin registros de actividad"
+        emptyDescription="No hay cambios registrados que coincidan con los filtros."
+        hidePagination
+        pageSize={perPage}
+        footer={
+          <AuditTablePagination
+            meta={meta}
+            pageSize={perPage}
+            isRefreshing={isRefreshing}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => {
+              setPerPage(size);
+              setPage(1);
+            }}
+          />
+        }
+        filters={
+          <ListFiltersToolbar
+            primaryFilters={
               <Select
                 value={typeFilter}
                 onValueChange={(v) => {
@@ -179,7 +209,7 @@ export default function AuditActivityLogs({ platformScope = false }: AuditScopeP
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="h-9 w-full sm:w-[160px]">
+                <SelectTrigger className="h-9 w-[160px]">
                   <SelectValue placeholder="Tipo de acción" />
                 </SelectTrigger>
                 <SelectContent>
@@ -190,30 +220,42 @@ export default function AuditActivityLogs({ platformScope = false }: AuditScopeP
                   ))}
                 </SelectContent>
               </Select>
-              {platformScope && (
-                <Select
-                  value={clinicFilter}
-                  onValueChange={(v) => {
-                    setClinicFilter(v);
-                    setPage(1);
-                  }}
-                >
-                  <SelectTrigger className="h-9 w-full sm:w-[200px]">
-                    <SelectValue placeholder="Clínica" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ALL}>Todas las clínicas</SelectItem>
-                    {clinics.map((clinic) => (
-                      <SelectItem key={clinic.id} value={clinic.id}>
-                        {clinic.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </>
-          }
-        />
+            }
+            advancedActiveCount={advancedActiveCount}
+            chips={filterChips}
+            onClearAll={() => {
+              setTypeFilter(ALL);
+              setClinicFilter(ALL);
+              setPage(1);
+            }}
+            advancedFilters={
+              platformScope ? (
+                <ListFilterField label="Clínica">
+                  <Select
+                    value={clinicFilter}
+                    onValueChange={(v) => {
+                      setClinicFilter(v);
+                      setPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="h-9 w-full">
+                      <SelectValue placeholder="Clínica" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={ALL}>Todas las clínicas</SelectItem>
+                      {clinics.map((clinic) => (
+                        <SelectItem key={clinic.id} value={clinic.id}>
+                          {clinic.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </ListFilterField>
+              ) : undefined
+            }
+          />
+        }
+      />
 
       <Dialog open={selectedId != null} onOpenChange={(open) => !open && setSelectedId(null)}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">

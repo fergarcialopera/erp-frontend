@@ -12,7 +12,6 @@ import { patchClinicProductSettingsByClinic } from "@/features/clinics/api";
 import { DataTable, Column } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -36,8 +35,14 @@ import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
 import { Product } from "@/types/models";
 import { PRODUCTS_NEW_QUERY_PARAM, PRODUCTS_NEW_QUERY_VALUE } from "@/features/products/constants";
+import {
+  ListFilterField,
+  ListFiltersToolbar,
+  LIST_FILTER_NONE,
+  type ListFilterChip,
+} from "@/components/ListFiltersToolbar";
 
-const NONE = "__none__";
+const NONE = LIST_FILTER_NONE;
 
 function resolveClinicVisible(product: Product): boolean {
   return product.is_visible === true;
@@ -112,6 +117,77 @@ export default function ProductsPage() {
         : allSubcategories,
     [allSubcategories, categoryFilter],
   );
+
+  const clearAdvancedFilters = () => {
+    setCategoryFilter(NONE);
+    setSubcategoryFilter(NONE);
+    setBrandFilter(NONE);
+    setDispensingFilter(NONE);
+  };
+
+  const advancedActiveCount = [
+    categoryFilter !== NONE,
+    subcategoryFilter !== NONE,
+    brandFilter !== NONE,
+    dispensingFilter !== NONE,
+  ].filter(Boolean).length;
+
+  const filterChips: ListFilterChip[] = useMemo(() => {
+    const chips: ListFilterChip[] = [];
+    if (statusFilter !== "all") {
+      chips.push({
+        id: "status",
+        label: statusFilter === "active" ? "Estado: Activos" : "Estado: Inactivos",
+        onRemove: () => setStatusFilter("all"),
+      });
+    }
+    if (categoryFilter !== NONE) {
+      const name = categories.find((c) => c.id === categoryFilter)?.name ?? "Categoría";
+      chips.push({
+        id: "category",
+        label: `Categoría: ${name}`,
+        onRemove: () => {
+          setCategoryFilter(NONE);
+          setSubcategoryFilter(NONE);
+        },
+      });
+    }
+    if (subcategoryFilter !== NONE) {
+      const name = allSubcategories.find((s) => s.id === subcategoryFilter)?.name ?? "Subcategoría";
+      chips.push({
+        id: "subcategory",
+        label: `Subcategoría: ${name}`,
+        onRemove: () => setSubcategoryFilter(NONE),
+      });
+    }
+    if (brandFilter !== NONE) {
+      const name = brands.find((b) => b.id === brandFilter)?.name ?? "Marca";
+      chips.push({
+        id: "brand",
+        label: `Marca: ${name}`,
+        onRemove: () => setBrandFilter(NONE),
+      });
+    }
+    if (dispensingFilter !== NONE) {
+      const name = dispensingTypes.find((d) => d.id === dispensingFilter)?.name ?? "Dispensación";
+      chips.push({
+        id: "dispensing",
+        label: `Dispensación: ${name}`,
+        onRemove: () => setDispensingFilter(NONE),
+      });
+    }
+    return chips;
+  }, [
+    statusFilter,
+    categoryFilter,
+    subcategoryFilter,
+    brandFilter,
+    dispensingFilter,
+    categories,
+    allSubcategories,
+    brands,
+    dispensingTypes,
+  ]);
 
   const isLoading = productsLoading || productsFetching;
   const canConfigureClinic = canToggleProductClinicSettings();
@@ -262,89 +338,108 @@ export default function ProductsPage() {
         emptyTitle="Sin productos"
         emptyDescription="No hay productos registrados aún."
         filters={
-          <div className="flex flex-wrap items-center gap-2">
-            <Input
-              className="h-9 w-[220px]"
-              placeholder="Buscar…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <Select
-              value={statusFilter}
-              onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
-            >
-              <SelectTrigger className="h-9 w-[140px]">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="active">Activos</SelectItem>
-                <SelectItem value="inactive">Inactivos</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={categoryFilter}
-              onValueChange={(v) => {
-                setCategoryFilter(v);
-                setSubcategoryFilter(NONE);
-              }}
-            >
-              <SelectTrigger className="h-9 w-[160px]">
-                <SelectValue placeholder="Categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>Todas las categorías</SelectItem>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={subcategoryFilter}
-              onValueChange={setSubcategoryFilter}
-              disabled={categoryFilter === NONE}
-            >
-              <SelectTrigger className="h-9 w-[170px]">
-                <SelectValue placeholder="Subcategoría" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>Todas las subcategorías</SelectItem>
-                {filterSubcategories.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={brandFilter} onValueChange={setBrandFilter}>
-              <SelectTrigger className="h-9 w-[150px]">
-                <SelectValue placeholder="Marca" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>Todas las marcas</SelectItem>
-                {brands.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={dispensingFilter} onValueChange={setDispensingFilter}>
-              <SelectTrigger className="h-9 w-[170px]">
-                <SelectValue placeholder="Dispensación" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>Todos los tipos</SelectItem>
-                {dispensingTypes.map((d) => (
-                  <SelectItem key={d.id} value={d.id}>
-                    {d.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <ListFiltersToolbar
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Buscar por nombre, barcode o referencia…"
+            primaryFilters={
+              <Select
+                value={statusFilter}
+                onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
+              >
+                <SelectTrigger className="h-9 w-[140px]">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="active">Activos</SelectItem>
+                  <SelectItem value="inactive">Inactivos</SelectItem>
+                </SelectContent>
+              </Select>
+            }
+            advancedActiveCount={advancedActiveCount}
+            chips={filterChips}
+            onClearAll={() => {
+              setStatusFilter("all");
+              clearAdvancedFilters();
+            }}
+            advancedFilters={
+              <>
+                <ListFilterField label="Categoría">
+                  <Select
+                    value={categoryFilter}
+                    onValueChange={(v) => {
+                      setCategoryFilter(v);
+                      setSubcategoryFilter(NONE);
+                    }}
+                  >
+                    <SelectTrigger className="h-9 w-full">
+                      <SelectValue placeholder="Categoría" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>Todas las categorías</SelectItem>
+                      {categories.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </ListFilterField>
+                <ListFilterField label="Subcategoría">
+                  <Select
+                    value={subcategoryFilter}
+                    onValueChange={setSubcategoryFilter}
+                    disabled={categoryFilter === NONE}
+                  >
+                    <SelectTrigger className="h-9 w-full">
+                      <SelectValue
+                        placeholder={categoryFilter === NONE ? "Elige categoría" : "Subcategoría"}
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>Todas las subcategorías</SelectItem>
+                      {filterSubcategories.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </ListFilterField>
+                <ListFilterField label="Marca">
+                  <Select value={brandFilter} onValueChange={setBrandFilter}>
+                    <SelectTrigger className="h-9 w-full">
+                      <SelectValue placeholder="Marca" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>Todas las marcas</SelectItem>
+                      {brands.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </ListFilterField>
+                <ListFilterField label="Tipo de dispensación">
+                  <Select value={dispensingFilter} onValueChange={setDispensingFilter}>
+                    <SelectTrigger className="h-9 w-full">
+                      <SelectValue placeholder="Dispensación" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>Todos los tipos</SelectItem>
+                      {dispensingTypes.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>
+                          {d.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </ListFilterField>
+              </>
+            }
+          />
         }
       />
 

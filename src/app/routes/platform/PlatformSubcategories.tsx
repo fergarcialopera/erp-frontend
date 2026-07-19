@@ -31,6 +31,11 @@ import { useCategories, useSubcategories } from "@/features/catalog/queries";
 import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
 import { TableHeaderButton } from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
+import {
+  ListFiltersToolbar,
+  LIST_FILTER_NONE,
+  type ListFilterChip,
+} from "@/components/ListFiltersToolbar";
 import { toast } from "sonner";
 import { toastMutationError } from "@/lib/toastMutationError";
 import type { Subcategory } from "@/types/models";
@@ -44,7 +49,7 @@ const schema = z.object({
 
 type Form = z.infer<typeof schema>;
 
-const ALL_CATEGORIES = "__all__";
+const ALL_CATEGORIES = LIST_FILTER_NONE;
 
 export default function PlatformSubcategoriesPage() {
   const queryClient = useQueryClient();
@@ -162,6 +167,18 @@ export default function PlatformSubcategoriesPage() {
     else setSearchParams({});
   };
 
+  const filterChips: ListFilterChip[] = useMemo(() => {
+    if (!filterCategoryId) return [];
+    const name = categoryNameById.get(filterCategoryId) ?? "Categoría";
+    return [
+      {
+        id: "category",
+        label: `Categoría: ${name}`,
+        onRemove: () => onFilterChange(ALL_CATEGORIES),
+      },
+    ];
+  }, [filterCategoryId, categoryNameById]);
+
   const columns: Column<Subcategory>[] = [
     {
       key: "name",
@@ -239,19 +256,25 @@ export default function PlatformSubcategoriesPage() {
         emptyTitle="Sin subcategorías"
         emptyDescription="Crea la primera subcategoría del catálogo."
         filters={
-          <Select value={filterCategoryId || ALL_CATEGORIES} onValueChange={onFilterChange}>
-            <SelectTrigger className="w-[220px]">
-              <SelectValue placeholder="Filtrar por categoría" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_CATEGORIES}>Todas las categorías</SelectItem>
-              {categories.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ListFiltersToolbar
+            primaryFilters={
+              <Select value={filterCategoryId || ALL_CATEGORIES} onValueChange={onFilterChange}>
+                <SelectTrigger className="h-9 w-[220px]">
+                  <SelectValue placeholder="Filtrar por categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL_CATEGORIES}>Todas las categorías</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            }
+            chips={filterChips}
+            onClearAll={filterCategoryId ? () => onFilterChange(ALL_CATEGORIES) : undefined}
+          />
         }
         headerAction={
           <TableHeaderButton label="Nueva subcategoría" icon={<Plus />} onClick={openCreate} />
