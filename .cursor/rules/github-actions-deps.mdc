@@ -1,10 +1,10 @@
 ---
-description: CI con npm ci y actualizaciones del ecosistema Vite en bloque
+description: CI con npm ci y actualizaciones Dependabot agrupadas (sin majors automáticos)
 globs: package.json,package-lock.json,.github/**
 alwaysApply: false
 ---
 
-# GitHub Actions y dependencias Vite
+# GitHub Actions y dependencias
 
 ## CI
 
@@ -12,6 +12,25 @@ alwaysApply: false
 - No usar `--legacy-peer-deps` ni `--force` en Actions: ocultan conflictos de peers.
 - El job de CI (`.github/workflows/ci.yml`) debe fallar en PRs si `npm ci`, lint, test o build fallan.
 - Deploy en `main` asume que CI ya validó la resolución de dependencias.
+
+## Dependabot
+
+Configurado en `.github/dependabot.yml`:
+
+- Solo **minor/patch** automáticos (`ignore` de majors).
+- Paquetes relacionados van en **grupos** (un PR por ecosistema), no PRs sueltos.
+
+Grupos npm:
+
+| Grupo | Patrones |
+|---|---|
+| `react-ecosystem` | `react`, `react-dom`, `@types/react`, `@types/react-dom` |
+| `radix-ui` | `@radix-ui/*` |
+| `vite-ecosystem` | `vite`, `@vitejs/*`, `vitest`, `@vitest/*`, `lovable-tagger` |
+| `eslint-ecosystem` | `eslint`, `eslint-*`, `@eslint/*`, `typescript-eslint` |
+| `testing-library` | `@testing-library/*`, `jsdom` |
+
+Los majors (p. ej. React 18→19, Recharts 2→3) se hacen a mano, con `package-lock.json` regenerado y `npm ci` verificado.
 
 ## Ecosistema Vite
 
@@ -37,4 +56,20 @@ Antes de mergear: regenerar `package-lock.json` y verificar con `npm ci`.
 "lovable-tagger": "^1.3.1"
 ```
 
-Dependabot agrupa estos paquetes en `vite-ecosystem`; no aceptar bumps sueltos de `vite` sin el resto del grupo.
+## Ecosistema React
+
+Mantener siempre la misma major entre runtime y types:
+
+```json
+// ❌ BAD — peers rotos (ERESOLVE en npm ci)
+"react": "^18.3.1",
+"react-dom": "^19.2.7",
+"@types/react": "^18.3.23",
+"@types/react-dom": "^19.2.3"
+
+// ✅ GOOD
+"react": "^18.3.1",
+"react-dom": "^18.3.1",
+"@types/react": "^18.3.23",
+"@types/react-dom": "^18.3.7"
+```
