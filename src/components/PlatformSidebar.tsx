@@ -1,7 +1,7 @@
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/app/providers/useAuth";
-import { platformNav } from "@/config/platformNavigation";
+import { platformNav, type PlatformNavItem } from "@/config/platformNavigation";
 import {
   Sidebar,
   SidebarContent,
@@ -12,9 +12,62 @@ import {
   SidebarMenuItem,
   SidebarFooter,
   SidebarHeader,
+  SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { SidebarUserMenu } from "@/components/SidebarUserMenu";
+import { useMemo } from "react";
+
+/** Agrupa ítems consecutivos con la misma `section` (sin título visible). */
+function groupNav(items: PlatformNavItem[]) {
+  const groups: PlatformNavItem[][] = [];
+  for (const item of items) {
+    const section = item.section ?? null;
+    const last = groups[groups.length - 1];
+    const lastSection = last?.[0]?.section ?? null;
+    if (last && lastSection === section) {
+      last.push(item);
+    } else {
+      groups.push([item]);
+    }
+  }
+  return groups;
+}
+
+function NavGroup({
+  items,
+  isActive,
+  onNavigate,
+}: {
+  items: PlatformNavItem[];
+  isActive: (path: string) => boolean;
+  onNavigate?: () => void;
+}) {
+  return (
+    <SidebarGroup className="!p-3">
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
+                <NavLink
+                  to={item.url}
+                  end={item.url === "/platform"}
+                  onClick={onNavigate}
+                  className="text-sidebar-foreground/70 hover:text-sidebar-foreground"
+                  activeClassName="text-sidebar-accent-foreground font-medium"
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.title}</span>
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
+}
 
 export function PlatformSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
@@ -22,6 +75,7 @@ export function PlatformSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const navGroups = useMemo(() => groupNav(platformNav), []);
 
   const closeMobileMenu = () => {
     if (isMobile) setOpenMobile(false);
@@ -60,28 +114,12 @@ export function PlatformSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup className="!p-3">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {platformNav.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                    <NavLink
-                      to={item.url}
-                      end={item.url === "/platform"}
-                      onClick={closeMobileMenu}
-                      className="text-sidebar-foreground/70 hover:text-sidebar-foreground"
-                      activeClassName="text-sidebar-accent-foreground font-medium"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {navGroups.map((items, index) => (
+          <div key={items.map((item) => item.url).join("|")}>
+            {index > 0 && <SidebarSeparator className="my-1" />}
+            <NavGroup items={items} isActive={isActive} onNavigate={closeMobileMenu} />
+          </div>
+        ))}
       </SidebarContent>
 
       <SidebarFooter className="!p-3">

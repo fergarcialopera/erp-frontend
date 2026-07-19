@@ -126,6 +126,16 @@ export function canManageCatalogAmbientes(role: Role): boolean {
   return role === "SUPER_ADMIN";
 }
 
+/** CRUD de categorías, subcategorías, marcas, proveedores, tipos y roles operativos. */
+export function canManageCatalogs(role: Role): boolean {
+  return role === "SUPER_ADMIN";
+}
+
+/** Relaciones producto-proveedor, marca-proveedor y tipo-rol. */
+export function canEditProductRelations(role: Role): boolean {
+  return role === "SUPER_ADMIN";
+}
+
 /** ADMIN: activar producto en clínica y controlar visibilidad en salidas. */
 export function canToggleProductClinicSettings(role: Role): boolean {
   return role === "ADMIN";
@@ -139,13 +149,12 @@ export function canEditIncidents(role: Role): boolean {
   return role === "SUPER_ADMIN";
 }
 
-export type AuthPermission =
-  | "clinicApp"
-  | "superAdminPlatform"
-  | "audit"
-  | "manageUsers";
+export type AuthPermission = "clinicApp" | "superAdminPlatform" | "audit" | "manageUsers";
 
-export function hasAuthPermission(role: Role | undefined | null, permission: AuthPermission): boolean {
+export function hasAuthPermission(
+  role: Role | undefined | null,
+  permission: AuthPermission,
+): boolean {
   if (!role) return false;
   switch (permission) {
     case "clinicApp":

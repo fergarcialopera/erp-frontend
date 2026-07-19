@@ -50,10 +50,7 @@ const columns: Column<ClinicListItem>[] = [
     key: "visible",
     header: "KIOSK",
     render: (c) => (
-      <StatusBadge
-        status={c.visible !== false ? "Visible en login" : "Oculta"}
-        type="active"
-      />
+      <StatusBadge status={c.visible !== false ? "Visible en login" : "Oculta"} type="active" />
     ),
   },
 ];
@@ -163,7 +160,9 @@ export default function PlatformClinicsPage() {
               <Label htmlFor="clinic-name">Nombre</Label>
               <Input id="clinic-name" {...createForm.register("name")} />
               {createForm.formState.errors.name && (
-                <p className="text-xs text-destructive">{createForm.formState.errors.name.message}</p>
+                <p className="text-xs text-destructive">
+                  {createForm.formState.errors.name.message}
+                </p>
               )}
             </div>
             <div className="space-y-2">
@@ -178,7 +177,9 @@ export default function PlatformClinicsPage() {
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
                 <Label>Visible en login kiosk</Label>
-                <p className="text-xs text-muted-foreground">Si está oculta, no aparecerá al iniciar sesión.</p>
+                <p className="text-xs text-muted-foreground">
+                  Si está oculta, no aparecerá al iniciar sesión.
+                </p>
               </div>
               <Switch
                 checked={createForm.watch("visible")}

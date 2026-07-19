@@ -126,9 +126,7 @@ export default function PlatformAmbienteDetailPage() {
     {
       key: "is_active",
       header: "ESTADO",
-      render: (z) => (
-        <StatusBadge status={z.is_active ? "Activo" : "Inactivo"} type="active" />
-      ),
+      render: (z) => <StatusBadge status={z.is_active ? "Activo" : "Inactivo"} type="active" />,
     },
     {
       key: "actions",
@@ -166,7 +164,12 @@ export default function PlatformAmbienteDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate("/platform/ambientes")}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => navigate("/platform/ambientes")}
+          >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="page-header mb-0">

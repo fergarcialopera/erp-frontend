@@ -6,6 +6,12 @@ import {
   Lock,
   AlertTriangle,
   ScrollText,
+  Tags,
+  Layers,
+  Award,
+  Truck,
+  Pill,
+  Shield,
 } from "lucide-react";
 
 export type PlatformNavItem = {
@@ -13,8 +19,9 @@ export type PlatformNavItem = {
   url: string;
   icon: typeof LayoutDashboard;
   description?: string;
+  /** Clave de agrupación en el sidebar (sin título visible; grupos separados por divisor). */
+  section?: string;
 };
-
 export const platformNav: PlatformNavItem[] = [
   {
     title: "Inicio",
@@ -41,6 +48,48 @@ export const platformNav: PlatformNavItem[] = [
     description: "Catálogo global",
   },
   {
+    title: "Categorías",
+    url: "/platform/categories",
+    icon: Tags,
+    description: "Categorías de producto",
+    section: "Catálogos",
+  },
+  {
+    title: "Subcategorías",
+    url: "/platform/subcategories",
+    icon: Layers,
+    description: "Subcategorías de producto",
+    section: "Catálogos",
+  },
+  {
+    title: "Marcas",
+    url: "/platform/brands",
+    icon: Award,
+    description: "Marcas y proveedores",
+    section: "Catálogos",
+  },
+  {
+    title: "Proveedores",
+    url: "/platform/suppliers",
+    icon: Truck,
+    description: "Proveedores del catálogo",
+    section: "Catálogos",
+  },
+  {
+    title: "Tipos de dispensación",
+    url: "/platform/dispensing-types",
+    icon: Pill,
+    description: "Tipos y roles permitidos",
+    section: "Catálogos",
+  },
+  {
+    title: "Roles operativos",
+    url: "/platform/roles",
+    icon: Shield,
+    description: "Roles de locker",
+    section: "Catálogos",
+  },
+  {
     title: "Ambientes",
     url: "/platform/ambientes",
     icon: Lock,
@@ -65,6 +114,12 @@ export const PLATFORM_PAGE_TITLES: Record<string, string> = {
   "/platform/clinics": "Clínicas",
   "/platform/users": "Usuarios",
   "/platform/products": "Productos",
+  "/platform/categories": "Categorías",
+  "/platform/subcategories": "Subcategorías",
+  "/platform/brands": "Marcas",
+  "/platform/suppliers": "Proveedores",
+  "/platform/dispensing-types": "Tipos de dispensación",
+  "/platform/roles": "Roles operativos",
   "/platform/ambientes": "Ambientes",
   "/platform/incidents": "Incidencias",
   "/platform/audit-logs": "Auditoría",

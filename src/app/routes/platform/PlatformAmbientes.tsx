@@ -52,16 +52,19 @@ const columns: Column<Ambiente>[] = [
   {
     key: "is_active",
     header: "ESTADO",
-    render: (a) => (
-      <StatusBadge status={a.is_active ? "Activo" : "Inactivo"} type="active" />
-    ),
+    render: (a) => <StatusBadge status={a.is_active ? "Activo" : "Inactivo"} type="active" />,
   },
 ];
 
 export default function PlatformAmbientesPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: records = [], isLoading, isError, refetch } = useAmbientes(null, {
+  const {
+    data: records = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useAmbientes(null, {
     platformScope: true,
   });
   const [open, setOpen] = useState(false);
@@ -121,10 +124,7 @@ export default function PlatformAmbientesPage() {
           <DialogHeader>
             <DialogTitle>Nuevo ambiente</DialogTitle>
           </DialogHeader>
-          <form
-            onSubmit={form.handleSubmit((d) => createMutation.mutate(d))}
-            className="space-y-4"
-          >
+          <form onSubmit={form.handleSubmit((d) => createMutation.mutate(d))} className="space-y-4">
             <div className="space-y-2">
               <Label>Nombre</Label>
               <Input {...form.register("name")} />

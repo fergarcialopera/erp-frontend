@@ -157,26 +157,26 @@ export function DataTable<T extends object>({
   return (
     <div className="table-container">
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 sm:p-4 border-b">
-        {filters ? (
-          <div className="flex flex-wrap items-center gap-2 min-w-0">{filters}</div>
-        ) : null}
-        <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto sm:ml-auto shrink-0">
-          {searchKey && (
-            <div className="relative w-full min-w-0 sm:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(0);
-                }}
-                placeholder={searchPlaceholder}
-                className="pl-9 h-9 bg-background"
-              />
-            </div>
-          )}
-          {headerAction}
+      <div className="flex flex-col gap-3 border-b p-3 sm:p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          {filters ? <div className="min-w-0 flex-1">{filters}</div> : null}
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:ml-auto">
+            {searchKey && (
+              <div className="relative w-full min-w-0 sm:w-72">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(0);
+                  }}
+                  placeholder={searchPlaceholder}
+                  className="h-9 bg-background pl-9"
+                />
+              </div>
+            )}
+            {headerAction}
+          </div>
         </div>
       </div>
 
@@ -185,64 +185,64 @@ export function DataTable<T extends object>({
         className={`relative transition-opacity ${isRefreshing ? "opacity-50 pointer-events-none" : ""}`}
         aria-busy={isRefreshing}
       >
-      {paged.length === 0 ? (
-        <EmptyState title={emptyTitle} description={emptyDescription} action={emptyAction} />
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              {columns.map((col) => (
-                <TableHead
-                  key={col.key}
-                  className={`${TABLE_HEAD_CLASS} ${columnVisibilityClass(col)} ${col.className || ""}`}
-                >
-                  {col.sortable ? (
-                    <button
-                      onClick={() => handleSort(col.key)}
-                      className="flex items-center gap-0.5 sm:gap-1 hover:text-foreground transition-colors max-w-full text-left"
-                    >
-                      {col.header}
-                      {sortKey === col.key ? (
-                        sortDir === "asc" ? (
-                          <ArrowUp className="h-3 w-3" />
-                        ) : (
-                          <ArrowDown className="h-3 w-3" />
-                        )
-                      ) : (
-                        <ArrowUpDown className="h-3 w-3 opacity-40" />
-                      )}
-                    </button>
-                  ) : (
-                    col.header
-                  )}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paged.map((item, idx) => {
-              const rowIndex = page * pageSize + idx;
-              const rowId = (item as { id?: string }).id;
-              return (
-              <TableRow
-                key={rowId != null && rowId !== "" ? `${rowId}-${rowIndex}` : `row-${rowIndex}`}
-                className={onRowClick ? "cursor-pointer" : ""}
-                onClick={() => onRowClick?.(item)}
-              >
+        {paged.length === 0 ? (
+          <EmptyState title={emptyTitle} description={emptyDescription} action={emptyAction} />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
                 {columns.map((col) => (
-                  <TableCell
+                  <TableHead
                     key={col.key}
-                    className={`${columnVisibilityClass(col)} ${col.className || ""}`}
+                    className={`${TABLE_HEAD_CLASS} ${columnVisibilityClass(col)} ${col.className || ""}`}
                   >
-                    {col.render ? col.render(item) : item[col.key]}
-                  </TableCell>
+                    {col.sortable ? (
+                      <button
+                        onClick={() => handleSort(col.key)}
+                        className="flex items-center gap-0.5 sm:gap-1 hover:text-foreground transition-colors max-w-full text-left"
+                      >
+                        {col.header}
+                        {sortKey === col.key ? (
+                          sortDir === "asc" ? (
+                            <ArrowUp className="h-3 w-3" />
+                          ) : (
+                            <ArrowDown className="h-3 w-3" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="h-3 w-3 opacity-40" />
+                        )}
+                      </button>
+                    ) : (
+                      col.header
+                    )}
+                  </TableHead>
                 ))}
               </TableRow>
-            );
-            })}
-          </TableBody>
-        </Table>
-      )}
+            </TableHeader>
+            <TableBody>
+              {paged.map((item, idx) => {
+                const rowIndex = page * pageSize + idx;
+                const rowId = (item as { id?: string }).id;
+                return (
+                  <TableRow
+                    key={rowId != null && rowId !== "" ? `${rowId}-${rowIndex}` : `row-${rowIndex}`}
+                    className={onRowClick ? "cursor-pointer" : ""}
+                    onClick={() => onRowClick?.(item)}
+                  >
+                    {columns.map((col) => (
+                      <TableCell
+                        key={col.key}
+                        className={`${columnVisibilityClass(col)} ${col.className || ""}`}
+                      >
+                        {col.render ? col.render(item) : item[col.key]}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
       </div>
 
       {footer}

@@ -5,6 +5,8 @@ import {
   canAccessConfig,
   canAccessManagement,
   canAccessOperations,
+  canEditProductRelations,
+  canManageCatalogs,
   canManageUsers,
   canToggleProductClinicSettings,
   hasClinicPermission,
@@ -35,5 +37,9 @@ describe("auth permissions", () => {
     expect(canAccessAudit("TECHNICIAN")).toBe(false);
     expect(canToggleProductClinicSettings("ADMIN")).toBe(true);
     expect(canToggleProductClinicSettings("TECHNICIAN")).toBe(false);
+    expect(canManageCatalogs("SUPER_ADMIN")).toBe(true);
+    expect(canManageCatalogs("ADMIN")).toBe(false);
+    expect(canEditProductRelations("SUPER_ADMIN")).toBe(true);
+    expect(canEditProductRelations("ADMIN")).toBe(false);
   });
 });
