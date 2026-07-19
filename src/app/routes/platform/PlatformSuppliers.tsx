@@ -24,12 +24,10 @@ import { TableHeaderButton } from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
 import { toastMutationError } from "@/lib/toastMutationError";
-import { slugifyName } from "@/lib/slugify";
 import type { Supplier } from "@/types/models";
 
 const schema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio").max(255),
-  slug: z.string().trim().max(120).optional().or(z.literal("")),
   legal_name: z.string().trim().max(255).optional().or(z.literal("")),
   tax_id: z.string().trim().max(64).optional().or(z.literal("")),
   email: z
@@ -50,13 +48,11 @@ export default function PlatformSuppliersPage() {
   const { data: records = [], isLoading, isError, refetch } = useSuppliers();
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
-  const [slugManual, setSlugManual] = useState(false);
 
   const form = useForm<Form>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
-      slug: "",
       legal_name: "",
       tax_id: "",
       email: "",
@@ -71,7 +67,6 @@ export default function PlatformSuppliersPage() {
 
   const toPayload = (data: Form) => ({
     name: data.name,
-    slug: data.slug?.trim() || slugifyName(data.name) || null,
     legal_name: data.legal_name?.trim() || null,
     tax_id: data.tax_id?.trim() || null,
     email: data.email?.trim() || null,
@@ -86,14 +81,12 @@ export default function PlatformSuppliersPage() {
       toast.success("Proveedor creado");
       form.reset({
         name: "",
-        slug: "",
         legal_name: "",
         tax_id: "",
         email: "",
         phone: "",
         is_active: true,
       });
-      setSlugManual(false);
       setCreateOpen(false);
     },
     onError: (err) => toastMutationError(err, "No se pudo crear el proveedor"),
@@ -101,15 +94,7 @@ export default function PlatformSuppliersPage() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Form }) =>
-      updateSupplier(id, {
-        name: data.name,
-        slug: data.slug?.trim() || null,
-        legal_name: data.legal_name?.trim() || null,
-        tax_id: data.tax_id?.trim() || null,
-        email: data.email?.trim() || null,
-        phone: data.phone?.trim() || null,
-        is_active: data.is_active,
-      }),
+      updateSupplier(id, toPayload(data)),
     onSuccess: () => {
       invalidate();
       toast.success("Proveedor actualizado");
@@ -129,10 +114,8 @@ export default function PlatformSuppliersPage() {
   });
 
   const openCreate = () => {
-    setSlugManual(false);
     form.reset({
       name: "",
-      slug: "",
       legal_name: "",
       tax_id: "",
       email: "",
@@ -143,24 +126,15 @@ export default function PlatformSuppliersPage() {
   };
 
   const openEdit = (supplier: Supplier) => {
-    setSlugManual(true);
     setEditing(supplier);
     form.reset({
       name: supplier.name,
-      slug: supplier.slug,
       legal_name: supplier.legal_name ?? "",
       tax_id: supplier.tax_id ?? "",
       email: supplier.email ?? "",
       phone: supplier.phone ?? "",
       is_active: supplier.is_active,
     });
-  };
-
-  const onNameChange = (value: string) => {
-    form.setValue("name", value, { shouldValidate: true });
-    if (!slugManual) {
-      form.setValue("slug", slugifyName(value), { shouldValidate: true });
-    }
   };
 
   const columns: Column<Supplier>[] = [
@@ -270,23 +244,10 @@ export default function PlatformSuppliersPage() {
           >
             <div className="space-y-2">
               <Label htmlFor="supplier-name">Nombre</Label>
-              <Input
-                id="supplier-name"
-                value={form.watch("name")}
-                onChange={(e) => onNameChange(e.target.value)}
-              />
+              <Input id="supplier-name" {...form.register("name")} />
               {form.formState.errors.name && (
                 <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
               )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="supplier-slug">Slug</Label>
-              <Input
-                id="supplier-slug"
-                {...form.register("slug", {
-                  onChange: () => setSlugManual(true),
-                })}
-              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="supplier-legal-name">Razón social</Label>

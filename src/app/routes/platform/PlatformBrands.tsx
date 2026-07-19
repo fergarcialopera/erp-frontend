@@ -42,12 +42,10 @@ import { TableHeaderButton } from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
 import { toastMutationError } from "@/lib/toastMutationError";
-import { slugifyName } from "@/lib/slugify";
 import type { Brand } from "@/types/models";
 
 const schema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio").max(255),
-  slug: z.string().trim().max(120).optional().or(z.literal("")),
   is_active: z.boolean(),
 });
 
@@ -163,11 +161,10 @@ export default function PlatformBrandsPage() {
   const { data: records = [], isLoading, isError, refetch } = useBrands();
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Brand | null>(null);
-  const [slugManual, setSlugManual] = useState(false);
 
   const form = useForm<Form>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", slug: "", is_active: true },
+    defaultValues: { name: "", is_active: true },
   });
 
   const invalidate = () => {
@@ -178,14 +175,12 @@ export default function PlatformBrandsPage() {
     mutationFn: (data: Form) =>
       createBrand({
         name: data.name,
-        slug: data.slug?.trim() || slugifyName(data.name) || null,
         is_active: data.is_active,
       }),
     onSuccess: () => {
       invalidate();
       toast.success("Marca creada");
-      form.reset({ name: "", slug: "", is_active: true });
-      setSlugManual(false);
+      form.reset({ name: "", is_active: true });
       setCreateOpen(false);
     },
     onError: (err) => toastMutationError(err, "No se pudo crear la marca"),
@@ -195,7 +190,6 @@ export default function PlatformBrandsPage() {
     mutationFn: ({ id, data }: { id: string; data: Form }) =>
       updateBrand(id, {
         name: data.name,
-        slug: data.slug?.trim() || null,
         is_active: data.is_active,
       }),
     onSuccess: () => {
@@ -217,26 +211,16 @@ export default function PlatformBrandsPage() {
   });
 
   const openCreate = () => {
-    setSlugManual(false);
-    form.reset({ name: "", slug: "", is_active: true });
+    form.reset({ name: "", is_active: true });
     setCreateOpen(true);
   };
 
   const openEdit = (brand: Brand) => {
-    setSlugManual(true);
     setEditing(brand);
     form.reset({
       name: brand.name,
-      slug: brand.slug,
       is_active: brand.is_active,
     });
-  };
-
-  const onNameChange = (value: string) => {
-    form.setValue("name", value, { shouldValidate: true });
-    if (!slugManual) {
-      form.setValue("slug", slugifyName(value), { shouldValidate: true });
-    }
   };
 
   const columns: Column<Brand>[] = [
@@ -245,12 +229,6 @@ export default function PlatformBrandsPage() {
       header: "NOMBRE",
       sortable: true,
       render: (b) => <span className={tableCell.primary}>{b.name}</span>,
-    },
-    {
-      key: "slug",
-      header: "SLUG",
-      hideBelowSm: true,
-      render: (b) => <span className={tableCell.mono}>{b.slug}</span>,
     },
     {
       key: "is_active",
@@ -316,7 +294,7 @@ export default function PlatformBrandsPage() {
             <DialogDescription>
               {isEdit
                 ? "Modifica la marca y gestiona sus proveedores."
-                : "Define nombre, slug y estado de la marca."}
+                : "Define nombre y estado de la marca."}
             </DialogDescription>
           </DialogHeader>
           <form
@@ -328,23 +306,10 @@ export default function PlatformBrandsPage() {
           >
             <div className="space-y-2">
               <Label htmlFor="brand-name">Nombre</Label>
-              <Input
-                id="brand-name"
-                value={form.watch("name")}
-                onChange={(e) => onNameChange(e.target.value)}
-              />
+              <Input id="brand-name" {...form.register("name")} />
               {form.formState.errors.name && (
                 <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
               )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="brand-slug">Slug</Label>
-              <Input
-                id="brand-slug"
-                {...form.register("slug", {
-                  onChange: () => setSlugManual(true),
-                })}
-              />
             </div>
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">

@@ -26,12 +26,10 @@ import { TableHeaderButton } from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
 import { toastMutationError } from "@/lib/toastMutationError";
-import { slugifyName } from "@/lib/slugify";
 import type { Category } from "@/types/models";
 
 const schema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio").max(255),
-  slug: z.string().trim().max(120).optional().or(z.literal("")),
   description: z.string().trim().max(2000).optional().or(z.literal("")),
   is_active: z.boolean(),
 });
@@ -45,7 +43,6 @@ export default function PlatformCategoriesPage() {
   const { data: subcategories = [] } = useSubcategories();
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
-  const [slugManual, setSlugManual] = useState(false);
 
   const subcategoryCount = useMemo(() => {
     const map = new Map<string, number>();
@@ -57,7 +54,7 @@ export default function PlatformCategoriesPage() {
 
   const form = useForm<Form>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", slug: "", description: "", is_active: true },
+    defaultValues: { name: "", description: "", is_active: true },
   });
 
   const invalidate = () => {
@@ -69,15 +66,13 @@ export default function PlatformCategoriesPage() {
     mutationFn: (data: Form) =>
       createCategory({
         name: data.name,
-        slug: data.slug?.trim() || slugifyName(data.name) || null,
         description: data.description?.trim() || null,
         is_active: data.is_active,
       }),
     onSuccess: () => {
       invalidate();
       toast.success("Categoría creada");
-      form.reset({ name: "", slug: "", description: "", is_active: true });
-      setSlugManual(false);
+      form.reset({ name: "", description: "", is_active: true });
       setCreateOpen(false);
     },
     onError: (err) => toastMutationError(err, "No se pudo crear la categoría"),
@@ -87,7 +82,6 @@ export default function PlatformCategoriesPage() {
     mutationFn: ({ id, data }: { id: string; data: Form }) =>
       updateCategory(id, {
         name: data.name,
-        slug: data.slug?.trim() || null,
         description: data.description?.trim() || null,
         is_active: data.is_active,
       }),
@@ -110,27 +104,17 @@ export default function PlatformCategoriesPage() {
   });
 
   const openCreate = () => {
-    setSlugManual(false);
-    form.reset({ name: "", slug: "", description: "", is_active: true });
+    form.reset({ name: "", description: "", is_active: true });
     setCreateOpen(true);
   };
 
   const openEdit = (category: Category) => {
-    setSlugManual(true);
     setEditing(category);
     form.reset({
       name: category.name,
-      slug: category.slug,
       description: category.description ?? "",
       is_active: category.is_active,
     });
-  };
-
-  const onNameChange = (value: string) => {
-    form.setValue("name", value, { shouldValidate: true });
-    if (!slugManual) {
-      form.setValue("slug", slugifyName(value), { shouldValidate: true });
-    }
   };
 
   const columns: Column<Category>[] = [
@@ -139,12 +123,6 @@ export default function PlatformCategoriesPage() {
       header: "NOMBRE",
       sortable: true,
       render: (c) => <span className={tableCell.primary}>{c.name}</span>,
-    },
-    {
-      key: "slug",
-      header: "SLUG",
-      hideBelowSm: true,
-      render: (c) => <span className={tableCell.mono}>{c.slug}</span>,
     },
     {
       key: "description",
@@ -233,7 +211,7 @@ export default function PlatformCategoriesPage() {
             <DialogDescription>
               {isEdit
                 ? "Modifica los datos de la categoría."
-                : "Define nombre, slug y estado de la categoría."}
+                : "Define nombre y estado de la categoría."}
             </DialogDescription>
           </DialogHeader>
           <form
@@ -245,25 +223,9 @@ export default function PlatformCategoriesPage() {
           >
             <div className="space-y-2">
               <Label htmlFor="category-name">Nombre</Label>
-              <Input
-                id="category-name"
-                value={form.watch("name")}
-                onChange={(e) => onNameChange(e.target.value)}
-              />
+              <Input id="category-name" {...form.register("name")} />
               {form.formState.errors.name && (
                 <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="category-slug">Slug</Label>
-              <Input
-                id="category-slug"
-                {...form.register("slug", {
-                  onChange: () => setSlugManual(true),
-                })}
-              />
-              {form.formState.errors.slug && (
-                <p className="text-xs text-destructive">{form.formState.errors.slug.message}</p>
               )}
             </div>
             <div className="space-y-2">

@@ -29,12 +29,10 @@ import { TableHeaderButton } from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
 import { toastMutationError } from "@/lib/toastMutationError";
-import { slugifyName } from "@/lib/slugify";
 import type { OperationalRole } from "@/types/models";
 
 const schema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio").max(255),
-  slug: z.string().trim().max(120).optional().or(z.literal("")),
   description: z.string().trim().max(2000).optional().or(z.literal("")),
   is_active: z.boolean(),
 });
@@ -46,11 +44,10 @@ export default function PlatformRolesPage() {
   const { data: records = [], isLoading, isError, refetch } = useOperationalRoles();
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<OperationalRole | null>(null);
-  const [slugManual, setSlugManual] = useState(false);
 
   const form = useForm<Form>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", slug: "", description: "", is_active: true },
+    defaultValues: { name: "", description: "", is_active: true },
   });
 
   const invalidate = () => {
@@ -61,15 +58,13 @@ export default function PlatformRolesPage() {
     mutationFn: (data: Form) =>
       createOperationalRole({
         name: data.name,
-        slug: data.slug?.trim() || slugifyName(data.name) || null,
         description: data.description?.trim() || null,
         is_active: data.is_active,
       }),
     onSuccess: () => {
       invalidate();
       toast.success("Rol operativo creado");
-      form.reset({ name: "", slug: "", description: "", is_active: true });
-      setSlugManual(false);
+      form.reset({ name: "", description: "", is_active: true });
       setCreateOpen(false);
     },
     onError: (err) => toastMutationError(err, "No se pudo crear el rol operativo"),
@@ -79,7 +74,6 @@ export default function PlatformRolesPage() {
     mutationFn: ({ id, data }: { id: string; data: Form }) =>
       updateOperationalRole(id, {
         name: data.name,
-        slug: data.slug?.trim() || null,
         description: data.description?.trim() || null,
         is_active: data.is_active,
       }),
@@ -102,27 +96,17 @@ export default function PlatformRolesPage() {
   });
 
   const openCreate = () => {
-    setSlugManual(false);
-    form.reset({ name: "", slug: "", description: "", is_active: true });
+    form.reset({ name: "", description: "", is_active: true });
     setCreateOpen(true);
   };
 
   const openEdit = (role: OperationalRole) => {
-    setSlugManual(true);
     setEditing(role);
     form.reset({
       name: role.name,
-      slug: role.slug,
       description: role.description ?? "",
       is_active: role.is_active,
     });
-  };
-
-  const onNameChange = (value: string) => {
-    form.setValue("name", value, { shouldValidate: true });
-    if (!slugManual) {
-      form.setValue("slug", slugifyName(value), { shouldValidate: true });
-    }
   };
 
   const columns: Column<OperationalRole>[] = [
@@ -131,12 +115,6 @@ export default function PlatformRolesPage() {
       header: "NOMBRE",
       sortable: true,
       render: (r) => <span className={tableCell.primary}>{r.name}</span>,
-    },
-    {
-      key: "slug",
-      header: "SLUG",
-      hideBelowSm: true,
-      render: (r) => <span className={tableCell.mono}>{r.slug}</span>,
     },
     {
       key: "description",
@@ -218,23 +196,10 @@ export default function PlatformRolesPage() {
           >
             <div className="space-y-2">
               <Label htmlFor="role-name">Nombre</Label>
-              <Input
-                id="role-name"
-                value={form.watch("name")}
-                onChange={(e) => onNameChange(e.target.value)}
-              />
+              <Input id="role-name" {...form.register("name")} />
               {form.formState.errors.name && (
                 <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
               )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="role-slug">Slug</Label>
-              <Input
-                id="role-slug"
-                {...form.register("slug", {
-                  onChange: () => setSlugManual(true),
-                })}
-              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="role-description">Descripción</Label>

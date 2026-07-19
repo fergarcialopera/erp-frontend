@@ -90,7 +90,7 @@ export interface CatalogRef {
 export interface Category {
   id: string;
   name: string;
-  slug: string;
+  slug?: string;
   description?: string | null;
   is_active: boolean;
   created_at?: string;
@@ -101,7 +101,7 @@ export interface Subcategory {
   id: string;
   category_id: string;
   name: string;
-  slug: string;
+  slug?: string;
   description?: string | null;
   is_active: boolean;
   created_at?: string;
@@ -111,7 +111,7 @@ export interface Subcategory {
 export interface Brand {
   id: string;
   name: string;
-  slug: string;
+  slug?: string;
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
@@ -120,7 +120,7 @@ export interface Brand {
 export interface Supplier {
   id: string;
   name: string;
-  slug: string;
+  slug?: string;
   legal_name?: string | null;
   tax_id?: string | null;
   email?: string | null;
@@ -133,7 +133,7 @@ export interface Supplier {
 export interface DispensingType {
   id: string;
   name: string;
-  slug: string;
+  slug?: string;
   description?: string | null;
   is_active: boolean;
   created_at?: string;
@@ -144,7 +144,7 @@ export interface DispensingType {
 export interface OperationalRole {
   id: string;
   name: string;
-  slug: string;
+  slug?: string;
   description?: string | null;
   is_active: boolean;
   created_at?: string;
@@ -180,7 +180,7 @@ export interface DispensingTypeRoleLink {
   dispensing_type_id: string;
   role_id: string;
   role_name: string;
-  role_slug: string;
+  role_slug?: string;
   created_at?: string;
   updated_at?: string;
 }

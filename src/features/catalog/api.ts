@@ -17,7 +17,7 @@ function mapCategory(raw: Record<string, unknown>): Category {
   return {
     id: String(raw.id ?? ""),
     name: String(raw.name ?? ""),
-    slug: String(raw.slug ?? ""),
+    slug: asOptionalString(raw.slug) ?? undefined,
     description: asOptionalString(raw.description) ?? null,
     is_active: asBoolean(raw.is_active),
     created_at: raw.created_at != null ? String(raw.created_at) : undefined,
@@ -30,7 +30,7 @@ function mapSubcategory(raw: Record<string, unknown>): Subcategory {
     id: String(raw.id ?? ""),
     category_id: String(raw.category_id ?? ""),
     name: String(raw.name ?? ""),
-    slug: String(raw.slug ?? ""),
+    slug: asOptionalString(raw.slug) ?? undefined,
     description: asOptionalString(raw.description) ?? null,
     is_active: asBoolean(raw.is_active),
     created_at: raw.created_at != null ? String(raw.created_at) : undefined,
@@ -42,7 +42,7 @@ function mapBrand(raw: Record<string, unknown>): Brand {
   return {
     id: String(raw.id ?? ""),
     name: String(raw.name ?? ""),
-    slug: String(raw.slug ?? ""),
+    slug: asOptionalString(raw.slug) ?? undefined,
     is_active: asBoolean(raw.is_active),
     created_at: raw.created_at != null ? String(raw.created_at) : undefined,
     updated_at: raw.updated_at != null ? String(raw.updated_at) : undefined,
@@ -53,7 +53,7 @@ function mapSupplier(raw: Record<string, unknown>): Supplier {
   return {
     id: String(raw.id ?? ""),
     name: String(raw.name ?? ""),
-    slug: String(raw.slug ?? ""),
+    slug: asOptionalString(raw.slug) ?? undefined,
     legal_name: asOptionalString(raw.legal_name) ?? null,
     tax_id: asOptionalString(raw.tax_id) ?? null,
     email: asOptionalString(raw.email) ?? null,
@@ -68,7 +68,7 @@ function mapDispensingType(raw: Record<string, unknown>): DispensingType {
   return {
     id: String(raw.id ?? ""),
     name: String(raw.name ?? ""),
-    slug: String(raw.slug ?? ""),
+    slug: asOptionalString(raw.slug) ?? undefined,
     description: asOptionalString(raw.description) ?? null,
     is_active: asBoolean(raw.is_active),
     created_at: raw.created_at != null ? String(raw.created_at) : undefined,
@@ -80,7 +80,7 @@ function mapOperationalRole(raw: Record<string, unknown>): OperationalRole {
   return {
     id: String(raw.id ?? ""),
     name: String(raw.name ?? ""),
-    slug: String(raw.slug ?? ""),
+    slug: asOptionalString(raw.slug) ?? undefined,
     description: asOptionalString(raw.description) ?? null,
     is_active: asBoolean(raw.is_active),
     created_at: raw.created_at != null ? String(raw.created_at) : undefined,
@@ -106,7 +106,7 @@ function mapDispensingTypeRole(raw: Record<string, unknown>): DispensingTypeRole
     dispensing_type_id: String(raw.dispensing_type_id ?? ""),
     role_id: String(raw.role_id ?? ""),
     role_name: String(raw.role_name ?? ""),
-    role_slug: String(raw.role_slug ?? ""),
+    role_slug: asOptionalString(raw.role_slug) ?? undefined,
     created_at: raw.created_at != null ? String(raw.created_at) : undefined,
     updated_at: raw.updated_at != null ? String(raw.updated_at) : undefined,
   };
@@ -130,7 +130,6 @@ export const getCategory = async (id: string): Promise<Category> => {
 
 export const createCategory = async (data: {
   name: string;
-  slug?: string | null;
   description?: string | null;
   is_active?: boolean;
 }): Promise<Category> => {
@@ -142,7 +141,6 @@ export const updateCategory = async (
   id: string,
   data: Partial<{
     name: string;
-    slug: string | null;
     description: string | null;
     is_active: boolean;
   }>,
@@ -178,7 +176,6 @@ export const getSubcategory = async (id: string): Promise<Subcategory> => {
 export const createSubcategory = async (data: {
   category_id: string;
   name: string;
-  slug?: string | null;
   description?: string | null;
   is_active?: boolean;
 }): Promise<Subcategory> => {
@@ -191,7 +188,6 @@ export const updateSubcategory = async (
   data: Partial<{
     category_id: string;
     name: string;
-    slug: string | null;
     description: string | null;
     is_active: boolean;
   }>,
@@ -220,7 +216,6 @@ export const getBrand = async (id: string): Promise<Brand> => {
 
 export const createBrand = async (data: {
   name: string;
-  slug?: string | null;
   is_active?: boolean;
 }): Promise<Brand> => {
   const res = await apiClient.post(ENDPOINTS.BRANDS.CREATE, data);
@@ -229,7 +224,7 @@ export const createBrand = async (data: {
 
 export const updateBrand = async (
   id: string,
-  data: Partial<{ name: string; slug: string | null; is_active: boolean }>,
+  data: Partial<{ name: string; is_active: boolean }>,
 ): Promise<Brand> => {
   const res = await apiClient.patch(ENDPOINTS.BRANDS.DETAIL(id), data);
   return mapBrand(unwrapData<Record<string, unknown>>(res.data));
@@ -275,7 +270,6 @@ export const getSupplier = async (id: string): Promise<Supplier> => {
 
 export const createSupplier = async (data: {
   name: string;
-  slug?: string | null;
   legal_name?: string | null;
   tax_id?: string | null;
   email?: string | null;
@@ -290,7 +284,6 @@ export const updateSupplier = async (
   id: string,
   data: Partial<{
     name: string;
-    slug: string | null;
     legal_name: string | null;
     tax_id: string | null;
     email: string | null;
@@ -324,7 +317,6 @@ export const getDispensingType = async (id: string): Promise<DispensingType> => 
 
 export const createDispensingType = async (data: {
   name: string;
-  slug?: string | null;
   description?: string | null;
   is_active?: boolean;
 }): Promise<DispensingType> => {
@@ -336,7 +328,6 @@ export const updateDispensingType = async (
   id: string,
   data: Partial<{
     name: string;
-    slug: string | null;
     description: string | null;
     is_active: boolean;
   }>,
@@ -391,7 +382,6 @@ export const getOperationalRole = async (id: string): Promise<OperationalRole> =
 
 export const createOperationalRole = async (data: {
   name: string;
-  slug?: string | null;
   description?: string | null;
   is_active?: boolean;
 }): Promise<OperationalRole> => {
@@ -403,7 +393,6 @@ export const updateOperationalRole = async (
   id: string,
   data: Partial<{
     name: string;
-    slug: string | null;
     description: string | null;
     is_active: boolean;
   }>,

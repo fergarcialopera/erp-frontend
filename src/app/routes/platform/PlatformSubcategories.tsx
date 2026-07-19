@@ -33,13 +33,11 @@ import { TableHeaderButton } from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
 import { toastMutationError } from "@/lib/toastMutationError";
-import { slugifyName } from "@/lib/slugify";
 import type { Subcategory } from "@/types/models";
 
 const schema = z.object({
   category_id: z.string().min(1, "La categoría es obligatoria"),
   name: z.string().trim().min(1, "El nombre es obligatorio").max(255),
-  slug: z.string().trim().max(120).optional().or(z.literal("")),
   description: z.string().trim().max(2000).optional().or(z.literal("")),
   is_active: z.boolean(),
 });
@@ -56,7 +54,6 @@ export default function PlatformSubcategoriesPage() {
   const [filterCategoryId, setFilterCategoryId] = useState(categoryIdFromQuery);
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<Subcategory | null>(null);
-  const [slugManual, setSlugManual] = useState(false);
 
   useEffect(() => {
     setFilterCategoryId(categoryIdFromQuery);
@@ -81,7 +78,6 @@ export default function PlatformSubcategoriesPage() {
     defaultValues: {
       category_id: categoryIdFromQuery || "",
       name: "",
-      slug: "",
       description: "",
       is_active: true,
     },
@@ -96,7 +92,6 @@ export default function PlatformSubcategoriesPage() {
       createSubcategory({
         category_id: data.category_id,
         name: data.name,
-        slug: data.slug?.trim() || slugifyName(data.name) || null,
         description: data.description?.trim() || null,
         is_active: data.is_active,
       }),
@@ -106,11 +101,9 @@ export default function PlatformSubcategoriesPage() {
       form.reset({
         category_id: filterCategoryId || "",
         name: "",
-        slug: "",
         description: "",
         is_active: true,
       });
-      setSlugManual(false);
       setCreateOpen(false);
     },
     onError: (err) => toastMutationError(err, "No se pudo crear la subcategoría"),
@@ -121,7 +114,6 @@ export default function PlatformSubcategoriesPage() {
       updateSubcategory(id, {
         category_id: data.category_id,
         name: data.name,
-        slug: data.slug?.trim() || null,
         description: data.description?.trim() || null,
         is_active: data.is_active,
       }),
@@ -144,11 +136,9 @@ export default function PlatformSubcategoriesPage() {
   });
 
   const openCreate = () => {
-    setSlugManual(false);
     form.reset({
       category_id: filterCategoryId || "",
       name: "",
-      slug: "",
       description: "",
       is_active: true,
     });
@@ -156,22 +146,13 @@ export default function PlatformSubcategoriesPage() {
   };
 
   const openEdit = (item: Subcategory) => {
-    setSlugManual(true);
     setEditing(item);
     form.reset({
       category_id: item.category_id,
       name: item.name,
-      slug: item.slug,
       description: item.description ?? "",
       is_active: item.is_active,
     });
-  };
-
-  const onNameChange = (value: string) => {
-    form.setValue("name", value, { shouldValidate: true });
-    if (!slugManual) {
-      form.setValue("slug", slugifyName(value), { shouldValidate: true });
-    }
   };
 
   const onFilterChange = (value: string) => {
@@ -194,12 +175,6 @@ export default function PlatformSubcategoriesPage() {
       render: (s) => (
         <span className={tableCell.muted}>{categoryNameById.get(s.category_id) ?? "—"}</span>
       ),
-    },
-    {
-      key: "slug",
-      header: "SLUG",
-      hideBelowSm: true,
-      render: (s) => <span className={tableCell.mono}>{s.slug}</span>,
     },
     {
       key: "description",
@@ -331,23 +306,10 @@ export default function PlatformSubcategoriesPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="subcategory-name">Nombre</Label>
-              <Input
-                id="subcategory-name"
-                value={form.watch("name")}
-                onChange={(e) => onNameChange(e.target.value)}
-              />
+              <Input id="subcategory-name" {...form.register("name")} />
               {form.formState.errors.name && (
                 <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
               )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="subcategory-slug">Slug</Label>
-              <Input
-                id="subcategory-slug"
-                {...form.register("slug", {
-                  onChange: () => setSlugManual(true),
-                })}
-              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="subcategory-description">Descripción</Label>

@@ -43,12 +43,10 @@ import { TableHeaderButton } from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
 import { toastMutationError } from "@/lib/toastMutationError";
-import { slugifyName } from "@/lib/slugify";
 import type { DispensingType } from "@/types/models";
 
 const schema = z.object({
   name: z.string().trim().min(1, "El nombre es obligatorio").max(255),
-  slug: z.string().trim().max(120).optional().or(z.literal("")),
   description: z.string().trim().max(2000).optional().or(z.literal("")),
   is_active: z.boolean(),
 });
@@ -130,7 +128,6 @@ function DispensingTypeRolesManager({ dispensingTypeId }: { dispensingTypeId: st
             <thead>
               <tr className="border-b text-left text-xs text-muted-foreground">
                 <th className="py-2 pr-2 font-medium">Rol</th>
-                <th className="py-2 pr-2 font-medium">Slug</th>
                 <th className="py-2 font-medium text-right"> </th>
               </tr>
             </thead>
@@ -138,7 +135,6 @@ function DispensingTypeRolesManager({ dispensingTypeId }: { dispensingTypeId: st
               {links.map((link) => (
                 <tr key={link.id} className="border-b last:border-0">
                   <td className={`py-2 pr-2 ${tableCell.primary}`}>{link.role_name}</td>
-                  <td className={`py-2 pr-2 ${tableCell.mono}`}>{link.role_slug}</td>
                   <td className="py-2 text-right">
                     <Button
                       type="button"
@@ -167,11 +163,10 @@ export default function PlatformDispensingTypesPage() {
   const { data: records = [], isLoading, isError, refetch } = useDispensingTypes();
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<DispensingType | null>(null);
-  const [slugManual, setSlugManual] = useState(false);
 
   const form = useForm<Form>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", slug: "", description: "", is_active: true },
+    defaultValues: { name: "", description: "", is_active: true },
   });
 
   const invalidate = () => {
@@ -182,15 +177,13 @@ export default function PlatformDispensingTypesPage() {
     mutationFn: (data: Form) =>
       createDispensingType({
         name: data.name,
-        slug: data.slug?.trim() || slugifyName(data.name) || null,
         description: data.description?.trim() || null,
         is_active: data.is_active,
       }),
     onSuccess: () => {
       invalidate();
       toast.success("Tipo de dispensación creado");
-      form.reset({ name: "", slug: "", description: "", is_active: true });
-      setSlugManual(false);
+      form.reset({ name: "", description: "", is_active: true });
       setCreateOpen(false);
     },
     onError: (err) => toastMutationError(err, "No se pudo crear el tipo de dispensación"),
@@ -200,7 +193,6 @@ export default function PlatformDispensingTypesPage() {
     mutationFn: ({ id, data }: { id: string; data: Form }) =>
       updateDispensingType(id, {
         name: data.name,
-        slug: data.slug?.trim() || null,
         description: data.description?.trim() || null,
         is_active: data.is_active,
       }),
@@ -223,27 +215,17 @@ export default function PlatformDispensingTypesPage() {
   });
 
   const openCreate = () => {
-    setSlugManual(false);
-    form.reset({ name: "", slug: "", description: "", is_active: true });
+    form.reset({ name: "", description: "", is_active: true });
     setCreateOpen(true);
   };
 
   const openEdit = (item: DispensingType) => {
-    setSlugManual(true);
     setEditing(item);
     form.reset({
       name: item.name,
-      slug: item.slug,
       description: item.description ?? "",
       is_active: item.is_active,
     });
-  };
-
-  const onNameChange = (value: string) => {
-    form.setValue("name", value, { shouldValidate: true });
-    if (!slugManual) {
-      form.setValue("slug", slugifyName(value), { shouldValidate: true });
-    }
   };
 
   const columns: Column<DispensingType>[] = [
@@ -252,12 +234,6 @@ export default function PlatformDispensingTypesPage() {
       header: "NOMBRE",
       sortable: true,
       render: (d) => <span className={tableCell.primary}>{d.name}</span>,
-    },
-    {
-      key: "slug",
-      header: "SLUG",
-      hideBelowSm: true,
-      render: (d) => <span className={tableCell.mono}>{d.slug}</span>,
     },
     {
       key: "description",
@@ -331,7 +307,7 @@ export default function PlatformDispensingTypesPage() {
             <DialogDescription>
               {isEdit
                 ? "Modifica el tipo y gestiona los roles permitidos."
-                : "Define nombre, slug y descripción."}
+                : "Define nombre y descripción."}
             </DialogDescription>
           </DialogHeader>
           <form
@@ -343,23 +319,10 @@ export default function PlatformDispensingTypesPage() {
           >
             <div className="space-y-2">
               <Label htmlFor="dispensing-name">Nombre</Label>
-              <Input
-                id="dispensing-name"
-                value={form.watch("name")}
-                onChange={(e) => onNameChange(e.target.value)}
-              />
+              <Input id="dispensing-name" {...form.register("name")} />
               {form.formState.errors.name && (
                 <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
               )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dispensing-slug">Slug</Label>
-              <Input
-                id="dispensing-slug"
-                {...form.register("slug", {
-                  onChange: () => setSlugManual(true),
-                })}
-              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="dispensing-description">Descripción</Label>
