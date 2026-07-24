@@ -6,7 +6,8 @@ export function LandingHero() {
   return (
     <section
       id="inicio"
-      className="relative overflow-hidden text-center text-[hsl(var(--ll-text-on-dark))]"
+      // Se extiende bajo el header sticky (77px) para que el traslúcido siempre se mezcle con el fondo oscuro
+      className="relative -mt-[77px] overflow-hidden pt-[77px] text-center text-[hsl(var(--ll-text-on-dark))]"
       style={{
         background:
           "radial-gradient(circle at 50% 0%, hsla(167, 90%, 48%, 0.12), transparent 34%), linear-gradient(135deg, hsl(var(--ll-navy-950)) 0%, hsl(var(--ll-navy-900)) 56%, hsl(var(--ll-navy-800)) 100%)",
