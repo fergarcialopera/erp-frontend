@@ -1,6 +1,6 @@
 import { LandingHeader } from "./components/LandingHeader";
 import { LandingHero } from "./components/LandingHero";
-import { FeatureGrid } from "./components/FeatureGrid";
+import { BenefitsSection } from "./components/BenefitsSection";
 import { ProcessSteps } from "./components/ProcessSteps";
 import { LandingCta } from "./components/LandingCta";
 import { LandingFooter } from "./components/LandingFooter";
@@ -11,7 +11,7 @@ export default function LandingPage() {
       <LandingHeader />
       <main>
         <LandingHero />
-        <FeatureGrid />
+        <BenefitsSection />
         <ProcessSteps />
         <LandingCta />
       </main>

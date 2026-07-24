@@ -28,8 +28,8 @@ export function LandingFooter() {
             <a href="#producto" className="transition-colors hover:text-white">
               Producto
             </a>
-            <a href="#capacidades" className="transition-colors hover:text-white">
-              Capacidades
+            <a href="#beneficios" className="transition-colors hover:text-white">
+              Beneficios
             </a>
             <Link to="/login" className="transition-colors hover:text-white">
               Acceso
