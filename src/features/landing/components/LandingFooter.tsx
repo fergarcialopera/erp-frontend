@@ -25,8 +25,8 @@ export function LandingFooter() {
           </div>
 
           <div className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
-            <a href="#producto" className="transition-colors hover:text-white">
-              Producto
+            <a href="#como-funciona" className="transition-colors hover:text-white">
+              Cómo funciona
             </a>
             <a href="#beneficios" className="transition-colors hover:text-white">
               Beneficios
