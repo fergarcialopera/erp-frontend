@@ -96,6 +96,11 @@ npm run dev
 # Build de producción
 npm run build
 
+# Lint y tests
+npm run lint
+npm run test
+```
+
 ---
 
 ## 8) Variables de entorno disponibles
@@ -156,7 +161,47 @@ npm run build
 
 ---
 
-## 12) Recomendaciones para desarrolladores nuevos
+## 12) Política de versiones de dependencias
+
+Este proyecto usa **versiones exactas** (sin `^` ni `~`) en `package.json`, y el archivo `.npmrc` (`save-exact=true`) garantiza que cualquier `npm install <paquete>` futuro también quede fijado.
+
+- **No hay actualizaciones automáticas**: no existe Dependabot ni ningún bot que abra PRs de dependencias. Toda actualización es una decisión manual y consciente.
+- **La fuente de verdad** es `package.json` + `package-lock.json`. CI instala con `npm ci`, que falla si no coinciden.
+
+### Cómo actualizar una dependencia (proceso manual)
+
+1. Revisa qué hay desactualizado:
+
+```bash
+npm outdated
+```
+
+2. Actualiza el paquete a una versión concreta (quedará fijada automáticamente por `.npmrc`):
+
+```bash
+npm install <paquete>@<versión>
+```
+
+3. Si el paquete tiene *peers* relacionados, actualízalos **juntos** en el mismo cambio:
+   - React: `react`, `react-dom`, `@types/react`, `@types/react-dom` (misma major).
+   - Vite: `vite`, `@vitejs/plugin-react-swc`, `vitest`, `lovable-tagger`.
+
+4. Valida antes de commitear:
+
+```bash
+npm ci
+npm run lint
+npm run test
+npm run build
+```
+
+5. Commitea `package.json` y `package-lock.json` en el mismo commit.
+
+Los cambios de **major** (p. ej. React 18 → 19) requieren PR dedicado con revisión de *breaking changes*.
+
+---
+
+## 13) Recomendaciones para desarrolladores nuevos
 
 - Haz cambios pequeños y valídalos con `npm run build`.
 - Antes de enviar cambios, ejecuta `npm run lint`.
