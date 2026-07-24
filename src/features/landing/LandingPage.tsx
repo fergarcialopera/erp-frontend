@@ -1,6 +1,7 @@
 import { LandingHeader } from "./components/LandingHeader";
 import { LandingHero } from "./components/LandingHero";
 import { BenefitsSection } from "./components/BenefitsSection";
+import { AdvantagesSection } from "./components/AdvantagesSection";
 import { ProcessSteps } from "./components/ProcessSteps";
 import { LandingCta } from "./components/LandingCta";
 import { LandingFooter } from "./components/LandingFooter";
@@ -12,6 +13,7 @@ export default function LandingPage() {
       <main>
         <LandingHero />
         <BenefitsSection />
+        <AdvantagesSection />
         <ProcessSteps />
         <LandingCta />
       </main>
