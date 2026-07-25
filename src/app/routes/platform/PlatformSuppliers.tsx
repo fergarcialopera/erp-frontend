@@ -226,7 +226,7 @@ export default function PlatformSuppliersPage() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>{isEdit ? "Editar proveedor" : "Nuevo proveedor"}</DialogTitle>
             <DialogDescription>
@@ -242,31 +242,33 @@ export default function PlatformSuppliersPage() {
             })}
             className="space-y-4"
           >
-            <div className="space-y-2">
-              <Label htmlFor="supplier-name">Nombre</Label>
-              <Input id="supplier-name" {...form.register("name")} />
-              {form.formState.errors.name && (
-                <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="supplier-legal-name">Razón social</Label>
-              <Input id="supplier-legal-name" {...form.register("legal_name")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="supplier-tax-id">NIF/CIF</Label>
-              <Input id="supplier-tax-id" {...form.register("tax_id")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="supplier-email">Email</Label>
-              <Input id="supplier-email" type="email" {...form.register("email")} />
-              {form.formState.errors.email && (
-                <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="supplier-phone">Teléfono</Label>
-              <Input id="supplier-phone" {...form.register("phone")} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="supplier-name">Nombre</Label>
+                <Input id="supplier-name" {...form.register("name")} />
+                {form.formState.errors.name && (
+                  <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="supplier-legal-name">Razón social</Label>
+                <Input id="supplier-legal-name" {...form.register("legal_name")} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="supplier-tax-id">NIF/CIF</Label>
+                <Input id="supplier-tax-id" {...form.register("tax_id")} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="supplier-phone">Teléfono</Label>
+                <Input id="supplier-phone" {...form.register("phone")} />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="supplier-email">Email</Label>
+                <Input id="supplier-email" type="email" {...form.register("email")} />
+                {form.formState.errors.email && (
+                  <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
+                )}
+              </div>
             </div>
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">

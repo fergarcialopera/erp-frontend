@@ -537,7 +537,7 @@ export default function PlatformProductsPage() {
       />
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Nuevo producto</DialogTitle>
           </DialogHeader>
@@ -563,7 +563,7 @@ export default function PlatformProductsPage() {
       </Dialog>
 
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Editar producto</DialogTitle>
           </DialogHeader>
@@ -573,14 +573,9 @@ export default function PlatformProductsPage() {
             })}
             className="space-y-4"
           >
-            {editing?.sku ? (
-              <div className="space-y-2">
-                <Label>SKU</Label>
-                <Input value={editing.sku} disabled className="font-mono" />
-              </div>
-            ) : null}
             <ProductFormFields
               form={editForm}
+              sku={editing?.sku}
               categories={categories}
               subcategories={editSubcategories}
               brands={brands}
@@ -622,6 +617,7 @@ function ProductFormFields({
   brands,
   dispensingTypes,
   onCategoryChange,
+  sku,
 }: {
   form: ReturnType<typeof useForm<ProductForm>>;
   categories: { id: string; name: string }[];
@@ -629,27 +625,26 @@ function ProductFormFields({
   brands: { id: string; name: string }[];
   dispensingTypes: { id: string; name: string }[];
   onCategoryChange: () => void;
+  sku?: string | null;
 }) {
   const categoryId = form.watch("category_id");
 
   return (
-    <>
-      <div className="space-y-2">
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="space-y-2 sm:col-span-2">
         <Label>Nombre *</Label>
         <Input {...form.register("name")} />
         {form.formState.errors.name && (
           <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
         )}
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2">
-          <Label>Código de barras</Label>
-          <Input {...form.register("barcode")} />
-        </div>
-        <div className="space-y-2">
-          <Label>Referencia interna</Label>
-          <Input {...form.register("internal_reference")} />
-        </div>
+      <div className="space-y-2">
+        <Label>Código de barras</Label>
+        <Input {...form.register("barcode")} />
+      </div>
+      <div className="space-y-2">
+        <Label>Referencia interna</Label>
+        <Input {...form.register("internal_reference")} />
       </div>
       <div className="space-y-2">
         <Label>Categoría</Label>
@@ -731,11 +726,17 @@ function ProductFormFields({
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2">
+      <div className={sku ? "space-y-2" : "space-y-2 sm:col-span-2"}>
         <Label>Unidad de medida</Label>
         <Input {...form.register("unit_of_measure")} />
       </div>
-      <div className="flex items-center justify-between rounded-lg border p-4">
+      {sku ? (
+        <div className="space-y-2">
+          <Label>SKU</Label>
+          <Input value={sku} disabled className="font-mono" />
+        </div>
+      ) : null}
+      <div className="flex items-center justify-between rounded-lg border p-4 sm:col-span-2">
         <div className="space-y-0.5">
           <Label>Activo en catálogo</Label>
           <p className="text-xs text-muted-foreground">
@@ -747,6 +748,6 @@ function ProductFormFields({
           onCheckedChange={(v) => form.setValue("is_active", v)}
         />
       </div>
-    </>
+    </div>
   );
 }

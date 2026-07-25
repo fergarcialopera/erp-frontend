@@ -288,7 +288,7 @@ export default function PlatformBrandsPage() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>{isEdit ? "Editar marca" : "Nueva marca"}</DialogTitle>
             <DialogDescription>

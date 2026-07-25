@@ -299,7 +299,7 @@ export default function PlatformDispensingTypesPage() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>
               {isEdit ? "Editar tipo de dispensación" : "Nuevo tipo de dispensación"}

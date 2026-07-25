@@ -265,7 +265,7 @@ export function ProductSuppliersPanel({ productId }: ProductSuppliersPanelProps)
       )}
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Añadir proveedor</DialogTitle>
           </DialogHeader>
@@ -307,7 +307,7 @@ export function ProductSuppliersPanel({ productId }: ProductSuppliersPanelProps)
       </Dialog>
 
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Editar proveedor</DialogTitle>
           </DialogHeader>

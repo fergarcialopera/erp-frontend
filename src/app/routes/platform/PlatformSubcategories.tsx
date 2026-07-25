@@ -290,7 +290,7 @@ export default function PlatformSubcategoriesPage() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{isEdit ? "Editar subcategoría" : "Nueva subcategoría"}</DialogTitle>
             <DialogDescription>
@@ -304,35 +304,37 @@ export default function PlatformSubcategoriesPage() {
             })}
             className="space-y-4"
           >
-            <div className="space-y-2">
-              <Label>Categoría</Label>
-              <Select
-                value={form.watch("category_id") || undefined}
-                onValueChange={(v) => form.setValue("category_id", v, { shouldValidate: true })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.category_id && (
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.category_id.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="subcategory-name">Nombre</Label>
-              <Input id="subcategory-name" {...form.register("name")} />
-              {form.formState.errors.name && (
-                <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
-              )}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Categoría</Label>
+                <Select
+                  value={form.watch("category_id") || undefined}
+                  onValueChange={(v) => form.setValue("category_id", v, { shouldValidate: true })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.category_id && (
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.category_id.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subcategory-name">Nombre</Label>
+                <Input id="subcategory-name" {...form.register("name")} />
+                {form.formState.errors.name && (
+                  <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+                )}
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="subcategory-description">Descripción</Label>

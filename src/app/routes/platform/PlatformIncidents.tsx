@@ -161,7 +161,7 @@ export default function PlatformIncidentsPage() {
       />
 
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Editar incidencia</DialogTitle>
           </DialogHeader>
