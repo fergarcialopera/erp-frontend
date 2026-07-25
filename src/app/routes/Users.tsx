@@ -13,10 +13,10 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import {
   Select,
   SelectContent,
@@ -234,7 +234,7 @@ export default function UsersPage() {
       />
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent size="xl">
           <DialogHeader>
             <DialogTitle>Nuevo usuario</DialogTitle>
             <DialogDescription>
@@ -242,61 +242,63 @@ export default function UsersPage() {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="new-user-name">Nombre</Label>
-              <Input
-                id="new-user-name"
-                placeholder="Nombre completo"
-                autoComplete="name"
-                {...register("name")}
-              />
-              {errors.name && (
-                <p className="text-xs text-destructive">{errors.name.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-user-email">Email</Label>
-              <Input
-                id="new-user-email"
-                type="email"
-                placeholder="usuario@ejemplo.com"
-                autoComplete="email"
-                {...register("email")}
-              />
-              {errors.email && (
-                <p className="text-xs text-destructive">{errors.email.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-user-password">Contraseña</Label>
-              <Input
-                id="new-user-password"
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                autoComplete="new-password"
-                {...register("password")}
-              />
-              {errors.password && (
-                <p className="text-xs text-destructive">{errors.password.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label>Rol</Label>
-              <Select
-                value={watch("role")}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="new-user-name">Nombre</Label>
+                <Input
+                  id="new-user-name"
+                  placeholder="Nombre completo"
+                  autoComplete="name"
+                  {...register("name")}
+                />
+                {errors.name && (
+                  <p className="text-xs text-destructive">{errors.name.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-user-email">Email</Label>
+                <Input
+                  id="new-user-email"
+                  type="email"
+                  placeholder="usuario@ejemplo.com"
+                  autoComplete="email"
+                  {...register("email")}
+                />
+                {errors.email && (
+                  <p className="text-xs text-destructive">{errors.email.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-user-password">Contraseña</Label>
+                <Input
+                  id="new-user-password"
+                  type="password"
+                  placeholder="Mínimo 6 caracteres"
+                  autoComplete="new-password"
+                  {...register("password")}
+                />
+                {errors.password && (
+                  <p className="text-xs text-destructive">{errors.password.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Rol</Label>
+                <Select
+                  value={watch("role")}
                   onValueChange={(value) => setValue("role", value as ClinicAssignableRole)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar rol" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CLINIC_ROLES.map((role) => (
-                    <SelectItem key={role} value={role}>
-                      {role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar rol" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CLINIC_ROLES.map((role) => (
+                      <SelectItem key={role} value={role}>
+                        {role}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
@@ -311,24 +313,17 @@ export default function UsersPage() {
                 onCheckedChange={(checked) => setValue("is_active", checked)}
               />
             </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setModalOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isSubmitting || createMutation.isPending}>
-                {createMutation.isPending ? "Creando…" : "Crear usuario"}
-              </Button>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel={createMutation.isPending ? "Creando…" : "Crear usuario"}
+              isPending={isSubmitting || createMutation.isPending}
+              onCancel={() => setModalOpen(false)}
+            />
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent size="xl">
           <DialogHeader>
             <DialogTitle>Editar usuario</DialogTitle>
             <DialogDescription>
@@ -337,48 +332,50 @@ export default function UsersPage() {
           </DialogHeader>
           {editingUser && (
             <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-user-name">Nombre</Label>
-                <Input
-                  id="edit-user-name"
-                  placeholder="Nombre completo"
-                  autoComplete="name"
-                  {...editForm.register("name")}
-                />
-                {editForm.formState.errors.name && (
-                  <p className="text-xs text-destructive">{editForm.formState.errors.name.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-user-email">Email</Label>
-                <Input
-                  id="edit-user-email"
-                  type="email"
-                  placeholder="usuario@ejemplo.com"
-                  autoComplete="email"
-                  {...editForm.register("email")}
-                />
-                {editForm.formState.errors.email && (
-                  <p className="text-xs text-destructive">{editForm.formState.errors.email.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label>Rol</Label>
-                <Select
-                  value={editForm.watch("role")}
-                  onValueChange={(value) => editForm.setValue("role", value as ClinicAssignableRole)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar rol" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CLINIC_ROLES.map((role) => (
-                      <SelectItem key={role} value={role}>
-                        {role}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-user-name">Nombre</Label>
+                  <Input
+                    id="edit-user-name"
+                    placeholder="Nombre completo"
+                    autoComplete="name"
+                    {...editForm.register("name")}
+                  />
+                  {editForm.formState.errors.name && (
+                    <p className="text-xs text-destructive">{editForm.formState.errors.name.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-user-email">Email</Label>
+                  <Input
+                    id="edit-user-email"
+                    type="email"
+                    placeholder="usuario@ejemplo.com"
+                    autoComplete="email"
+                    {...editForm.register("email")}
+                  />
+                  {editForm.formState.errors.email && (
+                    <p className="text-xs text-destructive">{editForm.formState.errors.email.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>Rol</Label>
+                  <Select
+                    value={editForm.watch("role")}
+                    onValueChange={(value) => editForm.setValue("role", value as ClinicAssignableRole)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar rol" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CLINIC_ROLES.map((role) => (
+                        <SelectItem key={role} value={role}>
+                          {role}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="flex items-center justify-between rounded-lg border p-4">
                 <div className="space-y-0.5">
@@ -393,23 +390,11 @@ export default function UsersPage() {
                   onCheckedChange={(checked) => editForm.setValue("is_active", checked)}
                 />
               </div>
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setEditingUser(null)}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={
-                    editForm.formState.isSubmitting || updateMutation.isPending
-                  }
-                >
-                  {updateMutation.isPending ? "Guardando…" : "Guardar"}
-                </Button>
-              </DialogFooter>
+              <FormDialogFooter
+                submitLabel={updateMutation.isPending ? "Guardando…" : "Guardar"}
+                isPending={editForm.formState.isSubmitting || updateMutation.isPending}
+                onCancel={() => setEditingUser(null)}
+              />
             </form>
           )}
         </DialogContent>

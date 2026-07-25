@@ -27,16 +27,33 @@ const DialogOverlay = React.forwardRef<
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
+/**
+ * Anchos estandarizados de modal. Toda decisión de tamaño se toma aquí:
+ * - md: formularios pequeños (1-3 campos)
+ * - lg: formularios estándar (por defecto)
+ * - xl: formularios en 2 columnas o con contenido embebido
+ * - 2xl: modales densos (p. ej. productos)
+ */
+const dialogContentSizes = {
+  md: "sm:max-w-md",
+  lg: "sm:max-w-lg",
+  xl: "sm:max-w-xl",
+  "2xl": "sm:max-w-2xl",
+} as const;
+
+type DialogContentSize = keyof typeof dialogContentSizes;
+
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { size?: DialogContentSize }
+>(({ className, children, size = "lg", ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
         "fixed left-[50%] top-[50%] z-50 grid w-[calc(100%-2rem)] max-w-lg max-h-[min(90dvh,100vh)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto border bg-background p-4 sm:p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        dialogContentSizes[size],
         className,
       )}
       {...props}

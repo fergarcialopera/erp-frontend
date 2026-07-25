@@ -18,10 +18,10 @@ import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import {
   Select,
   SelectContent,
@@ -29,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Star, Pencil, Plus, Trash2 } from "lucide-react";
+import { Star, Pencil, Plus } from "lucide-react";
 import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
 import { toastMutationError } from "@/lib/toastMutationError";
@@ -265,7 +265,7 @@ export function ProductSuppliersPanel({ productId }: ProductSuppliersPanelProps)
       )}
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Añadir proveedor</DialogTitle>
           </DialogHeader>
@@ -294,20 +294,17 @@ export function ProductSuppliersPanel({ productId }: ProductSuppliersPanelProps)
               )}
             </div>
             <SupplierLinkFields form={form} />
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setAddOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={addMutation.isPending}>
-                Añadir
-              </Button>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel="Añadir"
+              isPending={addMutation.isPending}
+              onCancel={() => setAddOpen(false)}
+            />
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar proveedor</DialogTitle>
           </DialogHeader>
@@ -322,26 +319,16 @@ export function ProductSuppliersPanel({ productId }: ProductSuppliersPanelProps)
               <Input value={editing?.name ?? ""} disabled />
             </div>
             <SupplierLinkFields form={editForm} />
-            <DialogFooter className="justify-between sm:justify-between">
-              <Button
-                type="button"
-                variant="destructive"
-                className="mr-auto gap-1.5"
-                onClick={() => editing && deleteMutation.mutate(editing.id)}
-                disabled={deleteMutation.isPending}
-              >
-                <Trash2 className="h-4 w-4" />
-                Eliminar
-              </Button>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={updateMutation.isPending}>
-                  Guardar
-                </Button>
-              </div>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel="Guardar"
+              isPending={updateMutation.isPending}
+              onCancel={() => setEditing(null)}
+              destructiveAction={{
+                label: "Eliminar",
+                onClick: () => editing && deleteMutation.mutate(editing.id),
+                isPending: deleteMutation.isPending,
+              }}
+            />
           </form>
         </DialogContent>
       </Dialog>

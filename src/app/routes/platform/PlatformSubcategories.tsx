@@ -15,10 +15,10 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import {
   Select,
   SelectContent,
@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { createSubcategory, deleteSubcategory, updateSubcategory } from "@/features/catalog/api";
 import { useCategories, useSubcategories } from "@/features/catalog/queries";
-import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, Plus } from "lucide-react";
 import { TableHeaderButton } from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
 import {
@@ -290,7 +290,7 @@ export default function PlatformSubcategoriesPage() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>{isEdit ? "Editar subcategoría" : "Nueva subcategoría"}</DialogTitle>
             <DialogDescription>
@@ -304,35 +304,37 @@ export default function PlatformSubcategoriesPage() {
             })}
             className="space-y-4"
           >
-            <div className="space-y-2">
-              <Label>Categoría</Label>
-              <Select
-                value={form.watch("category_id") || undefined}
-                onValueChange={(v) => form.setValue("category_id", v, { shouldValidate: true })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {form.formState.errors.category_id && (
-                <p className="text-xs text-destructive">
-                  {form.formState.errors.category_id.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="subcategory-name">Nombre</Label>
-              <Input id="subcategory-name" {...form.register("name")} />
-              {form.formState.errors.name && (
-                <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
-              )}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Categoría</Label>
+                <Select
+                  value={form.watch("category_id") || undefined}
+                  onValueChange={(v) => form.setValue("category_id", v, { shouldValidate: true })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.category_id && (
+                  <p className="text-xs text-destructive">
+                    {form.formState.errors.category_id.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subcategory-name">Nombre</Label>
+                <Input id="subcategory-name" {...form.register("name")} />
+                {form.formState.errors.name && (
+                  <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+                )}
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="subcategory-description">Descripción</Label>
@@ -351,42 +353,29 @@ export default function PlatformSubcategoriesPage() {
                 onCheckedChange={(v) => form.setValue("is_active", v)}
               />
             </div>
-            <DialogFooter className="justify-between sm:justify-between">
-              {isEdit && editing && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="mr-auto"
-                  disabled={deleteMutation.isPending}
-                  onClick={() => deleteMutation.mutate(editing.id)}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Desactivar
-                </Button>
-              )}
-              <div className="flex gap-2 ml-auto">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setCreateOpen(false);
-                    setEditing(null);
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                >
-                  {createMutation.isPending || updateMutation.isPending
-                    ? "Guardando…"
-                    : isEdit
-                      ? "Guardar"
-                      : "Crear"}
-                </Button>
-              </div>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel={
+                createMutation.isPending || updateMutation.isPending
+                  ? "Guardando…"
+                  : isEdit
+                    ? "Guardar"
+                    : "Crear"
+              }
+              isPending={createMutation.isPending || updateMutation.isPending}
+              onCancel={() => {
+                setCreateOpen(false);
+                setEditing(null);
+              }}
+              destructiveAction={
+                isEdit && editing
+                  ? {
+                      label: "Desactivar",
+                      onClick: () => deleteMutation.mutate(editing.id),
+                      isPending: deleteMutation.isPending,
+                    }
+                  : undefined
+              }
+            />
           </form>
         </DialogContent>
       </Dialog>

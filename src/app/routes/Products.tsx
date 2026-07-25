@@ -447,7 +447,7 @@ export default function ProductsPage() {
         open={editingProduct !== null}
         onOpenChange={(open) => !open && closeClinicSettings()}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent size="md">
           <DialogHeader>
             <DialogTitle>Visibilidad en clínica</DialogTitle>
             <DialogDescription>
@@ -485,7 +485,7 @@ export default function ProductsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={closeClinicSettings}>
+            <Button type="button" variant="ghost" onClick={closeClinicSettings}>
               Cancelar
             </Button>
             <Button

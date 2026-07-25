@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import {
   Select,
   SelectContent,
@@ -129,7 +129,7 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent size="xl">
         <DialogHeader>
           <DialogTitle>Nueva entrada de stock</DialogTitle>
         </DialogHeader>
@@ -253,53 +253,52 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="entry-quantity" className="text-xs font-medium">
-              Cantidad
-            </Label>
-            <Input
-              id="entry-quantity"
-              type="number"
-              min={1}
-              max={999}
-              className="h-10"
-              placeholder="1"
-              aria-invalid={!!errors.quantity}
-              {...register("quantity")}
-            />
-            {errors.quantity && (
-              <p className="text-xs text-destructive" role="alert">
-                {errors.quantity.message}
-              </p>
-            )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="entry-quantity" className="text-xs font-medium">
+                Cantidad
+              </Label>
+              <Input
+                id="entry-quantity"
+                type="number"
+                min={1}
+                max={999}
+                className="h-10"
+                placeholder="1"
+                aria-invalid={!!errors.quantity}
+                {...register("quantity")}
+              />
+              {errors.quantity && (
+                <p className="text-xs text-destructive" role="alert">
+                  {errors.quantity.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="entry-note" className="text-xs font-medium">
+                Nota  <span className="text-muted-foreground font-normal">(opcional)</span>
+              </Label>
+              <Input
+                id="entry-note"
+                className="h-10"
+                placeholder="Motivo o referencia"
+                aria-invalid={!!errors.note}
+                {...register("note")}
+              />
+              {errors.note && (
+                <p className="text-xs text-destructive" role="alert">
+                  {errors.note.message}
+                </p>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="entry-note" className="text-xs font-medium">
-              Nota  <span className="text-muted-foreground font-normal">(opcional)</span>
-            </Label>
-            <Input
-              id="entry-note"
-              className="h-10"
-              placeholder="Motivo o referencia"
-              aria-invalid={!!errors.note}
-              {...register("note")}
-            />
-            {errors.note && (
-              <p className="text-xs text-destructive" role="alert">
-                {errors.note.message}
-              </p>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={close}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Registrando..." : "Registrar entrada"}
-            </Button>
-          </DialogFooter>
+          <FormDialogFooter
+            submitLabel={isSubmitting ? "Registrando..." : "Registrar entrada"}
+            isPending={isSubmitting}
+            onCancel={close}
+          />
         </form>
       </DialogContent>
     </Dialog>

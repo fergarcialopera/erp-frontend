@@ -13,13 +13,13 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import { createSupplier, deleteSupplier, updateSupplier } from "@/features/catalog/api";
 import { useSuppliers } from "@/features/catalog/queries";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { TableHeaderButton } from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
@@ -226,7 +226,7 @@ export default function PlatformSuppliersPage() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent size="xl">
           <DialogHeader>
             <DialogTitle>{isEdit ? "Editar proveedor" : "Nuevo proveedor"}</DialogTitle>
             <DialogDescription>
@@ -242,31 +242,33 @@ export default function PlatformSuppliersPage() {
             })}
             className="space-y-4"
           >
-            <div className="space-y-2">
-              <Label htmlFor="supplier-name">Nombre</Label>
-              <Input id="supplier-name" {...form.register("name")} />
-              {form.formState.errors.name && (
-                <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="supplier-legal-name">Razón social</Label>
-              <Input id="supplier-legal-name" {...form.register("legal_name")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="supplier-tax-id">NIF/CIF</Label>
-              <Input id="supplier-tax-id" {...form.register("tax_id")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="supplier-email">Email</Label>
-              <Input id="supplier-email" type="email" {...form.register("email")} />
-              {form.formState.errors.email && (
-                <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="supplier-phone">Teléfono</Label>
-              <Input id="supplier-phone" {...form.register("phone")} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="supplier-name">Nombre</Label>
+                <Input id="supplier-name" {...form.register("name")} />
+                {form.formState.errors.name && (
+                  <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="supplier-legal-name">Razón social</Label>
+                <Input id="supplier-legal-name" {...form.register("legal_name")} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="supplier-tax-id">NIF/CIF</Label>
+                <Input id="supplier-tax-id" {...form.register("tax_id")} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="supplier-phone">Teléfono</Label>
+                <Input id="supplier-phone" {...form.register("phone")} />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="supplier-email">Email</Label>
+                <Input id="supplier-email" type="email" {...form.register("email")} />
+                {form.formState.errors.email && (
+                  <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
+                )}
+              </div>
             </div>
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
@@ -281,42 +283,29 @@ export default function PlatformSuppliersPage() {
                 onCheckedChange={(v) => form.setValue("is_active", v)}
               />
             </div>
-            <DialogFooter className="justify-between sm:justify-between">
-              {isEdit && editing && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="mr-auto"
-                  disabled={deleteMutation.isPending}
-                  onClick={() => deleteMutation.mutate(editing.id)}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Desactivar
-                </Button>
-              )}
-              <div className="flex gap-2 ml-auto">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setCreateOpen(false);
-                    setEditing(null);
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                >
-                  {createMutation.isPending || updateMutation.isPending
-                    ? "Guardando…"
-                    : isEdit
-                      ? "Guardar"
-                      : "Crear"}
-                </Button>
-              </div>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel={
+                createMutation.isPending || updateMutation.isPending
+                  ? "Guardando…"
+                  : isEdit
+                    ? "Guardar"
+                    : "Crear"
+              }
+              isPending={createMutation.isPending || updateMutation.isPending}
+              onCancel={() => {
+                setCreateOpen(false);
+                setEditing(null);
+              }}
+              destructiveAction={
+                isEdit && editing
+                  ? {
+                      label: "Desactivar",
+                      onClick: () => deleteMutation.mutate(editing.id),
+                      isPending: deleteMutation.isPending,
+                    }
+                  : undefined
+              }
+            />
           </form>
         </DialogContent>
       </Dialog>

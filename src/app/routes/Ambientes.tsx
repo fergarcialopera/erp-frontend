@@ -168,7 +168,7 @@ export default function AmbientesPage() {
         open={editingAmbiente !== null}
         onOpenChange={(open) => !open && closeClinicSettings()}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent size="md">
           <DialogHeader>
             <DialogTitle>Visibilidad en clínica</DialogTitle>
             <DialogDescription>
@@ -191,7 +191,7 @@ export default function AmbientesPage() {
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={closeClinicSettings}>
+            <Button type="button" variant="ghost" onClick={closeClinicSettings}>
               Cancelar
             </Button>
             <Button

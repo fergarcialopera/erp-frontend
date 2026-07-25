@@ -14,17 +14,17 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import {
   createOperationalRole,
   deleteOperationalRole,
   updateOperationalRole,
 } from "@/features/catalog/api";
 import { useOperationalRoles } from "@/features/catalog/queries";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { TableHeaderButton } from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
@@ -180,7 +180,7 @@ export default function PlatformRolesPage() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-md">
+        <DialogContent size="md">
           <DialogHeader>
             <DialogTitle>{isEdit ? "Editar rol operativo" : "Nuevo rol operativo"}</DialogTitle>
             <DialogDescription>
@@ -218,42 +218,29 @@ export default function PlatformRolesPage() {
                 onCheckedChange={(v) => form.setValue("is_active", v)}
               />
             </div>
-            <DialogFooter className="justify-between sm:justify-between">
-              {isEdit && editing && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="mr-auto"
-                  disabled={deleteMutation.isPending}
-                  onClick={() => deleteMutation.mutate(editing.id)}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Desactivar
-                </Button>
-              )}
-              <div className="flex gap-2 ml-auto">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setCreateOpen(false);
-                    setEditing(null);
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                >
-                  {createMutation.isPending || updateMutation.isPending
-                    ? "Guardando…"
-                    : isEdit
-                      ? "Guardar"
-                      : "Crear"}
-                </Button>
-              </div>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel={
+                createMutation.isPending || updateMutation.isPending
+                  ? "Guardando…"
+                  : isEdit
+                    ? "Guardar"
+                    : "Crear"
+              }
+              isPending={createMutation.isPending || updateMutation.isPending}
+              onCancel={() => {
+                setCreateOpen(false);
+                setEditing(null);
+              }}
+              destructiveAction={
+                isEdit && editing
+                  ? {
+                      label: "Desactivar",
+                      onClick: () => deleteMutation.mutate(editing.id),
+                      isPending: deleteMutation.isPending,
+                    }
+                  : undefined
+              }
+            />
           </form>
         </DialogContent>
       </Dialog>

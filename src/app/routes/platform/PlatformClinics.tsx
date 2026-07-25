@@ -14,10 +14,10 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import { useClinics } from "@/features/clinics/queries";
 import { createClinic, updateClinic, type ClinicListItem } from "@/features/clinics/api";
 import { Pencil, Plus } from "lucide-react";
@@ -147,7 +147,7 @@ export default function PlatformClinicsPage() {
       />
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent size="md">
           <DialogHeader>
             <DialogTitle>Nueva clínica</DialogTitle>
             <DialogDescription>Define nombre, contraseña de kiosk y visibilidad.</DialogDescription>
@@ -186,20 +186,17 @@ export default function PlatformClinicsPage() {
                 onCheckedChange={(v) => createForm.setValue("visible", v)}
               />
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? "Creando…" : "Crear"}
-              </Button>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel={createMutation.isPending ? "Creando…" : "Crear"}
+              isPending={createMutation.isPending}
+              onCancel={() => setCreateOpen(false)}
+            />
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent size="md">
           <DialogHeader>
             <DialogTitle>Editar clínica</DialogTitle>
           </DialogHeader>
@@ -222,14 +219,11 @@ export default function PlatformClinicsPage() {
                 onCheckedChange={(v) => editForm.setValue("visible", v)}
               />
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? "Guardando…" : "Guardar"}
-              </Button>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel={updateMutation.isPending ? "Guardando…" : "Guardar"}
+              isPending={updateMutation.isPending}
+              onCancel={() => setEditing(null)}
+            />
           </form>
         </DialogContent>
       </Dialog>
