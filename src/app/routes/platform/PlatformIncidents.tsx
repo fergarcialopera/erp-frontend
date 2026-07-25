@@ -19,10 +19,10 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import { useIncidents } from "@/features/incidents/queries";
 import { updateIncident } from "@/features/incidents/api";
 import { tableCell } from "@/components/tableTypography";
@@ -161,7 +161,7 @@ export default function PlatformIncidentsPage() {
       />
 
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent size="xl">
           <DialogHeader>
             <DialogTitle>Editar incidencia</DialogTitle>
           </DialogHeader>
@@ -202,14 +202,11 @@ export default function PlatformIncidentsPage() {
                 <Input {...form.register("status")} placeholder="Abierta, Resuelta…" />
               </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={updateMutation.isPending}>
-                Guardar
-              </Button>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel="Guardar"
+              isPending={updateMutation.isPending}
+              onCancel={() => setEditing(null)}
+            />
           </form>
         </DialogContent>
       </Dialog>

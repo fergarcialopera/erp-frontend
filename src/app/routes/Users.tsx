@@ -13,10 +13,10 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import {
   Select,
   SelectContent,
@@ -234,7 +234,7 @@ export default function UsersPage() {
       />
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent size="xl">
           <DialogHeader>
             <DialogTitle>Nuevo usuario</DialogTitle>
             <DialogDescription>
@@ -313,24 +313,17 @@ export default function UsersPage() {
                 onCheckedChange={(checked) => setValue("is_active", checked)}
               />
             </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setModalOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isSubmitting || createMutation.isPending}>
-                {createMutation.isPending ? "Creando…" : "Crear usuario"}
-              </Button>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel={createMutation.isPending ? "Creando…" : "Crear usuario"}
+              isPending={isSubmitting || createMutation.isPending}
+              onCancel={() => setModalOpen(false)}
+            />
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent size="xl">
           <DialogHeader>
             <DialogTitle>Editar usuario</DialogTitle>
             <DialogDescription>
@@ -397,23 +390,11 @@ export default function UsersPage() {
                   onCheckedChange={(checked) => editForm.setValue("is_active", checked)}
                 />
               </div>
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setEditingUser(null)}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={
-                    editForm.formState.isSubmitting || updateMutation.isPending
-                  }
-                >
-                  {updateMutation.isPending ? "Guardando…" : "Guardar"}
-                </Button>
-              </DialogFooter>
+              <FormDialogFooter
+                submitLabel={updateMutation.isPending ? "Guardando…" : "Guardar"}
+                isPending={editForm.formState.isSubmitting || updateMutation.isPending}
+                onCancel={() => setEditingUser(null)}
+              />
             </form>
           )}
         </DialogContent>

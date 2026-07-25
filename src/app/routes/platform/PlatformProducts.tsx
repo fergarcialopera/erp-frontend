@@ -22,10 +22,10 @@ import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import {
   Select,
   SelectContent,
@@ -33,7 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { TableHeaderButton } from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
@@ -537,7 +537,7 @@ export default function PlatformProductsPage() {
       />
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent size="2xl">
           <DialogHeader>
             <DialogTitle>Nuevo producto</DialogTitle>
           </DialogHeader>
@@ -550,20 +550,17 @@ export default function PlatformProductsPage() {
               dispensingTypes={dispensingTypes}
               onCategoryChange={() => form.setValue("subcategory_id", "")}
             />
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                Crear
-              </Button>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel="Crear"
+              isPending={createMutation.isPending}
+              onCancel={() => setModalOpen(false)}
+            />
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent size="2xl">
           <DialogHeader>
             <DialogTitle>Editar producto</DialogTitle>
           </DialogHeader>
@@ -583,26 +580,16 @@ export default function PlatformProductsPage() {
               onCategoryChange={() => editForm.setValue("subcategory_id", "")}
             />
             {editing ? <ProductSuppliersPanel productId={editing.id} /> : null}
-            <DialogFooter className="justify-between sm:justify-between">
-              <Button
-                type="button"
-                variant="destructive"
-                className="mr-auto gap-1.5"
-                onClick={() => editing && deleteMutation.mutate(editing.id)}
-                disabled={deleteMutation.isPending}
-              >
-                <Trash2 className="h-4 w-4" />
-                Desactivar
-              </Button>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={updateMutation.isPending}>
-                  Guardar
-                </Button>
-              </div>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel="Guardar"
+              isPending={updateMutation.isPending}
+              onCancel={() => setEditing(null)}
+              destructiveAction={{
+                label: "Desactivar",
+                onClick: () => editing && deleteMutation.mutate(editing.id),
+                isPending: deleteMutation.isPending,
+              }}
+            />
           </form>
         </DialogContent>
       </Dialog>

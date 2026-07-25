@@ -36,7 +36,7 @@ export function ContactDialog({ open, onOpenChange }: ContactDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-2xl sm:rounded-2xl">
+      <DialogContent size="md" className="rounded-2xl sm:rounded-2xl">
         <DialogHeader>
           <DialogTitle className="font-heading text-2xl font-bold tracking-tight">
             Consigue una prueba

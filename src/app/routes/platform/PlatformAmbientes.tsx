@@ -8,16 +8,15 @@ import { useAmbientes } from "@/features/ambientes/queries";
 import { createAmbiente } from "@/features/ambientes/api";
 import { DataTable, Column } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import { Plus } from "lucide-react";
 import { TableHeaderButton } from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
@@ -120,7 +119,7 @@ export default function PlatformAmbientesPage() {
       />
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent size="md">
           <DialogHeader>
             <DialogTitle>Nuevo ambiente</DialogTitle>
           </DialogHeader>
@@ -137,14 +136,11 @@ export default function PlatformAmbientesPage() {
               <Label>ID dispositivo</Label>
               <Input {...form.register("device_id")} />
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                Crear
-              </Button>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel="Crear"
+              isPending={createMutation.isPending}
+              onCancel={() => setOpen(false)}
+            />
           </form>
         </DialogContent>
       </Dialog>

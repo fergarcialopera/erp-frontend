@@ -9,10 +9,10 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import {
   Select,
   SelectContent,
@@ -129,7 +129,7 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent size="xl">
         <DialogHeader>
           <DialogTitle>Nueva entrada de stock</DialogTitle>
         </DialogHeader>
@@ -294,14 +294,11 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
             </div>
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={close}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Registrando..." : "Registrar entrada"}
-            </Button>
-          </DialogFooter>
+          <FormDialogFooter
+            submitLabel={isSubmitting ? "Registrando..." : "Registrar entrada"}
+            isPending={isSubmitting}
+            onCancel={close}
+          />
         </form>
       </DialogContent>
     </Dialog>
