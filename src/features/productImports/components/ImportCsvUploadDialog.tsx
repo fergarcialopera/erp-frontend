@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const MAX_BYTES = 10 * 1024 * 1024;
+const MAX_BYTES = 5 * 1024 * 1024;
 
 interface ImportCsvUploadDialogProps {
   open: boolean;
@@ -54,7 +54,7 @@ export function ImportCsvUploadDialog({
       return;
     }
     if (candidate.size > MAX_BYTES) {
-      setError("El archivo supera el máximo de 10 MB");
+      setError("El archivo supera el máximo permitido de 5 MB");
       setFile(null);
       return;
     }
@@ -75,7 +75,7 @@ export function ImportCsvUploadDialog({
         <DialogHeader className="min-w-0">
           <DialogTitle>Nueva importación CSV</DialogTitle>
           <DialogDescription>
-            Exportación de productos de Odoo delimitada por punto y coma (;). Máximo 10 MB.
+            Exportación de productos de Odoo delimitada por punto y coma (;). Máximo 5 MB.
             Decimales en formato español (10,49).
           </DialogDescription>
         </DialogHeader>
