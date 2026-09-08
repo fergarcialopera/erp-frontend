@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,17 +20,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/app/providers/useAuth";
-import { productsNewUrl } from "@/features/products/constants";
 import { useProducts } from "@/features/products/queries";
 import { ProductStockLocationsPanel } from "@/features/products/components/ProductStockLocationsPanel";
 import { useAmbientesTree } from "@/features/ambientes/queries";
 import { createEntryLog } from "@/features/entryLogs/api";
+import { isClinicOperableProduct } from "@/features/inventory/components/entryProductEligibility";
 import { useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
+import type { Ambiente, Product } from "@/types/models";
 
 const LOCATION_NONE = "__none__";
+const PRODUCT_RESULT_LIMIT = 30;
+
+/** Ambientes operativos para ubicar entradas (visibles en clínica). */
+function isOperableAmbiente(ambiente: Ambiente): boolean {
+  if (!ambiente.is_active) return false;
+  if (ambiente.is_visible === undefined) return true;
+  return ambiente.is_visible === true;
+}
+
+function matchesProductQuery(product: Product, query: string): boolean {
+  const haystack = [product.name, product.sku, product.barcode, product.internal_reference]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  return haystack.includes(query);
+}
 
 const entrySchema = z.object({
   product_id: z.string().min(1, "Selecciona un producto"),
@@ -49,15 +67,20 @@ interface NewEntryLogDialogProps {
 export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { clinicId, canAccessManagement } = useAuth();
-  const canManageProducts = canAccessManagement();
-  const { data: products = [] } = useProducts(clinicId);
+  const { clinicId } = useAuth();
+  const { data: products = [], isLoading: productsLoading } = useProducts(clinicId);
   const { data: ambienteTree = [], isLoading: ambienteTreeLoading } = useAmbientesTree(clinicId, {
     enabled: open,
   });
-  const activeProducts = products.filter((p) => p.is_active);
-  const activeAmbientes = ambienteTree.filter((a) => a.is_active);
+  const clinicProducts = useMemo(
+    () => products.filter(isClinicOperableProduct),
+    [products],
+  );
+  const hasClinicProducts = clinicProducts.length > 0;
+  const activeAmbientes = useMemo(() => ambienteTree.filter(isOperableAmbiente), [ambienteTree]);
   const [filterAmbienteId, setFilterAmbienteId] = useState<string | undefined>();
+  const [productQuery, setProductQuery] = useState("");
+  const deferredProductQuery = useDeferredValue(productQuery);
 
   const {
     watch,
@@ -74,24 +97,44 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
   const selectedAmbiente = activeAmbientes.find((a) => a.id === filterAmbienteId);
   const activeZones = (selectedAmbiente?.zones ?? []).filter((z) => z.is_active);
   const selectedProductId = watch("product_id");
+  const selectedProduct = clinicProducts.find((p) => p.id === selectedProductId);
+
+  const filteredProducts = useMemo(() => {
+    const q = deferredProductQuery.trim().toLowerCase();
+    const list = q
+      ? clinicProducts.filter((p) => matchesProductQuery(p, q))
+      : clinicProducts;
+    return list.slice(0, PRODUCT_RESULT_LIMIT);
+  }, [deferredProductQuery, clinicProducts]);
 
   useEffect(() => {
     if (open) {
-      reset({ quantity: 1, note: "", zone_id: undefined });
+      reset({ quantity: 1, note: "", zone_id: undefined, product_id: "" });
       setFilterAmbienteId(undefined);
+      setProductQuery("");
     }
   }, [open, reset]);
 
   const close = () => onOpenChange(false);
 
-  const goToNewProduct = () => {
+  const goToProducts = () => {
     close();
-    navigate(productsNewUrl());
+    navigate("/products");
+  };
+
+  const selectProduct = (product: Product) => {
+    setValue("product_id", product.id, { shouldValidate: true, shouldDirty: true });
+    setProductQuery("");
+  };
+
+  const clearProduct = () => {
+    setValue("product_id", "", { shouldValidate: true, shouldDirty: true });
+    setProductQuery("");
   };
 
   const onSubmit = async (data: EntryForm) => {
-    const selectedProduct = products.find((p) => p.id === data.product_id);
-    if (!selectedProduct?.sku) {
+    const product = clinicProducts.find((p) => p.id === data.product_id);
+    if (!product?.sku) {
       toast.error("Producto inválido", {
         description: "No se pudo resolver el SKU del producto seleccionado.",
       });
@@ -104,8 +147,8 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
 
     try {
       await createEntryLog({
-        sku: selectedProduct.sku,
-        name: selectedProduct.name,
+        sku: product.sku,
+        name: product.name,
         quantity: data.quantity,
         note: data.note,
         ...(zone
@@ -137,44 +180,161 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <Label htmlFor="entry-product_id" className="text-xs font-medium">
+              <Label htmlFor="entry-product-search" className="text-xs font-medium">
                 Producto a ingresar
               </Label>
-              {canManageProducts && (
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="h-auto px-0 text-xs"
+                onClick={goToProducts}
+              >
+                Ir a productos
+              </Button>
+            </div>
+
+            {!productsLoading && !hasClinicProducts && (
+              <p
+                className="rounded-md border border-dashed bg-muted/40 px-3 py-2.5 text-xs text-muted-foreground"
+                role="status"
+              >
+                No hay productos disponibles para esta clínica. Activa productos en la sección
+                Productos para poder registrar entradas.
+              </p>
+            )}
+
+            {selectedProduct ? (
+              <div className="flex items-start justify-between gap-2 rounded-md border bg-muted/40 px-3 py-2.5">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{selectedProduct.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    SKU: {selectedProduct.sku}
+                    {selectedProduct.barcode ? ` · ${selectedProduct.barcode}` : ""}
+                  </p>
+                </div>
                 <Button
                   type="button"
-                  variant="link"
-                  size="sm"
-                  className="h-auto px-0 text-xs"
-                  onClick={goToNewProduct}
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+                  onClick={clearProduct}
+                  aria-label="Quitar producto seleccionado"
                 >
-                  <Plus className="h-3.5 w-3.5" />
-                  Añadir producto
+                  <X className="h-4 w-4" />
                 </Button>
-              )}
-            </div>
-            <Select
-              value={watch("product_id")}
-              onValueChange={(v) => setValue("product_id", v)}
-              disabled={activeProducts.length === 0}
-            >
-              <SelectTrigger id="entry-product_id" className="h-10" aria-invalid={!!errors.product_id}>
-                <SelectValue placeholder="Seleccionar producto" />
-              </SelectTrigger>
-              <SelectContent>
-                {activeProducts.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name} ({p.sku})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.product_id && (
+              </div>
+            ) : hasClinicProducts || productsLoading ? (
+              <>
+                <div className="relative">
+                  <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <Input
+                    id="entry-product-search"
+                    value={productQuery}
+                    onChange={(e) => setProductQuery(e.target.value)}
+                    placeholder="Buscar por nombre, SKU o código…"
+                    className="h-10 pl-10 pr-10"
+                    disabled={productsLoading || !hasClinicProducts}
+                    aria-invalid={!!errors.product_id}
+                    autoComplete="off"
+                  />
+                  {productQuery.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0.5 top-1/2 h-8 w-8 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      onClick={() => setProductQuery("")}
+                      aria-label="Borrar búsqueda"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+
+                <div
+                  className="max-h-40 overflow-y-auto rounded-md border bg-background"
+                  role="listbox"
+                  aria-label="Resultados de productos"
+                >
+                  {productsLoading ? (
+                    <p className="px-3 py-2.5 text-xs text-muted-foreground">Cargando productos…</p>
+                  ) : filteredProducts.length === 0 ? (
+                    <p className="px-3 py-2.5 text-xs text-muted-foreground">
+                      Sin resultados para «{productQuery.trim()}».
+                    </p>
+                  ) : (
+                    <ul className="py-1">
+                      {filteredProducts.map((product) => (
+                        <li key={product.id}>
+                          <button
+                            type="button"
+                            role="option"
+                            className={cn(
+                              "flex w-full flex-col items-start gap-0.5 px-3 py-2 text-left",
+                              "hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:outline-none",
+                            )}
+                            onClick={() => selectProduct(product)}
+                          >
+                            <span className="text-sm font-medium truncate w-full">{product.name}</span>
+                            <span className="text-xs text-muted-foreground truncate w-full">
+                              {product.sku}
+                              {product.barcode ? ` · ${product.barcode}` : ""}
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </>
+            ) : null}
+
+            {errors.product_id && hasClinicProducts && (
               <p className="text-xs text-destructive" role="alert">
                 {errors.product_id.message}
               </p>
             )}
-            <ProductStockLocationsPanel productId={selectedProductId} />
+            <ProductStockLocationsPanel productId={selectedProductId || undefined} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="entry-quantity" className="text-xs font-medium">
+              Cantidad
+            </Label>
+            <Input
+              id="entry-quantity"
+              type="number"
+              min={1}
+              max={999}
+              className="h-10"
+              placeholder="1"
+              aria-invalid={!!errors.quantity}
+              {...register("quantity")}
+            />
+            {errors.quantity && (
+              <p className="text-xs text-destructive" role="alert">
+                {errors.quantity.message}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="entry-note" className="text-xs font-medium">
+              Nota <span className="text-muted-foreground font-normal">(opcional)</span>
+            </Label>
+            <Input
+              id="entry-note"
+              className="h-10"
+              placeholder="Motivo o referencia"
+              aria-invalid={!!errors.note}
+              {...register("note")}
+            />
+            {errors.note && (
+              <p className="text-xs text-destructive" role="alert">
+                {errors.note.message}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -191,10 +351,10 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
                 disabled={ambienteTreeLoading || activeAmbientes.length === 0}
               >
                 <SelectTrigger id="entry-filter-ambiente" className="h-10">
-                  <SelectValue placeholder="Todos los ambientes" />
+                  <SelectValue placeholder="Sin ambiente" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={LOCATION_NONE}>Todos los ambientes</SelectItem>
+                  <SelectItem value={LOCATION_NONE}>Sin ambiente</SelectItem>
                   {activeAmbientes.map((a) => (
                     <SelectItem key={a.id} value={a.id}>
                       {a.name}
@@ -229,7 +389,7 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
                       ambienteTreeLoading
                         ? "Cargando ambientes…"
                         : !filterAmbienteId
-                          ? "Elige un ambiente para ubicar"
+                          ? "Opcional tras elegir ambiente"
                           : activeZones.length === 0
                             ? "Sin zonas en este ambiente"
                             : "Sin zona"
@@ -253,50 +413,11 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="entry-quantity" className="text-xs font-medium">
-              Cantidad
-            </Label>
-            <Input
-              id="entry-quantity"
-              type="number"
-              min={1}
-              max={999}
-              className="h-10"
-              placeholder="1"
-              aria-invalid={!!errors.quantity}
-              {...register("quantity")}
-            />
-            {errors.quantity && (
-              <p className="text-xs text-destructive" role="alert">
-                {errors.quantity.message}
-              </p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="entry-note" className="text-xs font-medium">
-              Nota  <span className="text-muted-foreground font-normal">(opcional)</span>
-            </Label>
-            <Input
-              id="entry-note"
-              className="h-10"
-              placeholder="Motivo o referencia"
-              aria-invalid={!!errors.note}
-              {...register("note")}
-            />
-            {errors.note && (
-              <p className="text-xs text-destructive" role="alert">
-                {errors.note.message}
-              </p>
-            )}
-          </div>
-
           <DialogFooter>
             <Button type="button" variant="outline" onClick={close}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || !hasClinicProducts}>
               {isSubmitting ? "Registrando..." : "Registrar entrada"}
             </Button>
           </DialogFooter>

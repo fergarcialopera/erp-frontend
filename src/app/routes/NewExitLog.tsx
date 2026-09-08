@@ -44,7 +44,7 @@ export default function NewExitLogPage() {
     defaultValues: { quantity: 1 },
   });
 
-  const activeProducts = products.filter((p) => p.is_active);
+  const activeProducts = products.filter((p) => p.is_active && p.is_visible === true);
 
   const onSubmit = async (data: ExitLogForm) => {
     try {
