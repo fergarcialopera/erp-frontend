@@ -1,8 +1,10 @@
 import { LandingHeader } from "./components/LandingHeader";
 import { LandingHero } from "./components/LandingHero";
-import { FeatureGrid } from "./components/FeatureGrid";
-import { ProcessSteps } from "./components/ProcessSteps";
-import { LandingCta } from "./components/LandingCta";
+import { BenefitsSection } from "./components/BenefitsSection";
+import { AdvantagesSection } from "./components/AdvantagesSection";
+import { SoftwareSection } from "./components/SoftwareSection";
+import { SolutionsSection } from "./components/SolutionsSection";
+import { HowItWorksSection } from "./components/HowItWorksSection";
 import { LandingFooter } from "./components/LandingFooter";
 
 export default function LandingPage() {
@@ -11,9 +13,11 @@ export default function LandingPage() {
       <LandingHeader />
       <main>
         <LandingHero />
-        <FeatureGrid />
-        <ProcessSteps />
-        <LandingCta />
+        <BenefitsSection />
+        <AdvantagesSection />
+        <SoftwareSection />
+        <SolutionsSection />
+        <HowItWorksSection />
       </main>
       <LandingFooter />
     </div>

@@ -83,6 +83,17 @@ export const ENDPOINTS = {
     CLINICS: (id: string) => `/products/${id}/clinics`,
     CLINIC: (id: string, clinicId: string) => `/products/${id}/clinics/${clinicId}`,
   },
+  /** Importación CSV Odoo (SUPER_ADMIN). */
+  PRODUCT_IMPORTS: {
+    LIST: "/product-imports",
+    CREATE: "/product-imports",
+    DETAIL: (id: string) => `/product-imports/${id}`,
+    ROWS: (id: string) => `/product-imports/${id}/rows`,
+    ROW: (id: string, rowId: string) => `/product-imports/${id}/rows/${rowId}`,
+    CONFIRM: (id: string) => `/product-imports/${id}/confirm`,
+    CANCEL: (id: string) => `/product-imports/${id}/cancel`,
+  },
+
   CATEGORIES: resource("/categories"),
   SUBCATEGORIES: resource("/subcategories"),
   BRANDS: {

@@ -3,17 +3,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import { toast } from "sonner";
 import { useAuth } from "@/app/providers/useAuth";
 import { adjustProductInventory } from "@/features/inventory/api";
@@ -96,7 +95,7 @@ export function EditInventoryDialog({ row, onOpenChange }: EditInventoryDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent size="md">
         <DialogHeader>
           <DialogTitle>Corregir inventario</DialogTitle>
           <DialogDescription asChild>
@@ -147,14 +146,11 @@ export function EditInventoryDialog({ row, onOpenChange }: EditInventoryDialogPr
               )}
             </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isSubmitting || mutation.isPending}>
-                {isSubmitting || mutation.isPending ? "Guardando…" : "Guardar corrección"}
-              </Button>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel={isSubmitting || mutation.isPending ? "Guardando…" : "Guardar corrección"}
+              isPending={isSubmitting || mutation.isPending}
+              onCancel={() => onOpenChange(false)}
+            />
           </form>
         )}
       </DialogContent>

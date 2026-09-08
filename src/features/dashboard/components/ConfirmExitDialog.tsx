@@ -53,7 +53,7 @@ export function ConfirmExitDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl">
+      <DialogContent size="2xl" className="max-w-[calc(100%-2rem)]">
         <DialogHeader>
           <DialogTitle>Confirmar salida</DialogTitle>
           <DialogDescription>

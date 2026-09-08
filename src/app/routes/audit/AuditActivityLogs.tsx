@@ -258,7 +258,7 @@ export default function AuditActivityLogs({ platformScope = false }: AuditScopeP
       />
 
       <Dialog open={selectedId != null} onOpenChange={(open) => !open && setSelectedId(null)}>
-        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Detalle de actividad</DialogTitle>
           </DialogHeader>

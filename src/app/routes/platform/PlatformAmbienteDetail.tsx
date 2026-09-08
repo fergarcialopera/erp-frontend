@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,10 +12,10 @@ import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import { DataTable, Column } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAmbiente } from "@/features/ambientes/queries";
@@ -204,7 +204,7 @@ export default function PlatformAmbienteDetailPage() {
       />
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent size="md">
           <DialogHeader>
             <DialogTitle>Editar ambiente</DialogTitle>
           </DialogHeader>
@@ -231,31 +231,22 @@ export default function PlatformAmbienteDetailPage() {
                 onCheckedChange={(v) => ambienteForm.setValue("is_active", v)}
               />
             </div>
-            <DialogFooter className="justify-between sm:justify-between">
-              <Button
-                type="button"
-                variant="destructive"
-                className="mr-auto"
-                onClick={() => deleteAmbienteMutation.mutate()}
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Desactivar
-              </Button>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={updateAmbienteMutation.isPending}>
-                  Guardar
-                </Button>
-              </div>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel="Guardar"
+              isPending={updateAmbienteMutation.isPending}
+              onCancel={() => setEditOpen(false)}
+              destructiveAction={{
+                label: "Desactivar",
+                onClick: () => deleteAmbienteMutation.mutate(),
+                isPending: deleteAmbienteMutation.isPending,
+              }}
+            />
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={zoneModal !== null} onOpenChange={(open) => !open && setZoneModal(null)}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent size="md">
           <DialogHeader>
             <DialogTitle>{zoneModal === "create" ? "Nueva zona" : "Editar zona"}</DialogTitle>
           </DialogHeader>
@@ -278,24 +269,19 @@ export default function PlatformAmbienteDetailPage() {
                 onCheckedChange={(v) => zoneForm.setValue("is_active", v)}
               />
             </div>
-            <DialogFooter className="justify-between sm:justify-between">
-              {zoneModal !== "create" && zoneModal && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="mr-auto"
-                  onClick={() => deleteZoneMutation.mutate(zoneModal.id)}
-                >
-                  Eliminar
-                </Button>
-              )}
-              <div className="flex gap-2 ml-auto">
-                <Button type="button" variant="outline" onClick={() => setZoneModal(null)}>
-                  Cancelar
-                </Button>
-                <Button type="submit">Guardar</Button>
-              </div>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel="Guardar"
+              onCancel={() => setZoneModal(null)}
+              destructiveAction={
+                zoneModal !== "create" && zoneModal
+                  ? {
+                      label: "Eliminar",
+                      onClick: () => deleteZoneMutation.mutate(zoneModal.id),
+                      isPending: deleteZoneMutation.isPending,
+                    }
+                  : undefined
+              }
+            />
           </form>
         </DialogContent>
       </Dialog>

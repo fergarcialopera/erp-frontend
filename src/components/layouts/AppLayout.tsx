@@ -38,7 +38,7 @@ export default function AppLayout() {
             <Separator orientation="vertical" className="h-5" />
             <h1 className="truncate font-heading text-sm font-semibold">{title}</h1>
           </header>
-          <main className="min-w-0 flex-1 overflow-auto p-3 sm:p-4 md:p-6">
+          <main className="min-w-0 flex-1 overflow-auto p-3 sm:p-4 md:px-4 md:py-6">
             <div className="animate-fade-in">
               <Outlet />
             </div>

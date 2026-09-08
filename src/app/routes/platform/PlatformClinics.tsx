@@ -14,10 +14,10 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import { useClinics, CLINICS_QUERY_KEY } from "@/features/clinics/queries";
 import { createClinic, type ClinicListItem } from "@/features/clinics/api";
 import { Pencil, Plus } from "lucide-react";
@@ -125,7 +125,7 @@ export default function PlatformClinicsPage() {
       />
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent size="md">
           <DialogHeader>
             <DialogTitle>Nueva clínica</DialogTitle>
             <DialogDescription>Define nombre, contraseña de kiosk y visibilidad.</DialogDescription>
@@ -164,14 +164,11 @@ export default function PlatformClinicsPage() {
                 onCheckedChange={(v) => createForm.setValue("visible", v)}
               />
             </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending ? "Creando…" : "Crear"}
-              </Button>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel={createMutation.isPending ? "Creando…" : "Crear"}
+              isPending={createMutation.isPending}
+              onCancel={() => setCreateOpen(false)}
+            />
           </form>
         </DialogContent>
       </Dialog>

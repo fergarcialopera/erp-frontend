@@ -1,4 +1,5 @@
 import { useDeferredValue, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,13 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { FormDialogFooter } from "@/components/FormDialogFooter";
 import {
   Select,
   SelectContent,
@@ -34,8 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pencil, Plus, Trash2 } from "lucide-react";
-import { TableHeaderButton } from "@/components/TableHeaderButton";
+import { Pencil, Plus, Upload } from "lucide-react";
+import {
+  TableHeaderButton,
+  TableHeaderButtonLabel,
+  tableHeaderButtonClassName,
+} from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
 import { toastMutationError } from "@/lib/toastMutationError";
@@ -408,14 +408,28 @@ export default function PlatformProductsPage() {
         searchPlaceholder="Buscar por nombre, barcode o referencia…"
         emptyTitle="Sin productos"
         headerAction={
-          <TableHeaderButton
-            label="Nuevo producto"
-            icon={<Plus />}
-            onClick={() => {
-              form.reset(emptyForm);
-              setModalOpen(true);
-            }}
-          />
+          <div className="flex items-center gap-2">
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className={tableHeaderButtonClassName}
+              aria-label="Importar CSV"
+            >
+              <Link to="/platform/product-imports">
+                <Upload />
+                <TableHeaderButtonLabel label="Importar CSV" />
+              </Link>
+            </Button>
+            <TableHeaderButton
+              label="Nuevo producto"
+              icon={<Plus />}
+              onClick={() => {
+                form.reset(emptyForm);
+                setModalOpen(true);
+              }}
+            />
+          </div>
         }
         filters={
           <ListFiltersToolbar
@@ -539,7 +553,7 @@ export default function PlatformProductsPage() {
       />
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogContent size="2xl">
           <DialogHeader>
             <DialogTitle>Nuevo producto</DialogTitle>
           </DialogHeader>
@@ -552,20 +566,17 @@ export default function PlatformProductsPage() {
               dispensingTypes={dispensingTypes}
               onCategoryChange={() => form.setValue("subcategory_id", "")}
             />
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={createMutation.isPending}>
-                Crear
-              </Button>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel="Crear"
+              isPending={createMutation.isPending}
+              onCancel={() => setModalOpen(false)}
+            />
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+        <DialogContent size="2xl">
           <DialogHeader>
             <DialogTitle>Editar producto</DialogTitle>
           </DialogHeader>
@@ -575,14 +586,9 @@ export default function PlatformProductsPage() {
             })}
             className="space-y-4"
           >
-            {editing?.sku ? (
-              <div className="space-y-2">
-                <Label>SKU</Label>
-                <Input value={editing.sku} disabled className="font-mono" />
-              </div>
-            ) : null}
             <ProductFormFields
               form={editForm}
+              sku={editing?.sku}
               categories={categories}
               subcategories={editSubcategories}
               brands={brands}
@@ -591,26 +597,16 @@ export default function PlatformProductsPage() {
             />
             {editing ? <ProductSuppliersPanel productId={editing.id} /> : null}
             {editing ? <ProductClinicsPanel productId={editing.id} /> : null}
-            <DialogFooter className="justify-between sm:justify-between">
-              <Button
-                type="button"
-                variant="destructive"
-                className="mr-auto gap-1.5"
-                onClick={() => editing && deleteMutation.mutate(editing.id)}
-                disabled={deleteMutation.isPending}
-              >
-                <Trash2 className="h-4 w-4" />
-                Desactivar
-              </Button>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => setEditing(null)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={updateMutation.isPending}>
-                  Guardar
-                </Button>
-              </div>
-            </DialogFooter>
+            <FormDialogFooter
+              submitLabel="Guardar"
+              isPending={updateMutation.isPending}
+              onCancel={() => setEditing(null)}
+              destructiveAction={{
+                label: "Desactivar",
+                onClick: () => editing && deleteMutation.mutate(editing.id),
+                isPending: deleteMutation.isPending,
+              }}
+            />
           </form>
         </DialogContent>
       </Dialog>
@@ -625,6 +621,7 @@ function ProductFormFields({
   brands,
   dispensingTypes,
   onCategoryChange,
+  sku,
 }: {
   form: ReturnType<typeof useForm<ProductForm>>;
   categories: { id: string; name: string }[];
@@ -632,27 +629,26 @@ function ProductFormFields({
   brands: { id: string; name: string }[];
   dispensingTypes: { id: string; name: string }[];
   onCategoryChange: () => void;
+  sku?: string | null;
 }) {
   const categoryId = form.watch("category_id");
 
   return (
-    <>
-      <div className="space-y-2">
+    <div className="grid gap-4 sm:grid-cols-2">
+      <div className="space-y-2 sm:col-span-2">
         <Label>Nombre *</Label>
         <Input {...form.register("name")} />
         {form.formState.errors.name && (
           <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
         )}
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2">
-          <Label>Código de barras</Label>
-          <Input {...form.register("barcode")} />
-        </div>
-        <div className="space-y-2">
-          <Label>Referencia interna</Label>
-          <Input {...form.register("internal_reference")} />
-        </div>
+      <div className="space-y-2">
+        <Label>Código de barras</Label>
+        <Input {...form.register("barcode")} />
+      </div>
+      <div className="space-y-2">
+        <Label>Referencia interna</Label>
+        <Input {...form.register("internal_reference")} />
       </div>
       <div className="space-y-2">
         <Label>Categoría</Label>
@@ -734,11 +730,17 @@ function ProductFormFields({
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2">
+      <div className={sku ? "space-y-2" : "space-y-2 sm:col-span-2"}>
         <Label>Unidad de medida</Label>
         <Input {...form.register("unit_of_measure")} />
       </div>
-      <div className="flex items-center justify-between rounded-lg border p-4">
+      {sku ? (
+        <div className="space-y-2">
+          <Label>SKU</Label>
+          <Input value={sku} disabled className="font-mono" />
+        </div>
+      ) : null}
+      <div className="flex items-center justify-between rounded-lg border p-4 sm:col-span-2">
         <div className="space-y-0.5">
           <Label>Activo en catálogo</Label>
           <p className="text-xs text-muted-foreground">
@@ -750,6 +752,6 @@ function ProductFormFields({
           onCheckedChange={(v) => form.setValue("is_active", v)}
         />
       </div>
-    </>
+    </div>
   );
 }
