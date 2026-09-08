@@ -1,11 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import {
+  fetchProductClinics,
   fetchProductStockLocations,
   fetchProductSuppliers,
   fetchProducts,
   getProduct,
 } from "./api";
 import type { ProductListFilters } from "@/types/models";
+
+export const productClinicsQueryKey = (productId: string) =>
+  ["products", productId, "clinics"] as const;
 
 export const useProducts = (
   clinicId: string | null,
@@ -54,5 +58,12 @@ export const useProductSuppliers = (productId: string | undefined) =>
   useQuery({
     queryKey: ["products", productId, "suppliers"],
     queryFn: () => fetchProductSuppliers(productId!),
+    enabled: !!productId,
+  });
+
+export const useProductClinics = (productId: string | undefined) =>
+  useQuery({
+    queryKey: productClinicsQueryKey(productId ?? ""),
+    queryFn: () => fetchProductClinics(productId!),
     enabled: !!productId,
   });

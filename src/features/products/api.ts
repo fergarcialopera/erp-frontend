@@ -191,3 +191,75 @@ export const setPreferredProductSupplier = async (
   );
   return mapProductSupplier(unwrapData<Record<string, unknown>>(res.data));
 };
+
+export interface ProductClinic {
+  clinic_id: string;
+  name: string;
+  visible: boolean;
+  visible_in_kiosk: boolean;
+}
+
+export interface ProductClinicVisibilityBulkPayload {
+  visible: boolean;
+  clinic_ids?: string[];
+}
+
+export interface ProductClinicVisibilityBulkResult {
+  product_id: string;
+  visible: boolean;
+  matched: number;
+  updated: number;
+  unchanged: number;
+}
+
+export interface ProductClinicVisibility {
+  product_id: string;
+  clinic_id: string;
+  visible: boolean;
+}
+
+function mapProductClinic(raw: Record<string, unknown>): ProductClinic {
+  return {
+    clinic_id: String(raw.clinic_id ?? ""),
+    name: String(raw.name ?? ""),
+    visible: raw.visible === true,
+    visible_in_kiosk: raw.visible_in_kiosk !== false,
+  };
+}
+
+export const fetchProductClinics = async (
+  productId: string,
+  params?: { visible?: boolean; search?: string },
+): Promise<ProductClinic[]> => {
+  const res = await apiClient.get(ENDPOINTS.PRODUCTS.CLINICS(productId), { params });
+  return unwrapList<Record<string, unknown>>(res.data).map(mapProductClinic);
+};
+
+export const patchProductClinicVisibility = async (
+  productId: string,
+  clinicId: string,
+  visible: boolean,
+): Promise<ProductClinicVisibility> => {
+  const res = await apiClient.patch(ENDPOINTS.PRODUCTS.CLINIC(productId, clinicId), { visible });
+  const raw = unwrapData<Record<string, unknown>>(res.data);
+  return {
+    product_id: String(raw.product_id ?? productId),
+    clinic_id: String(raw.clinic_id ?? clinicId),
+    visible: raw.visible === true,
+  };
+};
+
+export const bulkPatchProductClinicVisibility = async (
+  productId: string,
+  data: ProductClinicVisibilityBulkPayload,
+): Promise<ProductClinicVisibilityBulkResult> => {
+  const res = await apiClient.patch(ENDPOINTS.PRODUCTS.CLINICS(productId), data);
+  const raw = unwrapData<Record<string, unknown>>(res.data);
+  return {
+    product_id: String(raw.product_id ?? productId),
+    visible: raw.visible === true,
+    matched: Number(raw.matched ?? 0),
+    updated: Number(raw.updated ?? 0),
+    unchanged: Number(raw.unchanged ?? 0),
+  };
+};

@@ -29,7 +29,7 @@ import AuditAccessLogs from "@/app/routes/audit/AuditAccessLogs";
 import AuditActivityLogs from "@/app/routes/audit/AuditActivityLogs";
 import PlatformHomePage from "@/app/routes/platform/PlatformHome";
 import PlatformClinicsPage from "@/app/routes/platform/PlatformClinics";
-import PlatformClinicDetailPage from "@/app/routes/platform/PlatformClinicDetail";
+import PlatformClinicEditPage from "@/app/routes/platform/PlatformClinicEdit";
 import PlatformProductsPage from "@/app/routes/platform/PlatformProducts";
 import PlatformCategoriesPage from "@/app/routes/platform/PlatformCategories";
 import PlatformSubcategoriesPage from "@/app/routes/platform/PlatformSubcategories";
@@ -78,7 +78,7 @@ const App = () => (
             >
               <Route path="/platform" element={<PlatformHomePage />} />
               <Route path="/platform/clinics" element={<PlatformClinicsPage />} />
-              <Route path="/platform/clinics/:id" element={<PlatformClinicDetailPage />} />
+              <Route path="/platform/clinics/:id" element={<PlatformClinicEditPage />} />
               <Route path="/platform/users" element={<UsersPage />} />
               <Route path="/platform/products" element={<PlatformProductsPage />} />
               <Route path="/platform/categories" element={<PlatformCategoriesPage />} />

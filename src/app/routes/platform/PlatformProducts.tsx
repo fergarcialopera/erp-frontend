@@ -13,6 +13,7 @@ import {
   useSuppliers,
 } from "@/features/catalog/queries";
 import { ProductSuppliersPanel } from "@/features/products/components/ProductSuppliersPanel";
+import { ProductClinicsPanel } from "@/features/products/components/ProductClinicsPanel";
 import { DataTable, Column } from "@/components/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -563,7 +564,7 @@ export default function PlatformProductsPage() {
       </Dialog>
 
       <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Editar producto</DialogTitle>
           </DialogHeader>
@@ -588,6 +589,7 @@ export default function PlatformProductsPage() {
               onCategoryChange={() => editForm.setValue("subcategory_id", "")}
             />
             {editing ? <ProductSuppliersPanel productId={editing.id} /> : null}
+            {editing ? <ProductClinicsPanel productId={editing.id} /> : null}
             <DialogFooter className="justify-between sm:justify-between">
               <Button
                 type="button"
