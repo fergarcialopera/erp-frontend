@@ -2,6 +2,7 @@ import { apiClient } from "@/lib/apiClient";
 import { unwrapData, unwrapList } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
 import { asBoolean, asOptionalNumber, asOptionalString, mapCatalogRef } from "@/lib/catalogMap";
+import { effectiveListSearch } from "@/components/ListFiltersToolbar";
 import type {
   Product,
   ProductCreatePayload,
@@ -90,8 +91,9 @@ export function filterProductsClient(products: Product[], filters?: ProductListF
       (p.suppliers ?? []).some((s) => s.supplier_id === filters.supplier_id),
     );
   }
-  if (filters.search?.trim()) {
-    const q = filters.search.trim().toLowerCase();
+  const searchTerm = effectiveListSearch(filters.search);
+  if (searchTerm) {
+    const q = searchTerm.toLowerCase();
     result = result.filter((p) => {
       const fields = [p.name, p.barcode, p.internal_reference, p.sku];
       return fields.some((f) => f != null && String(f).toLowerCase().includes(q));
@@ -111,7 +113,8 @@ function buildProductListParams(
   if (filters.brand_id) params.brand_id = filters.brand_id;
   if (filters.dispensing_type_id) params.dispensing_type_id = filters.dispensing_type_id;
   if (filters.supplier_id) params.supplier_id = filters.supplier_id;
-  if (filters.search?.trim()) params.search = filters.search.trim();
+  const searchTerm = effectiveListSearch(filters.search);
+  if (searchTerm) params.search = searchTerm;
   return Object.keys(params).length ? params : undefined;
 }
 
@@ -190,4 +193,76 @@ export const setPreferredProductSupplier = async (
     ENDPOINTS.PRODUCTS.SUPPLIER_PREFERRED(productId, productSupplierId),
   );
   return mapProductSupplier(unwrapData<Record<string, unknown>>(res.data));
+};
+
+export interface ProductClinic {
+  clinic_id: string;
+  name: string;
+  visible: boolean;
+  visible_in_kiosk: boolean;
+}
+
+export interface ProductClinicVisibilityBulkPayload {
+  visible: boolean;
+  clinic_ids?: string[];
+}
+
+export interface ProductClinicVisibilityBulkResult {
+  product_id: string;
+  visible: boolean;
+  matched: number;
+  updated: number;
+  unchanged: number;
+}
+
+export interface ProductClinicVisibility {
+  product_id: string;
+  clinic_id: string;
+  visible: boolean;
+}
+
+function mapProductClinic(raw: Record<string, unknown>): ProductClinic {
+  return {
+    clinic_id: String(raw.clinic_id ?? ""),
+    name: String(raw.name ?? ""),
+    visible: raw.visible === true,
+    visible_in_kiosk: raw.visible_in_kiosk !== false,
+  };
+}
+
+export const fetchProductClinics = async (
+  productId: string,
+  params?: { visible?: boolean; search?: string },
+): Promise<ProductClinic[]> => {
+  const res = await apiClient.get(ENDPOINTS.PRODUCTS.CLINICS(productId), { params });
+  return unwrapList<Record<string, unknown>>(res.data).map(mapProductClinic);
+};
+
+export const patchProductClinicVisibility = async (
+  productId: string,
+  clinicId: string,
+  visible: boolean,
+): Promise<ProductClinicVisibility> => {
+  const res = await apiClient.patch(ENDPOINTS.PRODUCTS.CLINIC(productId, clinicId), { visible });
+  const raw = unwrapData<Record<string, unknown>>(res.data);
+  return {
+    product_id: String(raw.product_id ?? productId),
+    clinic_id: String(raw.clinic_id ?? clinicId),
+    visible: raw.visible === true,
+  };
+};
+
+export const bulkPatchProductClinicVisibility = async (
+  productId: string,
+  data: ProductClinicVisibilityBulkPayload,
+): Promise<ProductClinicVisibilityBulkResult> => {
+  const res = await apiClient.patch(ENDPOINTS.PRODUCTS.CLINICS(productId), data);
+  const raw = unwrapData<Record<string, unknown>>(res.data);
+  return {
+    product_id: String(raw.product_id ?? productId),
+    visible: raw.visible === true,
+    matched: Number(raw.matched ?? 0),
+    updated: Number(raw.updated ?? 0),
+    unchanged: Number(raw.unchanged ?? 0),
+  };
 };

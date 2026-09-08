@@ -7,6 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
+/** Mínimo de caracteres para activar búsqueda en listados/tablas. */
+export const LIST_SEARCH_MIN_LENGTH = 3;
+
+/** Devuelve el término trimmeado solo si alcanza el mínimo; si no, `undefined`. */
+export function effectiveListSearch(
+  value: string | undefined | null,
+  minLength: number = LIST_SEARCH_MIN_LENGTH,
+): string | undefined {
+  const trimmed = value?.trim() ?? "";
+  return trimmed.length >= minLength ? trimmed : undefined;
+}
+
 export type ListFilterChip = {
   id: string;
   label: string;

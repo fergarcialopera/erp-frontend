@@ -47,7 +47,12 @@ export const ENDPOINTS = {
     LIST: "/clinics",
     CREATE: "/clinics",
     DETAIL: (id: string) => `/clinics/${id}`,
+    USERS: (clinicId: string) => `/clinics/${clinicId}/users`,
+    USERS_AVAILABLE: (clinicId: string) => `/clinics/${clinicId}/users/available`,
+    USER: (clinicId: string, userId: string) => `/clinics/${clinicId}/users/${userId}`,
+    PRODUCTS: (clinicId: string) => `/clinics/${clinicId}/products`,
     PRODUCT: (clinicId: string, productId: string) => `/clinics/${clinicId}/products/${productId}`,
+    AMBIENTES: (clinicId: string) => `/clinics/${clinicId}/ambientes`,
     AMBIENTE: (clinicId: string, ambienteId: string) =>
       `/clinics/${clinicId}/ambientes/${ambienteId}`,
     ASSOCIATE_AMBIENTE: (clinicId: string) => `/clinics/${clinicId}/ambientes`,
@@ -75,6 +80,8 @@ export const ENDPOINTS = {
       `/products/${id}/suppliers/${productSupplierId}`,
     SUPPLIER_PREFERRED: (id: string, productSupplierId: string) =>
       `/products/${id}/suppliers/${productSupplierId}/preferred`,
+    CLINICS: (id: string) => `/products/${id}/clinics`,
+    CLINIC: (id: string, clinicId: string) => `/products/${id}/clinics/${clinicId}`,
   },
   /** Importación CSV Odoo (SUPER_ADMIN). */
   PRODUCT_IMPORTS: {

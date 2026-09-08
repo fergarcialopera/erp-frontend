@@ -18,8 +18,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FormDialogFooter } from "@/components/FormDialogFooter";
-import { useClinics } from "@/features/clinics/queries";
-import { createClinic, updateClinic, type ClinicListItem } from "@/features/clinics/api";
+import { useClinics, CLINICS_QUERY_KEY } from "@/features/clinics/queries";
+import { createClinic, type ClinicListItem } from "@/features/clinics/api";
 import { Pencil, Plus } from "lucide-react";
 import { TableHeaderButton } from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
@@ -31,13 +31,7 @@ const createSchema = z.object({
   visible: z.boolean(),
 });
 
-const editSchema = z.object({
-  name: z.string().trim().min(1, "El nombre es obligatorio").max(255),
-  visible: z.boolean(),
-});
-
 type CreateForm = z.infer<typeof createSchema>;
-type EditForm = z.infer<typeof editSchema>;
 
 const columns: Column<ClinicListItem>[] = [
   {
@@ -60,16 +54,10 @@ export default function PlatformClinicsPage() {
   const queryClient = useQueryClient();
   const { data: records = [], isLoading, isError, refetch } = useClinics();
   const [createOpen, setCreateOpen] = useState(false);
-  const [editing, setEditing] = useState<ClinicListItem | null>(null);
 
   const createForm = useForm<CreateForm>({
     resolver: zodResolver(createSchema),
     defaultValues: { name: "", password: "", visible: true },
-  });
-
-  const editForm = useForm<EditForm>({
-    resolver: zodResolver(editSchema),
-    defaultValues: { name: "", visible: true },
   });
 
   const createMutation = useMutation({
@@ -79,15 +67,6 @@ export default function PlatformClinicsPage() {
       toast.success("Clínica creada");
       createForm.reset({ name: "", password: "", visible: true });
       setCreateOpen(false);
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: EditForm }) => updateClinic(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: CLINICS_QUERY_KEY });
-      toast.success("Clínica actualizada");
-      setEditing(null);
     },
   });
 
@@ -104,8 +83,7 @@ export default function PlatformClinicsPage() {
             className="h-8 w-8 p-0"
             onClick={(e) => {
               e.stopPropagation();
-              setEditing(c);
-              editForm.reset({ name: c.name, visible: c.visible !== false });
+              navigate(`/platform/clinics/${c.id}`);
             }}
             aria-label={`Editar ${c.name}`}
           >
@@ -120,7 +98,7 @@ export default function PlatformClinicsPage() {
     <div className="space-y-6">
       <div className="page-header">
         <h2 className="page-title">Clínicas</h2>
-        <p className="page-description">Alta, edición y visibilidad en el acceso kiosk.</p>
+        <p className="page-description">Alta y edición de clínicas, usuarios, ambientes y productos.</p>
       </div>
 
       <DataTable
@@ -190,39 +168,6 @@ export default function PlatformClinicsPage() {
               submitLabel={createMutation.isPending ? "Creando…" : "Crear"}
               isPending={createMutation.isPending}
               onCancel={() => setCreateOpen(false)}
-            />
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!editing} onOpenChange={(open) => !open && setEditing(null)}>
-        <DialogContent size="md">
-          <DialogHeader>
-            <DialogTitle>Editar clínica</DialogTitle>
-          </DialogHeader>
-          <form
-            onSubmit={editForm.handleSubmit((d) => {
-              if (editing) updateMutation.mutate({ id: editing.id, data: d });
-            })}
-            className="space-y-4"
-          >
-            <div className="space-y-2">
-              <Label htmlFor="edit-clinic-name">Nombre</Label>
-              <Input id="edit-clinic-name" {...editForm.register("name")} />
-            </div>
-            <div className="flex items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <Label>Visible en login kiosk</Label>
-              </div>
-              <Switch
-                checked={editForm.watch("visible")}
-                onCheckedChange={(v) => editForm.setValue("visible", v)}
-              />
-            </div>
-            <FormDialogFooter
-              submitLabel={updateMutation.isPending ? "Guardando…" : "Guardar"}
-              isPending={updateMutation.isPending}
-              onCancel={() => setEditing(null)}
             />
           </form>
         </DialogContent>

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Search, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { TABLE_HEAD_CLASS } from "@/components/tableTypography";
+import { effectiveListSearch } from "@/components/ListFiltersToolbar";
 
 export interface Column<T> {
   key: string;
@@ -92,19 +93,20 @@ export function DataTable<T extends object>({
 
   const filtered = useMemo(() => {
     let result = data;
+    const query = effectiveListSearch(search);
 
-    if (search && searchKey) {
-      const q = search.toLowerCase();
+    if (query && searchKey) {
+      const q = query.toLowerCase();
       result = result.filter((item) => {
-        const val = item[searchKey];
-        return val && String(val).toLowerCase().includes(q);
+        const val = (item as Record<string, unknown>)[searchKey];
+        return val != null && String(val).toLowerCase().includes(q);
       });
     }
 
     if (sortKey && sortDir) {
       result = [...result].sort((a, b) => {
-        const aVal = a[sortKey] ?? "";
-        const bVal = b[sortKey] ?? "";
+        const aVal = (a as Record<string, unknown>)[sortKey] ?? "";
+        const bVal = (b as Record<string, unknown>)[sortKey] ?? "";
         const cmp = String(aVal).localeCompare(String(bVal), undefined, { numeric: true });
         return sortDir === "asc" ? cmp : -cmp;
       });
