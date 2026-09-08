@@ -1,4 +1,5 @@
 import { useDeferredValue, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,12 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FormDialogFooter } from "@/components/FormDialogFooter";
 import {
   Select,
@@ -33,8 +29,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Pencil, Plus } from "lucide-react";
-import { TableHeaderButton } from "@/components/TableHeaderButton";
+import { Pencil, Plus, Upload } from "lucide-react";
+import {
+  TableHeaderButton,
+  TableHeaderButtonLabel,
+  tableHeaderButtonClassName,
+} from "@/components/TableHeaderButton";
 import { tableCell } from "@/components/tableTypography";
 import { toast } from "sonner";
 import { toastMutationError } from "@/lib/toastMutationError";
@@ -406,14 +406,28 @@ export default function PlatformProductsPage() {
         searchPlaceholder="Buscar por nombre, barcode o referencia…"
         emptyTitle="Sin productos"
         headerAction={
-          <TableHeaderButton
-            label="Nuevo producto"
-            icon={<Plus />}
-            onClick={() => {
-              form.reset(emptyForm);
-              setModalOpen(true);
-            }}
-          />
+          <div className="flex items-center gap-2">
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className={tableHeaderButtonClassName}
+              aria-label="Importar CSV"
+            >
+              <Link to="/platform/product-imports">
+                <Upload />
+                <TableHeaderButtonLabel label="Importar CSV" />
+              </Link>
+            </Button>
+            <TableHeaderButton
+              label="Nuevo producto"
+              icon={<Plus />}
+              onClick={() => {
+                form.reset(emptyForm);
+                setModalOpen(true);
+              }}
+            />
+          </div>
         }
         filters={
           <ListFiltersToolbar

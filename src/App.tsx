@@ -31,6 +31,8 @@ import PlatformHomePage from "@/app/routes/platform/PlatformHome";
 import PlatformClinicsPage from "@/app/routes/platform/PlatformClinics";
 import PlatformClinicDetailPage from "@/app/routes/platform/PlatformClinicDetail";
 import PlatformProductsPage from "@/app/routes/platform/PlatformProducts";
+import PlatformProductImportsPage from "@/app/routes/platform/PlatformProductImports";
+import PlatformProductImportDetailPage from "@/app/routes/platform/PlatformProductImportDetail";
 import PlatformCategoriesPage from "@/app/routes/platform/PlatformCategories";
 import PlatformSubcategoriesPage from "@/app/routes/platform/PlatformSubcategories";
 import PlatformBrandsPage from "@/app/routes/platform/PlatformBrands";
@@ -81,6 +83,11 @@ const App = () => (
               <Route path="/platform/clinics/:id" element={<PlatformClinicDetailPage />} />
               <Route path="/platform/users" element={<UsersPage />} />
               <Route path="/platform/products" element={<PlatformProductsPage />} />
+              <Route path="/platform/product-imports" element={<PlatformProductImportsPage />} />
+              <Route
+                path="/platform/product-imports/:id"
+                element={<PlatformProductImportDetailPage />}
+              />
               <Route path="/platform/categories" element={<PlatformCategoriesPage />} />
               <Route path="/platform/subcategories" element={<PlatformSubcategoriesPage />} />
               <Route path="/platform/brands" element={<PlatformBrandsPage />} />

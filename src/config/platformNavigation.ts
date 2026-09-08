@@ -114,6 +114,7 @@ export const PLATFORM_PAGE_TITLES: Record<string, string> = {
   "/platform/clinics": "Clínicas",
   "/platform/users": "Usuarios",
   "/platform/products": "Productos",
+  "/platform/product-imports": "Importaciones CSV",
   "/platform/categories": "Categorías",
   "/platform/subcategories": "Subcategorías",
   "/platform/brands": "Marcas",
@@ -129,6 +130,7 @@ export const PLATFORM_PAGE_TITLES: Record<string, string> = {
 
 export function getPlatformPageTitle(pathname: string): string {
   if (PLATFORM_PAGE_TITLES[pathname]) return PLATFORM_PAGE_TITLES[pathname];
+  if (pathname.startsWith("/platform/product-imports/")) return "Detalle de importación";
   if (pathname.startsWith("/platform/clinics/")) return "Detalle de clínica";
   if (pathname.startsWith("/platform/ambientes/")) return "Detalle de ambiente";
   return "LogiLock Plataforma";
