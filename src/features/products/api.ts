@@ -2,6 +2,7 @@ import { apiClient } from "@/lib/apiClient";
 import { unwrapData, unwrapList } from "@/lib/apiResponse";
 import { ENDPOINTS } from "@/config/endpoints";
 import { asBoolean, asOptionalNumber, asOptionalString, mapCatalogRef } from "@/lib/catalogMap";
+import { effectiveListSearch } from "@/components/ListFiltersToolbar";
 import type {
   Product,
   ProductCreatePayload,
@@ -90,8 +91,9 @@ export function filterProductsClient(products: Product[], filters?: ProductListF
       (p.suppliers ?? []).some((s) => s.supplier_id === filters.supplier_id),
     );
   }
-  if (filters.search?.trim()) {
-    const q = filters.search.trim().toLowerCase();
+  const searchTerm = effectiveListSearch(filters.search);
+  if (searchTerm) {
+    const q = searchTerm.toLowerCase();
     result = result.filter((p) => {
       const fields = [p.name, p.barcode, p.internal_reference, p.sku];
       return fields.some((f) => f != null && String(f).toLowerCase().includes(q));
@@ -111,7 +113,8 @@ function buildProductListParams(
   if (filters.brand_id) params.brand_id = filters.brand_id;
   if (filters.dispensing_type_id) params.dispensing_type_id = filters.dispensing_type_id;
   if (filters.supplier_id) params.supplier_id = filters.supplier_id;
-  if (filters.search?.trim()) params.search = filters.search.trim();
+  const searchTerm = effectiveListSearch(filters.search);
+  if (searchTerm) params.search = searchTerm;
   return Object.keys(params).length ? params : undefined;
 }
 

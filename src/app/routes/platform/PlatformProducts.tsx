@@ -44,6 +44,7 @@ import {
   ListFilterField,
   ListFiltersToolbar,
   LIST_FILTER_NONE,
+  effectiveListSearch,
   type ListFilterChip,
 } from "@/components/ListFiltersToolbar";
 
@@ -105,17 +106,18 @@ export default function PlatformProductsPage() {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
 
-  const listFilters = useMemo(
-    () => ({
+  const listFilters = useMemo(() => {
+    const searchTerm = effectiveListSearch(deferredSearch);
+    return {
       ...(categoryFilter !== NONE ? { category_id: categoryFilter } : {}),
       ...(subcategoryFilter !== NONE ? { subcategory_id: subcategoryFilter } : {}),
       ...(brandFilter !== NONE ? { brand_id: brandFilter } : {}),
       ...(dispensingFilter !== NONE ? { dispensing_type_id: dispensingFilter } : {}),
       ...(supplierFilter !== NONE ? { supplier_id: supplierFilter } : {}),
-      ...(deferredSearch.trim() ? { search: deferredSearch.trim() } : {}),
+      ...(searchTerm ? { search: searchTerm } : {}),
       ...(statusFilter === "inactive" ? { active: false as const } : {}),
-    }),
-    [
+    };
+  }, [
       categoryFilter,
       subcategoryFilter,
       brandFilter,
@@ -123,8 +125,7 @@ export default function PlatformProductsPage() {
       supplierFilter,
       deferredSearch,
       statusFilter,
-    ],
-  );
+    ]);
 
   const {
     data: records = [],
