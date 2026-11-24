@@ -27,8 +27,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Verify (lint, test, build)
+        run: npm run verify
 
       - name: Validate deploy secrets
         env:

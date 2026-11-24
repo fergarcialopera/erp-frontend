@@ -4,44 +4,14 @@ globs: package.json,package-lock.json,.npmrc,.github/**
 alwaysApply: false
 ---
 
-# Dependencias y CI
+# Dependencias y CI (adaptador Cursor)
 
-## Política de versiones
+**Fuente de verdad:** `.ai/PROJECT.md` §8 (política, grupos, majors). Onboarding humano: `README.md`. Gate: `npm run verify`.
 
-- `package.json` usa **versiones exactas** (sin `^` ni `~`). `.npmrc` tiene `save-exact=true` para que cualquier instalación futura quede fijada.
-- **No hay actualizaciones automáticas**: no existe `dependabot.yml` ni bots de dependencias. No reintroducirlos.
-- Toda actualización es manual: `npm outdated` → `npm install <paquete>@<versión>` → validar → commitear `package.json` + `package-lock.json` juntos.
-- El proceso completo está documentado en `README.md` (sección "Política de versiones de dependencias").
+Al editar dependencias o workflows:
 
-## CI
-
-- Los workflows deben instalar con `npm ci` (nunca `npm install` en CI).
-- No usar `--legacy-peer-deps` ni `--force` en Actions: ocultan conflictos de peers.
-- El job de CI (`.github/workflows/ci.yml`) debe fallar en PRs si `npm ci`, lint, test o build fallan.
-- Deploy en `main` asume que CI ya validó la resolución de dependencias.
-
-## Ecosistemas que se actualizan en bloque
-
-Al actualizar cualquiera de estos paquetes, actualizar **todo el grupo** en el mismo cambio (misma major, peers alineados):
-
-| Grupo | Paquetes |
-|---|---|
-| React | `react`, `react-dom`, `@types/react`, `@types/react-dom` |
-| Vite | `vite`, `@vitejs/plugin-react-swc`, `vitest`, `lovable-tagger` |
-| ESLint | `eslint`, `eslint-*`, `@eslint/*`, `typescript-eslint` |
-
-```json
-// ❌ BAD — peers rotos (ERESOLVE en npm ci)
-"react": "18.3.1",
-"react-dom": "19.2.7",
-"@types/react": "18.3.23",
-"@types/react-dom": "19.2.3"
-
-// ✅ GOOD — misma major en runtime y types
-"react": "18.3.1",
-"react-dom": "18.3.1",
-"@types/react": "18.3.23",
-"@types/react-dom": "18.3.7"
-```
-
-Los cambios de **major** (React 18→19, Vite 8→9, etc.) requieren PR dedicado con revisión de breaking changes y validación completa (`npm ci`, lint, test, build).
+- Versiones exactas; no reintroducir Dependabot.
+- Actions: `npm ci` (nunca `npm install`); sin `--legacy-peer-deps` / `--force`.
+- Tras actualizar: `npm run verify`; commit conjunto de `package.json` + `package-lock.json`.
+- CI y deploy deben fallar si `verify` falla.
+- Majors y grupos React/Vite/ESLint: seguir `.ai/PROJECT.md` §8 — no inventar peers.
