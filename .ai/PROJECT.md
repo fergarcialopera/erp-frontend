@@ -184,6 +184,13 @@ Resumen para humanos: `README.md`. Adaptador Cursor: `.cursor/rules/github-actio
 - Registro SW: `src/components/PwaRegister.tsx`.
 - **HTTPS obligatorio** en dispositivos reales (cámara e instalación). `localhost` vale en desarrollo.
 - Iconos: `public/favicon/web-app-manifest-*.png` (`any` + `maskable`).
+- Nginx: aplicar `deploy/nginx-pwa.snippet.conf` para que `/manifest.webmanifest`, `/sw.js` y `/favicon/*` **no** caigan en el fallback SPA (`index.html`). Si Chrome recibe HTML en esos recursos, muestra «Esta aplicación no se puede instalar».
+
+Comprobación rápida en el móvil (deben ser 200 y el tipo correcto, no una página HTML):
+
+1. `https://<dominio>/manifest.webmanifest`
+2. `https://<dominio>/sw.js`
+3. `https://<dominio>/favicon/web-app-manifest-192x192.png`
 
 ## 11. Escaneo de códigos (cámara)
 

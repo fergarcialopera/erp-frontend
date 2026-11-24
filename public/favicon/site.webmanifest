@@ -3,13 +3,14 @@
   "short_name": "LogiLock",
   "description": "Gestión de ambientes, inventario y órdenes para clínicas.",
   "lang": "es",
-  "start_url": "/",
-  "scope": "/",
-  "id": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "any",
   "background_color": "#F7FAFC",
   "theme_color": "#06162D",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/favicon/web-app-manifest-192x192.png",

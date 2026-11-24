@@ -18,10 +18,22 @@ function isStandaloneDisplay(): boolean {
   return mq || iosStandalone;
 }
 
+function isAndroidChrome(): boolean {
+  const ua = navigator.userAgent;
+  return /android/i.test(ua) && /chrome/i.test(ua) && !/edg\//i.test(ua);
+}
+
+function isSecureForPwa(): boolean {
+  if (window.isSecureContext) return true;
+  const host = window.location.hostname;
+  return host === "localhost" || host === "127.0.0.1";
+}
+
 /** Banner de instalación (Android/Chrome). En iOS se muestra una pista manual. */
 export function PwaInstallBanner() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIosHint, setShowIosHint] = useState(false);
+  const [showAndroidHelp, setShowAndroidHelp] = useState(false);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -29,11 +41,13 @@ export function PwaInstallBanner() {
     if (sessionStorage.getItem(DISMISS_KEY) === "1") return;
 
     const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    const isSafari = /safari/i.test(navigator.userAgent) && !/crios|fxios|edgios/i.test(navigator.userAgent);
+    const isSafari =
+      /safari/i.test(navigator.userAgent) && !/crios|fxios|edgios/i.test(navigator.userAgent);
 
     const onBeforeInstall = (event: Event) => {
       event.preventDefault();
       setDeferred(event as BeforeInstallPromptEvent);
+      setShowAndroidHelp(false);
       setVisible(true);
     };
 
@@ -44,7 +58,18 @@ export function PwaInstallBanner() {
       setVisible(true);
     }
 
-    return () => window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+    // Si Chrome Android no dispara el evento, suele ser HTTPS/manifest/iconos/SW mal servidos.
+    const timer = window.setTimeout(() => {
+      if (isAndroidChrome() && !sessionStorage.getItem(DISMISS_KEY)) {
+        setShowAndroidHelp(true);
+        setVisible(true);
+      }
+    }, 4000);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+    };
   }, []);
 
   if (!visible) return null;
@@ -63,6 +88,8 @@ export function PwaInstallBanner() {
     setVisible(false);
   };
 
+  const secure = isSecureForPwa();
+
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 p-3 shadow-lg backdrop-blur supports-[padding:max(0px)]:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto flex max-w-3xl items-start gap-3">
@@ -78,6 +105,23 @@ export function PwaInstallBanner() {
             <p className="text-xs text-muted-foreground">
               En iPhone/iPad: toca Compartir y elige «Añadir a pantalla de inicio».
             </p>
+          ) : showAndroidHelp ? (
+            <div className="space-y-1 text-xs text-muted-foreground">
+              {!secure ? (
+                <p>
+                  Esta página no está en HTTPS. Chrome no permite instalar PWA ni usar la cámara por
+                  HTTP (salvo localhost).
+                </p>
+              ) : (
+                <p>
+                  Chrome aún no ofrece instalar. Comprueba en el móvil que abren bien (código 200, no
+                  HTML): <span className="font-mono">/manifest.webmanifest</span>,{" "}
+                  <span className="font-mono">/sw.js</span> y{" "}
+                  <span className="font-mono">/favicon/web-app-manifest-192x192.png</span>. Si el
+                  nginx hace fallback SPA sobre esos archivos, la instalación falla.
+                </p>
+              )}
+            </div>
           ) : null}
           <div className="flex flex-wrap gap-2">
             {deferred ? (

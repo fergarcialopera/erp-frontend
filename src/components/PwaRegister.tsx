@@ -5,8 +5,18 @@ import { toast } from "sonner";
 /** Registra el service worker y avisa si hay una nueva versión lista. */
 export function PwaRegister() {
   useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+
     const updateSW = registerSW({
       immediate: true,
+      onRegisteredSW(swUrl, registration) {
+        if (import.meta.env.DEV) {
+          console.info("[PWA] SW registrado:", swUrl, registration?.scope);
+        }
+      },
+      onRegisterError(error) {
+        console.error("[PWA] Error registrando service worker:", error);
+      },
       onNeedRefresh() {
         toast.message("Hay una nueva versión de LogiLock", {
           description: "Recarga para actualizar la aplicación instalada.",
