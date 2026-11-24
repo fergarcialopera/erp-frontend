@@ -86,6 +86,12 @@ Commitear `package.json` y `package-lock.json` juntos. Grupos que deben actualiz
 
 Los cambios de **major** requieren PR dedicado con revisión de *breaking changes*.
 
+## PWA y cámara
+
+La app es instalable como PWA (HTTPS en producción). Desde el móvil puedes «Instalar» / «Añadir a pantalla de inicio» y escanear códigos de barras en salidas y entradas.
+
+Detalle: [`.ai/PROJECT.md`](.ai/PROJECT.md) §§10–11.
+
 ## Para desarrolladores nuevos
 
 - Validar con `npm run verify` antes de dar por cerrado un cambio.

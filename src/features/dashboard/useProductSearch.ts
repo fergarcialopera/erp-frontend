@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useProducts } from "@/features/products/queries";
 import { useInventory } from "@/features/inventory/queries";
+import { findExactBarcodeMatch } from "@/features/scanning/findByBarcode";
 import type { ProductSearchItem } from "./types";
 
 function normalizeText(value: string) {
@@ -8,7 +9,9 @@ function normalizeText(value: string) {
 }
 
 export function useProductSearch(clinicId: string | null, search: string) {
-  const { data: products = [], isLoading: loadingProducts } = useProducts(clinicId, { activeOnly: true });
+  const { data: products = [], isLoading: loadingProducts } = useProducts(clinicId, {
+    activeOnly: true,
+  });
   const { data: inventory = [], isLoading: loadingInventory } = useInventory(clinicId);
 
   const availableByProductId = useMemo(() => {
@@ -22,21 +25,26 @@ export function useProductSearch(clinicId: string | null, search: string) {
     return map;
   }, [inventory]);
 
+  const catalog = useMemo<ProductSearchItem[]>(
+    () =>
+      products.map((p) => ({
+        productId: p.id,
+        sku: p.sku,
+        name: p.name,
+        barcode: p.barcode,
+        availableStock: availableByProductId.get(p.id) ?? 0,
+      })),
+    [availableByProductId, products],
+  );
+
   const results = useMemo<ProductSearchItem[]>(() => {
     const query = normalizeText(search);
-    const rows = products.map((p) => ({
-      productId: p.id,
-      sku: p.sku,
-      name: p.name,
-      barcode: p.barcode,
-      availableStock: availableByProductId.get(p.id) ?? 0,
-    }));
 
     // UX: no mostramos listado si el usuario aún no ha escrito.
     // A partir de 2 caracteres, sugerimos productos priorizando stock > 0.
     if (query.length < 2) return [];
 
-    const matches = rows.filter((p) => {
+    const matches = catalog.filter((p) => {
       const haystack = `${p.name} ${p.sku} ${p.barcode ?? ""}`.toLowerCase();
       return haystack.includes(query);
     });
@@ -44,10 +52,16 @@ export function useProductSearch(clinicId: string | null, search: string) {
     const withStock = matches.filter((p) => p.availableStock > 0);
     const withoutStock = matches.filter((p) => p.availableStock <= 0);
     return [...withStock, ...withoutStock].slice(0, 30);
-  }, [availableByProductId, products, search]);
+  }, [catalog, search]);
+
+  const matchExactBarcode = useCallback(
+    (code: string) => findExactBarcodeMatch(catalog, code),
+    [catalog],
+  );
 
   return {
     results,
     isLoading: loadingProducts || loadingInventory,
+    matchExactBarcode,
   };
 }

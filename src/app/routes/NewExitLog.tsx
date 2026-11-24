@@ -12,11 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/app/providers/useAuth";
 import { useProducts } from "@/features/products/queries";
 import { createExitLog } from "@/features/exitLogs/api";
+import { BarcodeScannerDialog } from "@/features/scanning/BarcodeScannerDialog";
+import { findExactBarcodeMatch } from "@/features/scanning/findByBarcode";
 import { useQueryClient } from "@tanstack/react-query";
 
 const exitLogSchema = z.object({
@@ -32,6 +35,7 @@ export default function NewExitLogPage() {
   const queryClient = useQueryClient();
   const { clinicId } = useAuth();
   const { data: products = [] } = useProducts(clinicId);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const {
     watch,
@@ -45,6 +49,18 @@ export default function NewExitLogPage() {
   });
 
   const activeProducts = products.filter((p) => p.is_active && p.is_visible === true);
+
+  const handleBarcodeScanned = (code: string) => {
+    const match = findExactBarcodeMatch(activeProducts, code);
+    if (!match) {
+      toast.error("Código no encontrado", {
+        description: `No hay producto visible con barcode «${code}».`,
+      });
+      return;
+    }
+    setValue("product_id", match.id, { shouldValidate: true, shouldDirty: true });
+    toast.success("Producto seleccionado", { description: match.name });
+  };
 
   const onSubmit = async (data: ExitLogForm) => {
     try {
@@ -93,22 +109,41 @@ export default function NewExitLogPage() {
               <Label htmlFor="product_id" className="text-xs font-medium">
                 Producto
               </Label>
-              <Select
-                value={watch("product_id")}
-                onValueChange={(v) => setValue("product_id", v)}
-                disabled={activeProducts.length === 0}
-              >
-                <SelectTrigger id="product_id" className="h-10" aria-invalid={!!errors.product_id}>
-                  <SelectValue placeholder="Seleccionar producto" />
-                </SelectTrigger>
-                <SelectContent>
-                  {activeProducts.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name} ({p.sku})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select
+                  value={watch("product_id")}
+                  onValueChange={(v) => setValue("product_id", v)}
+                  disabled={activeProducts.length === 0}
+                >
+                  <SelectTrigger id="product_id" className="h-10" aria-invalid={!!errors.product_id}>
+                    <SelectValue placeholder="Seleccionar producto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {activeProducts.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name} ({p.sku})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  onClick={() => setScannerOpen(true)}
+                  disabled={activeProducts.length === 0}
+                  aria-label="Escanear código de barras"
+                  title="Escanear código"
+                >
+                  <Camera className="h-4 w-4" />
+                </Button>
+              </div>
+              <BarcodeScannerDialog
+                open={scannerOpen}
+                onOpenChange={setScannerOpen}
+                onScan={handleBarcodeScanned}
+              />
               {errors.product_id && (
                 <p className="text-xs text-destructive" role="alert">
                   {errors.product_id.message}

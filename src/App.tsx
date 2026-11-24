@@ -44,6 +44,7 @@ import PlatformAmbienteDetailPage from "@/app/routes/platform/PlatformAmbienteDe
 import PlatformIncidentsPage from "@/app/routes/platform/PlatformIncidents";
 import NotFound from "@/app/routes/NotFound";
 import { ROUTE_MIN_ROLE } from "@/config/navigation";
+import { PwaInstallBanner } from "@/components/PwaInstallBanner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +62,7 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
+        <PwaInstallBanner />
         <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />

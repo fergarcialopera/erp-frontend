@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, X } from "lucide-react";
+import { Camera, Search, X } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/app/providers/useAuth";
 import { useProducts } from "@/features/products/queries";
@@ -28,6 +28,8 @@ import { ProductStockLocationsPanel } from "@/features/products/components/Produ
 import { useAmbientesTree } from "@/features/ambientes/queries";
 import { createEntryLog } from "@/features/entryLogs/api";
 import { isClinicOperableProduct } from "@/features/inventory/components/entryProductEligibility";
+import { BarcodeScannerDialog } from "@/features/scanning/BarcodeScannerDialog";
+import { findExactBarcodeMatch } from "@/features/scanning/findByBarcode";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import type { Ambiente, Product } from "@/types/models";
@@ -80,6 +82,7 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
   const activeAmbientes = useMemo(() => ambienteTree.filter(isOperableAmbiente), [ambienteTree]);
   const [filterAmbienteId, setFilterAmbienteId] = useState<string | undefined>();
   const [productQuery, setProductQuery] = useState("");
+  const [scannerOpen, setScannerOpen] = useState(false);
   const deferredProductQuery = useDeferredValue(productQuery);
 
   const {
@@ -130,6 +133,19 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
   const clearProduct = () => {
     setValue("product_id", "", { shouldValidate: true, shouldDirty: true });
     setProductQuery("");
+  };
+
+  const handleBarcodeScanned = (code: string) => {
+    setProductQuery(code);
+    const match = findExactBarcodeMatch(clinicProducts, code);
+    if (!match) {
+      toast.error("Código no encontrado", {
+        description: `No hay producto operable con barcode «${code}».`,
+      });
+      return;
+    }
+    selectProduct(match);
+    toast.success("Producto seleccionado", { description: match.name });
   };
 
   const onSubmit = async (data: EntryForm) => {
@@ -226,31 +242,53 @@ export function NewEntryLogDialog({ open, onOpenChange }: NewEntryLogDialogProps
               </div>
             ) : hasClinicProducts || productsLoading ? (
               <>
-                <div className="relative">
-                  <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                  <Input
-                    id="entry-product-search"
-                    value={productQuery}
-                    onChange={(e) => setProductQuery(e.target.value)}
-                    placeholder="Buscar por nombre, SKU o código…"
-                    className="h-10 pl-10 pr-10"
+                <div className="flex gap-2">
+                  <div className="relative min-w-0 flex-1">
+                    <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    <Input
+                      id="entry-product-search"
+                      value={productQuery}
+                      onChange={(e) => setProductQuery(e.target.value)}
+                      placeholder="Buscar por nombre, SKU o código…"
+                      className="h-10 pl-10 pr-10"
+                      disabled={productsLoading || !hasClinicProducts}
+                      aria-invalid={!!errors.product_id}
+                      autoComplete="off"
+                    />
+                    {productQuery.length > 0 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-0.5 top-1/2 h-8 w-8 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setProductQuery("")}
+                        aria-label="Borrar búsqueda"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 shrink-0"
+                    onClick={() => setScannerOpen(true)}
                     disabled={productsLoading || !hasClinicProducts}
-                    aria-invalid={!!errors.product_id}
-                    autoComplete="off"
-                  />
-                  {productQuery.length > 0 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-0.5 top-1/2 h-8 w-8 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      onClick={() => setProductQuery("")}
-                      aria-label="Borrar búsqueda"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
+                    aria-label="Escanear código de barras"
+                    title="Escanear código"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </Button>
                 </div>
+
+                <BarcodeScannerDialog
+                  open={scannerOpen}
+                  onOpenChange={setScannerOpen}
+                  onScan={handleBarcodeScanned}
+                  title="Escanear producto"
+                  description="Selecciona el producto a ingresar apuntando al código de barras."
+                />
 
                 <div
                   className="max-h-40 overflow-y-auto rounded-md border bg-background"

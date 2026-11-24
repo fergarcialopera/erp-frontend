@@ -176,8 +176,26 @@ Resumen para humanos: `README.md`. Adaptador Cursor: `.cursor/rules/github-actio
 - Secrets en environment `VPS_IONOS.env`.
 - CI en PRs y pushes fuera de `main`: `.github/workflows/ci.yml` (`npm run verify`).
 
-## 10. Limitaciones conocidas
+## 10. PWA e instalación móvil
+
+- Plugin: `vite-plugin-pwa` (manifest + service worker en build).
+- Shell instalable (`display: standalone`); API `/api` en caché **NetworkOnly**.
+- Banner de instalación: `src/components/PwaInstallBanner.tsx` (Chrome/Android; pista iOS Safari).
+- Registro SW: `src/components/PwaRegister.tsx`.
+- **HTTPS obligatorio** en dispositivos reales (cámara e instalación). `localhost` vale en desarrollo.
+- Iconos: `public/favicon/web-app-manifest-*.png` (`any` + `maskable`).
+
+## 11. Escaneo de códigos (cámara)
+
+- Feature: `src/features/scanning/` (`BarcodeScannerDialog`, normalización y match exacto de barcode).
+- Librería: `@zxing/browser` + `@zxing/library` vía `getUserMedia` (cámara trasera ideal).
+- Integrado en: dashboard (salidas), `/exit-logs/new`, diálogo de entrada de inventario.
+- El permiso de cámara se pide solo al abrir el escáner (gesto del usuario).
+
+## 12. Limitaciones conocidas
 
 - No hay suite E2E en el repo.
 - La cobertura de tests es parcial; priorizar lógica de riesgo (ver `.ai/QUALITY.md`).
 - El backend OpenAPI en local es la referencia de contratos; no hay copia versionada del OpenAPI en este frontend.
+- iOS no dispara `beforeinstallprompt`; la instalación es manual («Añadir a pantalla de inicio»).
+- El escáner requiere producto con `barcode` coincidente en catálogo; no crea productos nuevos.

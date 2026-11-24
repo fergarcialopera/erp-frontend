@@ -65,7 +65,11 @@ export default function DashboardPage() {
   const [draft, dispatch] = useReducer(draftReducer, []);
   const canExecute = canAccessOperations();
   const draftEditor = useDraftExitEditor(clinicId, canExecute);
-  const { results, isLoading: isSearchLoading } = useProductSearch(clinicId, search);
+  const {
+    results,
+    isLoading: isSearchLoading,
+    matchExactBarcode,
+  } = useProductSearch(clinicId, search);
   const createExitMutation = useCreateExitLog();
   const {
     data: dashboard,
@@ -142,6 +146,23 @@ export default function DashboardPage() {
     }
   };
 
+  const handleBarcodeScanned = (code: string) => {
+    setSearch(code);
+    const match = matchExactBarcode(code);
+    if (!match) {
+      toast.error("Código no encontrado", {
+        description: `No hay producto con barcode «${code}» en el catálogo visible.`,
+      });
+      return;
+    }
+    if (!canExecute) {
+      toast.error("Sin permiso", { description: "No puedes registrar salidas con tu rol." });
+      return;
+    }
+    dispatch({ type: "addItem", item: match });
+    toast.success("Producto añadido", { description: match.name });
+  };
+
   return (
     <div className="space-y-6">
       <div className="page-header">
@@ -156,8 +177,11 @@ export default function DashboardPage() {
         isLoading={isSearchLoading}
         canExecute={canExecute}
         onAdd={(item) => dispatch({ type: "addItem", item })}
+        onBarcodeScanned={handleBarcodeScanned}
         draftItems={draft}
-        onUpdateDraftQty={(productId, quantity) => dispatch({ type: "updateQty", productId, quantity })}
+        onUpdateDraftQty={(productId, quantity) =>
+          dispatch({ type: "updateQty", productId, quantity })
+        }
         onRemoveDraftItem={(productId) => dispatch({ type: "removeItem", productId })}
         onExecuteDraft={executeDraft}
         isExecuting={createExitMutation.isPending}

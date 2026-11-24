@@ -65,6 +65,7 @@ Modelo de referencia en el repo: tests de `src/features/exitLogs/` y `src/featur
 - No persistir secretos en el repo; no loguear tokens.
 - Respetar `authMode` del `apiClient` (`user` | `clinic` | `none`).
 - No introducir XSS deliberado (evitar `dangerouslySetInnerHTML` sin sanitizar).
+- Cámara: solo tras gesto del usuario; detener tracks al cerrar el escáner; no grabar ni subir vídeo.
 - Cambios de dependencias: política en `.ai/PROJECT.md` §8; no usar `--force` / `--legacy-peer-deps` en CI.
 - No modificar workflows de deploy ni secrets sin autorización explícita.
 
